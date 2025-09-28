@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    android:paddingTop="10dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="130dp"
+        android:background="@drawable/khungitem"
+        android:alpha="0.4"/>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp">
+        <TextView
+            android:id="@+id/txtLoaiPhong"
+            android:text="Loại phòng: "
+            android:textStyle="bold"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#AAF84B"
+            android:textSize="18sp" />
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_margin="3dp"
+            android:background="@color/white"/>
+
+
+        <TextView
+            android:id="@+id/txtPhiDichVu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Phí dịch vụ: 100.000đ/người"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/txtGiaDien"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Giá điện: 3.500đ/số"
+            android:textColor="@color/white"
+            android:textSize="18sp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/txtGiaNuoc"
+                android:layout_width="0dp"
+                android:layout_weight="4"
+                android:layout_height="wrap_content"
+                android:text="Giá nước: 100.000đ/người"
+                android:textColor="@color/white"
+                android:textSize="18sp" />
+            <ImageView
+                android:id="@+id/btnDelete"
+                android:layout_width="0dp"
+                android:layout_weight="0.5"
+                android:layout_height="wrap_content"
+                android:src="@drawable/delete" />
+        </LinearLayout>
+    </LinearLayout>
+    </RelativeLayout>

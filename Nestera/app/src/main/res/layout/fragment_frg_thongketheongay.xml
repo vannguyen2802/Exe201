@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Fragment.frg_thongketheongay">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".fragment_doanh_thu"
+        android:padding="10dp"
+        android:background="@drawable/background">
+        <ImageView
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:src="@drawable/logo_nestera"
+            android:layout_gravity="center"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/btnTuNgay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Từ ngày"
+                    android:background="@drawable/khungedt"
+                    android:textColor="#AAF84B" />
+
+                <EditText
+                    android:id="@+id/edtTuNgay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="yyyy-MM-dd"
+                    android:textColor="@color/white"
+                    android:textSize="18dp" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_weight="1"
+                android:layout_marginLeft="10dp"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/btnDenNgay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/khungedt"
+                    android:textColor="#AAF84B"
+                    android:text="Đến ngày" />
+
+                <EditText
+                    android:id="@+id/edtDenNgay"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="yyyy-MM-dd"
+                    android:textColor="@color/white"
+                    android:textSize="18dp" />
+
+            </LinearLayout>
+
+
+
+
+        </LinearLayout>
+        <Button
+            android:id="@+id/btnDoanhThu"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Xem doanh thu"
+            android:textSize="20dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="20dp"
+            android:textColor="#AAF84B"
+            android:background="@drawable/khungedt"/>
+        <TextView
+            android:id="@+id/txtDoanhThu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="30dp"
+            android:text="Doanh Thu"
+            android:gravity="center"
+            android:layout_marginTop="20dp"
+            android:textColor="#AAF84B"/>
+    </LinearLayout>
+
+</FrameLayout>
