@@ -1,6 +1,7 @@
 package com.example.nestera.Adapter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -61,11 +62,13 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
         if (holder.tvStatus != null) {
             String status = room.getTrangThai() == 0 ? "Còn trống" : "Đã thuê";
             holder.tvStatus.setText(status);
-            // Màu sắc theo trạng thái
+            // Sử dụng background nhất quán với text trắng dễ nhìn
+            holder.tvStatus.setBackgroundResource(R.drawable.status_badge_background);
+            // Màu text theo trạng thái (vì background đã cố định)
             if (room.getTrangThai() == 0) {
-                holder.tvStatus.setBackgroundResource(R.drawable.category_button_background); // Xanh lá
+                holder.tvStatus.setTextColor(Color.WHITE); // Còn trống - trắng
             } else {
-                holder.tvStatus.setBackgroundResource(R.drawable.filter_button_background); // Đỏ
+                holder.tvStatus.setTextColor(Color.YELLOW); // Đã thuê - vàng để phân biệt
             }
         }
         
