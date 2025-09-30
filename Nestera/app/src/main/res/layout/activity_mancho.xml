@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/assets_task_01k6e26zg7fp5ve631qbt3b96t_1759261357_img_1"
     android:orientation="vertical"
-    android:background="@drawable/background"
     tools:context=".mancho">
 
     <com.airbnb.lottie.LottieAnimationView
@@ -15,6 +15,7 @@
         app:lottie_autoPlay="true"
         app:lottie_loop="true"
         app:lottie_rawRes="@raw/animation1" />
+
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/anm"
         android:layout_width="wrap_content"

@@ -4,34 +4,36 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/card_background"
     android:orientation="vertical"
-    android:background="@drawable/background"
     tools:context=".Activity.loaiPhong_Activity">
-    <include layout="@layout/toolbar"/>
+
+    <include layout="@layout/toolbar" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
+
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 
-            app:startIconDrawable="@drawable/ic_search"
-            app:startIconTint="#FFFFFF"
+            android:layout_margin="10dp"
+            app:boxBackgroundColor="#F88E4B"
 
             app:boxBackgroundMode="outline"
-            app:boxBackgroundColor="#F88E4B"
             app:endIconMode="clear_text"
-            app:endIconTint="@color/white"
-            android:layout_margin="10dp"
-            >
+            app:endIconTint="@color/gray_dark"
+            app:startIconDrawable="@drawable/ic_search"
+            app:startIconTint="#FFFFFF">
+
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edtSearch"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/khungedt"
-                android:textColor="@color/white"
-                />
+                android:background="@drawable/filter_button_background"
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
 
     </LinearLayout>

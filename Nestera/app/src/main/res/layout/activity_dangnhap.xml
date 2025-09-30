@@ -4,108 +4,111 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/assets_task_01k6e26zg7fp5ve631qbt3b96t_1759261357_img_1"
     android:orientation="vertical"
     android:padding="20dp"
     tools:context=".dangnhap">
-<ImageView
-    android:layout_width="120dp"
-    android:layout_height="120dp"
-    android:src="@drawable/logo_nestera"
-    android:layout_marginTop="70dp"
-    android:layout_marginBottom="20dp"
-    android:layout_gravity="center"/>
+
+    <ImageView
+        android:layout_width="350dp"
+        android:layout_height="230dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="0dp"
+        android:src="@drawable/nobg" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        android:text="Xin Chào!"
-        android:textColor="@color/white"
+        android:text="Chào mừng trở lại"
+        android:textColor="@color/gray_dark"
         android:textSize="30dp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tài khoản"
-        android:textColor="@color/white"
-        android:layout_marginTop="40dp"
         android:layout_marginLeft="5dp"
-        />
+        android:layout_marginTop="40dp"
+        android:text="Tài khoản"
+        android:textColor="@color/gray_dark" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
-        app:startIconDrawable="@drawable/baseline_person_24"
-        app:startIconTint="#99DB34"
-
-        app:boxBackgroundMode="outline"
         app:boxBackgroundColor="#AAF84B"
+        app:boxBackgroundMode="outline"
+
         app:endIconMode="clear_text"
-        app:endIconTint="@color/white"
-        >
+        app:endIconTint="@color/gray_dark"
+        app:startIconDrawable="@drawable/baseline_person_24"
+        app:startIconTint="#99DB34">
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edtUser"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/khungedt"
-            android:textColor="@color/white"
-            />
+            android:background="@drawable/room_image_background"
+            android:textColor="@color/gray_dark" />
     </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Mật khẩu"
-        android:textColor="@color/white"
-        android:layout_marginTop="15dp"
         android:layout_marginLeft="5dp"
-        />
+        android:layout_marginTop="15dp"
+        android:text="Mật khẩu"
+        android:textColor="@color/gray_dark" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
+        app:boxBackgroundColor="#99DB34"
+        app:boxBackgroundMode="outline"
+
+        app:endIconMode="password_toggle"
+        app:endIconTint="@color/gray_dark"
+
         app:startIconDrawable="@drawable/baseline_lock_24"
         app:startIconTint="#99DB34"
 
-        app:boxBackgroundMode="outline"
-        app:boxBackgroundColor="#99DB34"
-
-        app:endIconMode="password_toggle"
-        app:endIconTint="@color/white"
-
-
-
 
         >
+
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/edtPass"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/khungedt"
-            android:textColor="@color/white"
+            android:background="@drawable/room_image_background"
             android:inputType="textPassword"
-            />
+            android:textColor="@color/gray_dark" />
     </com.google.android.material.textfield.TextInputLayout>
-<CheckBox
-    android:id="@+id/chkLuu"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:buttonTint="@color/white"
-    android:layout_marginLeft="-4dp"
-    android:textColor="@color/white"
-    android:textSize="12dp"
-    android:layout_marginTop="10dp"
-    android:text="Lưu mật khẩu"/>
+
+    <CheckBox
+        android:id="@+id/chkLuu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="-4dp"
+        android:layout_marginTop="10dp"
+        android:buttonTint="@color/gray_dark"
+        android:text="Lưu mật khẩu"
+        android:textColor="@color/gray_dark"
+        android:textSize="12dp" />
+
     <Button
         android:id="@+id/btnDangNhap"
         android:layout_width="wrap_content"
         android:layout_height="35dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="30dp"
+        android:background="@drawable/filter_button_background"
         android:paddingLeft="60dp"
         android:paddingRight="60dp"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/khung_login"
-        android:layout_gravity="center"
         android:text="Đăng nhập"
-        android:textColor="#99DB34"/>
+        android:textColor="@color/yellow" />
 
 
 </LinearLayout>
