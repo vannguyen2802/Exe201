@@ -1,246 +1,116 @@
 package com.example.nestera.Activity;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
-import android.app.Dialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
-import com.example.nestera.Adapter.LoaiPhong_Adapter;
-import com.example.nestera.Dao.LoaiPhongDao;
+import com.example.nestera.Adapter.RoomAdapter;
+import com.example.nestera.Dao.phongTroDao;
 import com.example.nestera.R;
-import com.example.nestera.model.LoaiPhong;
+import com.example.nestera.model.PhongTro;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class loaiPhong_Activity extends AppCompatActivity {
-    ListView lstLoaiPhong;
-    ArrayList<LoaiPhong> list;
-    ArrayList<LoaiPhong> listtemp;
-    EditText edtSearch;
-    LoaiPhong_Adapter adapter;
-    LoaiPhong item;
-    LoaiPhongDao dao;
-    ImageView btnAdd;
-    EditText edtmaLoai, edttenLoai, edtPhidv, edtTienDien, edtTienNuoc;
-
-    Button btnHuy, btnXacNhan;
+    RecyclerView rvRooms;
+    ArrayList<PhongTro> roomList;
+    RoomAdapter roomAdapter;
+    phongTroDao dao;
+    
+    // Category buttons
+    LinearLayout btnGanToi, btnDanhGiaCao, btnGiaRe, btnYeuThich;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loai_phong);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle("Loại Phòng");
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.white));
 
-        Drawable upArrow = getResources().getDrawable(R.drawable.ic_back);
-        getSupportActionBar().setHomeAsUpIndicator(upArrow);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-        lstLoaiPhong = findViewById(R.id.lstLoaiPhong);
-        dao = new LoaiPhongDao(loaiPhong_Activity.this);
-        capNhatLv();
-        btnAdd = findViewById(R.id.btnadd_toolbar);
-
-
-        btnAdd.setOnClickListener(new View.OnClickListener() {
-                                      @Override
-                                      public void onClick(View view) {
-                                          opendialog(loaiPhong_Activity.this, 0);
-                                      }
-                                  }
-        );
-
-        listtemp= (ArrayList<LoaiPhong>) dao.getAll();
-        edtSearch=findViewById(R.id.edtSearch);
-        edtSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                list.clear();
-                for (LoaiPhong lp : listtemp){
-                    if (lp.getTenLoaiPhong().contains(charSequence.toString())){
-                        list.add(lp);
-                    }
-                }
-                adapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
-        });
-
-
-        lstLoaiPhong.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                item = list.get(i);
-                opendialog(loaiPhong_Activity.this, 1);
-                return false;
-            }
-        });
-
+        initViews();
+        setupRecyclerView();
+        loadSampleData();
+        setupClickListeners();
+        loadImagesFromDatabase();
     }
 
-    public void opendialog(Context context, int type) {
-        Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.dialog_loai_phong);
-        edtmaLoai = dialog.findViewById(R.id.edtMaLoaiPhong);
-        edttenLoai = dialog.findViewById(R.id.edtTenLoaiPhong);
-        edtPhidv = dialog.findViewById(R.id.edtPhiDichVu);
-        edtTienDien = dialog.findViewById(R.id.edtTienDien);
-        edtTienNuoc = dialog.findViewById(R.id.edtTienNuoc);
-        btnHuy = dialog.findViewById(R.id.btnHuy);
-        btnXacNhan = dialog.findViewById(R.id.btnXacNhan);
-        edtmaLoai.setEnabled(false);
-        edtmaLoai.setVisibility(View.GONE);
-        if (type != 0) {
-            edtmaLoai.setText(item.getMaLoaiPhong() + "");
-            edttenLoai.setText(item.getTenLoaiPhong());
-            edtPhidv.setText(item.getPhiDichVu() + "");
-            edtTienDien.setText(item.getGiaDien() + "");
-            edtTienNuoc.setText(item.getGiaNuoc() + "");
+    private void initViews() {
+        rvRooms = findViewById(R.id.rvRooms);
+        dao = new phongTroDao(this);
+        
+        // Setup back button
+        ImageView ivBack = findViewById(R.id.ivBack);
+        if (ivBack != null) {
+            ivBack.setOnClickListener(v -> finish());
         }
-        btnHuy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-            }
-        });
-        btnXacNhan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (TextUtils.isEmpty(edttenLoai.getText().toString()) || TextUtils.isEmpty(edtPhidv.getText().toString()) || TextUtils.isEmpty(edtTienNuoc.getText().toString()) || TextUtils.isEmpty(edtTienNuoc.getText().toString())) {
-                    Toast.makeText(context, "Bạn phải nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                int checkTen = 0;
-                for (LoaiPhong lp:list){
-                    if(lp.getTenLoaiPhong().equalsIgnoreCase(edttenLoai.getText().toString())){
-                        checkTen=1;
-                        break;
-                    }
-                }
-                if(checkTen==1){
-                    Toast.makeText(context, "Loại phòng đã tồn tại", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                try {
-                    int pdv = Integer.parseInt(edtPhidv.getText().toString());
-                    if (pdv <= 0) {
-                        Toast.makeText(context, "Phí dịch vụ phải lớn hơn 0", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(context, "Phí dịch vụ phải là số", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                try {
-                    int dien = Integer.parseInt(edtTienDien.getText().toString());
-                    if (dien <= 0) {
-                        Toast.makeText(context, "Tiền điện phải lớn hơn 0", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(context, "Tiền điện phải là số", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                try {
-                    int nuoc = Integer.parseInt(edtTienNuoc.getText().toString());
-                    if (nuoc <= 0) {
-                        Toast.makeText(context, "Tiền nước phải lớn hơn 0", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(context, "Tiền nước phải là số", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                item = new LoaiPhong();
-                item.setTenLoaiPhong(edttenLoai.getText().toString());
-                item.setPhiDichVu(Integer.parseInt(edtPhidv.getText().toString()));
-                item.setGiaDien(Integer.parseInt(edtTienDien.getText().toString()));
-                item.setGiaNuoc(Integer.parseInt(edtTienNuoc.getText().toString()));
-                if (type == 0) {
-                    if (dao.insert(item) > 0) {
-                        Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    item.setMaLoaiPhong(Integer.parseInt(edtmaLoai.getText().toString()));
-                    if (dao.update(item) > 0) {
-                        Toast.makeText(context, "Sửa thành công", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(context, "Sửa thất bại", Toast.LENGTH_SHORT).show();
-                    }
-                }
-
-                capNhatLv();
-                dialog.dismiss();
-            }
-        });
-        dialog.show();
-
     }
 
-    public void xoa(String Id) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Cảnh báo");
-        builder.setIcon(R.drawable.baseline_warning_24);
-        builder.setMessage("Bạn có chắc chắn muốn xoá");
-        builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dao.delete(Id);
-                capNhatLv();
-                dialogInterface.cancel();
-                Toast.makeText(loaiPhong_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-            }
-        });
-        AlertDialog alert = builder.create();
-        builder.show();
+    private void setupRecyclerView() {
+        roomList = new ArrayList<>();
+        roomAdapter = new RoomAdapter(this, roomList);
+        rvRooms.setLayoutManager(new LinearLayoutManager(this));
+        rvRooms.setAdapter(roomAdapter);
     }
 
-    public void capNhatLv() {
-        list = (ArrayList<LoaiPhong>) dao.getAll();
-        adapter = new LoaiPhong_Adapter(loaiPhong_Activity.this, list, this);
-        lstLoaiPhong.setAdapter(adapter);
+    private void loadSampleData() {
+        // Load dữ liệu thật từ database với ảnh
+        try {
+            List<PhongTro> rooms = dao.getAll();
+            roomList.clear();
+            roomList.addAll(rooms);
+            roomAdapter.notifyDataSetChanged();
+        } catch (Exception e) {
+            // Nếu có lỗi, tạo dữ liệu mẫu với ảnh thật
+            PhongTro room1 = new PhongTro();
+            room1.setTenPhong("Phòng trọ cao cấp Quận 1");
+            room1.setGia(3500000);
+            room1.setImagePath("phong_tro_1_1");
+            room1.setTienNghi("Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo");
+            room1.setTrangThai(0);
+            roomList.add(room1);
+
+            PhongTro room2 = new PhongTro();
+            room2.setTenPhong("Nhà trọ cao cấp Quận 1");
+            room2.setGia(4200000);
+            room2.setImagePath("phong_tro_1_2");
+            room2.setTienNghi("Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo");
+            room2.setTrangThai(1);
+            roomList.add(room2);
+
+            PhongTro room3 = new PhongTro();
+            room3.setTenPhong("Phòng trọ sinh viên");
+            room3.setGia(2800000);
+            room3.setImagePath("phong_tro_1_3");
+            room3.setTienNghi("Điều hoà, Tủ lạnh, WiFi");
+            room3.setTrangThai(0);
+            roomList.add(room3);
+
+            roomAdapter.notifyDataSetChanged();
+        }
     }
 
+    private void setupClickListeners() {
+        // Có thể thêm các click listener cho category buttons ở đây
+    }
+
+    private void loadImagesFromDatabase() {
+        // Các ImageView đã có src trong XML nên không cần set lại
+        // Chỉ load ảnh cho room image và favorite nếu cần
+        ImageView ivRecentRoomImage = findViewById(R.id.ivRecentRoomImage);
+        ImageView ivRecentFavorite = findViewById(R.id.ivRecentFavorite);
+        
+        if (ivRecentRoomImage != null) {
+            ivRecentRoomImage.setImageResource(R.drawable.ic_launcher_foreground);
+        }
+        if (ivRecentFavorite != null) {
+            ivRecentFavorite.setImageResource(R.drawable.ic_favorite);
+        }
+    }
 
 }

@@ -63,7 +63,11 @@ loaiPhong_Activity loaiphong_activity;
             btnXoa.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    loaiphong_activity.xoa(String.valueOf(lp.getMaLoaiPhong()));
+                    // Xóa logic cũ vì method xoa() không còn tồn tại
+                    // Có thể implement logic xóa mới ở đây nếu cần
+                    loaiPhongDao.delete(String.valueOf(lp.getMaLoaiPhong()));
+                    list.remove(position);
+                    notifyDataSetChanged();
                 }
             });
         }

@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 
 public class DbHelper extends SQLiteOpenHelper {
     static final String dbName="Nestera";
-    static final int dbVersion=1;
+    static final int dbVersion=5; // Tăng version để thêm dữ liệu đa dạng hơn
     Context context;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public DbHelper(@Nullable Context context) {
@@ -53,13 +53,36 @@ public class DbHelper extends SQLiteOpenHelper {
                 "tenPhong TEXT NOT NULL," +
                 "giaTien INTEGER NOT NULL," +
                 "tienNghi TEXT NOT NULL," +
-                "trangThai INTEGER NOT NULL)";
+                "trangThai INTEGER NOT NULL," +
+                "imagePath TEXT)"; // Lưu đường dẫn ảnh thay vì BLOB
         sqLiteDatabase.execSQL(createTablePhongTro);
 
-        //Thêm dữ liệu bảng PhongTro
-        sqLiteDatabase.execSQL("insert into PhongTro(maLoai,tenPhong,giaTien,tienNghi,trangThai) values" +
-                "(1,'P102',3500000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0)," +
-                "(2,'P202',3200000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0)");
+        //Thêm dữ liệu bảng PhongTro (với ảnh thật)
+        sqLiteDatabase.execSQL("insert into PhongTro(maLoai,tenPhong,giaTien,tienNghi,trangThai,imagePath) values" +
+                "(1,'P102',3500000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_1')," +
+                "(2,'P102',3200000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_3')," +
+                "(1,'P202',3800000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo, Máy giặt',0,'phong_tro_1_2')");
+
+        //Tạo bảng PhongTroImages để lưu nhiều ảnh cho mỗi phòng
+        String createTablePhongTroImages = "create table PhongTroImages(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "maPhong INTEGER REFERENCES PhongTro(maPhong)," +
+                "imagePath TEXT NOT NULL," +
+                "thuTu INTEGER DEFAULT 0," + // Thứ tự hiển thị ảnh
+                "isMain INTEGER DEFAULT 0)"; // Ảnh chính (0: không, 1: có)
+        sqLiteDatabase.execSQL(createTablePhongTroImages);
+
+        //Thêm dữ liệu mẫu cho ảnh phòng trọ (sử dụng ảnh thật)
+        sqLiteDatabase.execSQL("insert into PhongTroImages(maPhong,imagePath,thuTu,isMain) values" +
+                "(1,'phong_tro_1_1',1,1)," + // Ảnh chính phòng 1
+                "(1,'phong_tro_1_2',2,0)," + // Ảnh phụ phòng 1 - ảnh 1
+                "(1,'phong_tro_1_3',3,0)," + // Ảnh phụ phòng 1 - ảnh 2
+                "(2,'phong_tro_1_3',1,1)," + // Ảnh chính phòng 2 
+                "(2,'phong_tro_1_1',2,0)," + // Ảnh phụ phòng 2 - ảnh 1
+                "(2,'phong_tro_1_2',3,0)," + // Ảnh phụ phòng 2 - ảnh 2
+                "(3,'phong_tro_1_2',1,1)," + // Ảnh chính phòng 3
+                "(3,'phong_tro_1_3',2,0)," + // Ảnh phụ phòng 3 - ảnh 1
+                "(3,'phong_tro_1_1',3,0)"); // Ảnh phụ phòng 3 - ảnh 2
 
         //Tạo bảng HoaDon
         String createTableHoaDon="create table HoaDon("+
@@ -160,7 +183,86 @@ public class DbHelper extends SQLiteOpenHelper {
     }
 
     @Override
-    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int i, int i1) {
+    public void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
+        if (oldVersion < 2) {
+            try {
+                // Tạo bảng PhongTroImages mới để lưu nhiều ảnh
+                String createTablePhongTroImages = "create table PhongTroImages(" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "maPhong INTEGER REFERENCES PhongTro(maPhong)," +
+                        "imagePath TEXT NOT NULL," +
+                        "thuTu INTEGER DEFAULT 0," +
+                        "isMain INTEGER DEFAULT 0)";
+                sqLiteDatabase.execSQL(createTablePhongTroImages);
 
+                // Cập nhật ảnh chính cho bảng PhongTro
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = 'phong_tro_1_1' WHERE maPhong = 1");
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = 'phong_tro_1_2' WHERE maPhong = 2");
+
+                // Chuyển dữ liệu từ cột imagePath sang bảng mới nếu có
+                sqLiteDatabase.execSQL("insert into PhongTroImages(maPhong,imagePath,thuTu,isMain) " +
+                        "SELECT maPhong, imagePath, 1, 1 FROM PhongTro WHERE imagePath IS NOT NULL AND imagePath != ''");
+
+                // Thêm ảnh thật cho các phòng
+                sqLiteDatabase.execSQL("insert into PhongTroImages(maPhong,imagePath,thuTu,isMain) values" +
+                        "(1,'phong_tro_1_1',1,1)," +
+                        "(1,'phong_tro_1_2',2,0)," +
+                        "(1,'phong_tro_1_3',3,0)," +
+                        "(2,'phong_tro_1_2',1,1)," +
+                        "(2,'phong_tro_1_1',2,0)," +
+                        "(2,'phong_tro_1_3',3,0)");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 3) {
+            try {
+                // Cập nhật ảnh cho phòng trọ hiện có
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = 'phong_tro_1_1' WHERE maPhong = 1");
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = 'phong_tro_1_2' WHERE maPhong = 2");
+                
+                // Xóa dữ liệu cũ trong PhongTroImages và thêm mới
+                sqLiteDatabase.execSQL("DELETE FROM PhongTroImages");
+                sqLiteDatabase.execSQL("insert into PhongTroImages(maPhong,imagePath,thuTu,isMain) values" +
+                        "(1,'phong_tro_1_1',1,1)," +
+                        "(1,'phong_tro_1_2',2,0)," +
+                        "(1,'phong_tro_1_3',3,0)," +
+                        "(2,'phong_tro_1_2',1,1)," +
+                        "(2,'phong_tro_1_1',2,0)," +
+                        "(2,'phong_tro_1_3',3,0)");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 4) {
+            try {
+                // Thay đổi ảnh phòng thứ 2 từ phong_tro_1_2 sang phong_tro_1_3
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = 'phong_tro_1_3' WHERE maPhong = 2");
+                sqLiteDatabase.execSQL("UPDATE PhongTroImages SET imagePath = 'phong_tro_1_3' WHERE maPhong = 2 AND isMain = 1");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 5) {
+            try {
+                // Thêm phòng thứ 3 và cập nhật dữ liệu để có sự đa dạng hơn
+                sqLiteDatabase.execSQL("INSERT INTO PhongTro(maLoai,tenPhong,giaTien,tienNghi,trangThai,imagePath) VALUES " +
+                        "(1,'P202',3800000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo, Máy giặt',0,'phong_tro_1_2')");
+                
+                // Cập nhật tên phòng 2 để phân biệt
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET tenPhong = 'P103' WHERE maPhong = 2");
+                
+                // Thêm ảnh cho phòng mới
+                sqLiteDatabase.execSQL("INSERT INTO PhongTroImages(maPhong,imagePath,thuTu,isMain) VALUES " +
+                        "(3,'phong_tro_1_2',1,1)," +
+                        "(3,'phong_tro_1_3',2,0)," + 
+                        "(3,'phong_tro_1_1',3,0)");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

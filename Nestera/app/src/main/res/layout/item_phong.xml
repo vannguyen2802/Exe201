@@ -1,91 +1,224 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="10dp"
-    android:paddingTop="10dp"
-    android:paddingLeft="10dp"
-    android:paddingRight="10dp">
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="155dp"
-        android:background="@drawable/khungitem"
-        android:alpha="0.4"/>
+    android:layout_margin="8dp"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="4dp"
+    android:backgroundTint="@color/white">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="10dp">
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/txtPhong"
-                android:text="Phòng: P202"
-                android:textStyle="bold"
-                android:layout_width="0dp"
-                android:layout_weight="3"
-                android:layout_height="wrap_content"
-                android:textColor="#AAF84B"
-                android:textSize="18sp" />
-            <TextView
-                android:id="@+id/txtXemHopDong"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Xem hợp đồng"
-                />
+        android:orientation="vertical">
 
-        </LinearLayout>
-        <View
+        <!-- Container cho ảnh -->
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:layout_margin="3dp"
-            android:background="@color/white"/>
-
-        <TextView
-            android:id="@+id/txtGia"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Giá: 3.000.000đ/tháng"
-            android:textColor="@color/white"
-            android:textSize="18sp" />
-
-        <TextView
-            android:id="@+id/txtTienNghi"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tiện nghi: Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo"
-            android:textColor="@color/white"
-            android:textSize="18sp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/txtLoaiPhong_Phong"
-                android:layout_width="0dp"
-                android:layout_weight="3.75"
-                android:layout_height="wrap_content"
-                android:text="Loại phòng: Full"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
-            <TextView
-                android:id="@+id/txtTinhTrang"
-                android:layout_width="0dp"
-                android:layout_weight="2"
-                android:layout_height="wrap_content"
-                android:text="Đã cho thuê"
-                android:textColor="@color/white"
-                android:textSize="18sp" />
+            android:layout_height="200dp">
 
             <ImageView
-                android:id="@+id/btnDeletePhong"
-                android:layout_width="0dp"
+                android:id="@+id/ivRoomImage"
+                android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_weight="0.5"
-                android:src="@drawable/delete" />
+                android:scaleType="centerCrop"
+                android:src="@drawable/phong_tro_1_1" />
+
+            <!-- Status badge với background rõ ràng hơn -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|start"
+                android:layout_margin="12dp"
+                android:background="@drawable/status_badge_background"
+                android:paddingHorizontal="12dp"
+                android:paddingVertical="8dp"
+                android:text="Còn trống"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+
+            <!-- Heart icon -->
+            <ImageView
+                android:id="@+id/ivFavorite"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                android:background="@drawable/ic_favorite"
+                android:padding="8dp" />
+
+            <!-- Delete button -->
+            <ImageView
+                android:id="@+id/btnDeletePhong"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="12dp"
+                android:background="@drawable/delete"
+                android:padding="6dp" />
+
+        </FrameLayout>
+
+        <!-- Thông tin phòng với chiều cao cố định -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- Tên phòng -->
+            <TextView
+                android:id="@+id/txtPhong"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Phòng trọ cao cấp Quận 1"
+                android:textColor="@color/black"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:maxLines="1"
+                android:ellipsize="end" />
+
+            <!-- Địa chỉ -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:src="@drawable/ic_location"
+                    app:tint="#666666" />
+
+                <TextView
+                    android:id="@+id/tvLocation"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:layout_weight="1"
+                    android:text="123 Nguyễn Huệ, Quận 1"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
+
+                <!-- Rating -->
+                <ImageView
+                    android:layout_width="14dp"
+                    android:layout_height="14dp"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_star"
+                    app:tint="#FFD700" />
+
+                <TextView
+                    android:id="@+id/tvRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="4.8"
+                    android:textColor="#666666"
+                    android:textSize="14sp" />
+
+            </LinearLayout>
+
+            <!-- Giá và diện tích -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtGia"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="3.5tr/tháng"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_home_active"
+                        app:tint="#666666" />
+
+                    <TextView
+                        android:id="@+id/tvArea"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp"
+                        android:text="25m²"
+                        android:textColor="#666666"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <!-- Tiện nghi -->
+            <TextView
+                android:id="@+id/txtTienNghi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Điều hoà • Tủ lạnh • Nóng lạnh • WiFi"
+                android:textColor="#666666"
+                android:textSize="14sp"
+                android:maxLines="2"
+                android:ellipsize="end" />
+
+            <!-- Spacer để đẩy content xuống dưới -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <!-- Loại phòng và xem hợp đồng -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/txtLoaiPhong_Phong"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Full option"
+                    android:textColor="#4285F4"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtXemHopDong"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:background="@drawable/detail_button_background"
+                    android:paddingHorizontal="16dp"
+                    android:gravity="center"
+                    android:text="Xem chi tiết"
+                    android:textColor="@color/white"
+                    android:textSize="12sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
         </LinearLayout>
+
     </LinearLayout>
-</RelativeLayout>
+
+</androidx.cardview.widget.CardView>
