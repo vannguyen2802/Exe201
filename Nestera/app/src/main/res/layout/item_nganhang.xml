@@ -25,14 +25,16 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginLeft="10dp">
+
             <TextView
                 android:id="@+id/txtTenTKNganHang"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Tên tài khoản: "
-                android:textColor="#AAF84B"
                 android:layout_marginTop="5dp"
+                android:text="Tên tài khoản: "
+                android:textColor="@color/gray_dark"
                 android:textSize="20sp" />
+
             <TextView
                 android:id="@+id/txtTenNganHang"
                 android:layout_width="match_parent"
