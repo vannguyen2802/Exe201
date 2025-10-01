@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="350dp"
     android:layout_height="match_parent"
-    android:background="@color/black"
+    android:background="@drawable/card_background"
     android:gravity="center_vertical"
     android:orientation="vertical"
 
@@ -14,12 +14,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:hint="Mã phòng"
         android:visibility="gone"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_dark"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -27,15 +27,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Tên phòng"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtTenPhong"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -43,13 +43,13 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Loại phòng"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <Spinner
         android:id="@+id/spnLoaiPhong"
         android:layout_width="match_parent"
         android:layout_height="33dp"
         android:paddingLeft="10dp"
-        android:backgroundTint="@color/white"
+        android:backgroundTint="@color/gray_dark"
         android:popupBackground="@color/black"
         android:textSize="17dp" />
     <TextView
@@ -58,15 +58,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Giá phòng"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtGia"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -74,24 +74,24 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Tiện nghi"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtTienNghi"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <CheckBox
         android:layout_gravity="start"
         android:id="@+id/chkDaChoThue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:buttonTint="@color/white"
+        android:buttonTint="@color/gray_dark"
         android:layout_marginLeft="-4dp"
-        android:textColor="@color/white"
+        android:textColor="@color/gray_dark"
         android:textSize="12dp"
         android:layout_marginTop="10dp"
         android:text="Đã cho thuê"/>
@@ -107,18 +107,18 @@
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@drawable/filter_button_background"
             android:text="Xác nhận"
-            android:textColor="#AAF84B" />
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/btnHuy"
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@color/pink"
             android:text="Hủy"
-            android:textColor="#F84B4B" />
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 
 

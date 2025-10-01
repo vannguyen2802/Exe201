@@ -108,7 +108,7 @@
         android:paddingLeft="60dp"
         android:paddingRight="60dp"
         android:text="Đăng nhập"
-        android:textColor="@color/yellow" />
+        android:textColor="#FFFFFF" />
 
 
 </LinearLayout>

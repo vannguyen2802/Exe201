@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/assets_task_01k6e26zg7fp5ve631qbt3b96t_1759261357_img_1"
     android:padding="20dp"
     tools:context=".Fragment.frg_themtaikhoan">
 
@@ -14,19 +14,19 @@
         android:orientation="vertical">
 
         <ImageView
-            android:layout_width="120dp"
-            android:layout_height="120dp"
+            android:layout_width="300dp"
+            android:layout_height="150dp"
             android:layout_gravity="center"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="0dp"
             android:layout_marginBottom="20dp"
-            android:src="@drawable/logo_nestera" />
+            android:src="@drawable/nobg" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:text="Tạo tài khoản mới"
-            android:textColor="@color/white"
+            android:textColor="@color/gray_dark"
             android:textSize="30dp"
             android:textStyle="bold" />
 
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
             android:text="Nhập tên đăng nhập"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -49,8 +49,8 @@
                 android:id="@+id/edtUsername"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/khungedt"
-                android:textColor="@color/white" />
+                android:background="@drawable/border_selector"
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -58,7 +58,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="Mật khẩu mới"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/edtPass_ttk"
@@ -73,9 +73,9 @@
                 android:id="@+id/edtPassMoi_dmk"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:inputType="textPassword"
-                android:textColor="@color/white" />
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -83,7 +83,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="Nhập lại mật khẩu"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -96,16 +96,16 @@
                 android:id="@+id/edtNhapLaiPass_ttk"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:inputType="textPassword"
-                android:textColor="@color/white" />
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="Nhập họ tên"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -116,8 +116,8 @@
                 android:id="@+id/edtHoTen"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/khungedt"
-                android:textColor="@color/white" />
+                android:background="@drawable/border_selector"
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <TextView
@@ -125,7 +125,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:text="Chọn phòng"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
@@ -136,8 +136,8 @@
                 android:id="@+id/edtChonPhong"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@drawable/khungedt"
-                android:textColor="@color/white" />
+                android:background="@drawable/border_selector"
+                android:textColor="@color/gray_dark" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <Button
@@ -146,10 +146,10 @@
             android:layout_height="35dp"
             android:layout_gravity="center"
             android:layout_marginTop="50dp"
-            android:background="@drawable/khung_login"
+            android:background="@drawable/filter_button_background"
             android:paddingLeft="60dp"
             android:paddingRight="60dp"
             android:text="Xác nhận"
-            android:textColor="#AAF84B" />
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </FrameLayout>

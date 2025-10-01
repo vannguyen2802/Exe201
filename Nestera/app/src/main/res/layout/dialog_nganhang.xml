@@ -16,7 +16,7 @@
         android:hint="Tên tài khoản"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -32,7 +32,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -48,7 +48,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -64,7 +64,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <ImageView
         android:id="@+id/imgAnhQR"

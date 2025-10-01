@@ -24,7 +24,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -43,7 +43,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -62,7 +62,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -80,7 +80,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <RadioGroup
@@ -167,7 +167,7 @@
             android:focusable="false"
             android:cursorVisible="false"
             android:clickable="false"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -178,7 +178,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -197,7 +197,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -215,7 +215,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
 

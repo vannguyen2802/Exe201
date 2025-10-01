@@ -17,7 +17,7 @@
         android:hint="Mã hóa đơn"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -51,7 +51,7 @@
         android:background="@drawable/border_selector"
         android:padding="5dp"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <LinearLayout
@@ -92,7 +92,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -103,7 +103,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -145,7 +145,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -156,7 +156,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -250,7 +250,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -261,7 +261,7 @@
             android:background="@drawable/border_selector"
             android:padding="5dp"
             android:textColor="@color/gray_dark"
-            android:textColorHint="#@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -285,7 +285,7 @@
         android:paddingLeft="7dp"
         android:text="Ghi chú"
         android:textColor="@color/gray_dark"
-        android:textColorHint="@color/gray_dark" />
+        android:textColorHint="@color/gray_medium" />
 
     <ImageView
         android:id="@+id/imgAnhQR"
