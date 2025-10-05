@@ -23,7 +23,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="centerCrop"
-                android:src="@drawable/phong_tro_1_1" />
+                android:src="@drawable/ic_image_placeholder" />
 
             <!-- Status badge với background rõ ràng hơn -->
             <TextView
@@ -35,7 +35,6 @@
                 android:background="@drawable/status_badge_background"
                 android:paddingHorizontal="12dp"
                 android:paddingVertical="8dp"
-                android:text="Còn trống"
                 android:textColor="@color/white"
                 android:textSize="12sp"
                 android:textStyle="bold" />
@@ -62,10 +61,10 @@
 
         </FrameLayout>
 
-        <!-- Thông tin phòng với chiều cao cố định -->
+        <!-- Thông tin phòng -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="233dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -75,8 +74,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:ellipsize="end"
-                android:maxLines="1"
-                android:text="Phòng trọ cao cấp Quận 1"
+                android:maxLines="2"
                 android:textColor="@color/black"
                 android:textSize="18sp"
                 android:textStyle="bold" />
@@ -101,7 +99,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:text="123 Nguyễn Huệ, Quận 1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
                     android:textColor="#666666"
                     android:textSize="14sp" />
 
@@ -118,7 +117,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="4dp"
-                    android:text="4.8"
                     android:textColor="#666666"
                     android:textSize="14sp" />
 
@@ -137,7 +135,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="3.5tr/tháng"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -198,7 +195,6 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Full option"
                     android:textColor="#4285F4"
                     android:textSize="14sp"
                     android:textStyle="bold" />

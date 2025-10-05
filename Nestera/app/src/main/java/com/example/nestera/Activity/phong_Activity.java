@@ -187,8 +187,13 @@ public class phong_Activity extends AppCompatActivity {
         btnChonAnh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.setType("image/*");
                 intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                // Flags để có thể lưu persistent permission
+                intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 ((Activity) context).startActivityForResult(intent, REQUEST_IMAGE_PICK);
             }
         });
@@ -335,13 +340,21 @@ public class phong_Activity extends AppCompatActivity {
                     // Mặc định khi tạo phòng: không tìm người ở ghép, 0 người hiện tại
                     item.setTimNguoiOGhep(0);
                     item.setSoNguoiHienTai(0);
+                    item.setImagePath(""); // Set empty image path để tránh null
                     if (chk.isChecked()) {
                         item.setTrangThai(1);
                     } else {
                         item.setTrangThai(0);
                     }
                     if (type == 0) {
-                        if (dao.insert(item) > 0) {
+                        long result = dao.insert(item);
+                        Log.d("PhongTro", "Insert result: " + result);
+                        if (result > 0) {
+                            // Lưu ảnh vào bảng PhongTroImages nếu có
+                            if (selectedImages != null && !selectedImages.isEmpty()) {
+                                dao.saveImagesForPhong((int) result, selectedImages);
+                                Log.d("PhongTro", "Saved " + selectedImages.size() + " images for room " + result);
+                            }
                             Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
@@ -388,8 +401,8 @@ public class phong_Activity extends AppCompatActivity {
     }
 
     public void capNhapLv() {
-
         list = (ArrayList<PhongTro>) dao.getAll();
+        Log.d("PhongTro", "capNhapLv - Total rooms: " + list.size());
         adapter = new Phong_Adapter(phong_Activity.this, this, list);
         lstPhong.setAdapter(adapter);
     }
@@ -417,14 +430,32 @@ public class phong_Activity extends AppCompatActivity {
                 for (int i = 0; i < count; i++) {
                     Uri imageUri = data.getClipData().getItemAt(i).getUri();
                     if (!selectedImages.contains(imageUri)) {
-                        selectedImages.add(imageUri);
+                        // Lưu quyền truy cập lâu dài cho URI
+                        try {
+                            getContentResolver().takePersistableUriPermission(imageUri, 
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                            selectedImages.add(imageUri);
+                            Log.d("PhongTro", "Granted persistent permission for: " + imageUri);
+                        } catch (SecurityException e) {
+                            Log.e("PhongTro", "Cannot grant persistent permission for: " + imageUri, e);
+                            // Vẫn thêm vào list, sẽ xử lý fallback sau
+                            selectedImages.add(imageUri);
+                        }
                     }
                 }
             } else if (data.getData() != null) {
                 // Một ảnh được chọn
                 Uri imageUri = data.getData();
                 if (!selectedImages.contains(imageUri)) {
-                    selectedImages.add(imageUri);
+                    try {
+                        getContentResolver().takePersistableUriPermission(imageUri, 
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        selectedImages.add(imageUri);
+                        Log.d("PhongTro", "Granted persistent permission for: " + imageUri);
+                    } catch (SecurityException e) {
+                        Log.e("PhongTro", "Cannot grant persistent permission for: " + imageUri, e);
+                        selectedImages.add(imageUri);
+                    }
                 }
             }
             

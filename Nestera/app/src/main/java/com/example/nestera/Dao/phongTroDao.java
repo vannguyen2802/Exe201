@@ -5,6 +5,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
 import com.example.nestera.Database.DbHelper;
 import com.example.nestera.model.PhongTro;
 import com.example.nestera.model.PhongTroImage;
@@ -30,12 +31,14 @@ public class phongTroDao {
         values.put("giaTien", obj.getGia());
         values.put("tienNghi", obj.getTienNghi());
         values.put("trangThai", obj.getTrangThai());
-        values.put("imagePath", obj.getImagePath());
+        values.put("imagePath", obj.getImagePath()); // Thêm lại imagePath
         values.put("diaChi", obj.getDiaChi());
         values.put("timNguoiOGhep", obj.getTimNguoiOGhep());
         values.put("soNguoiHienTai", obj.getSoNguoiHienTai());
         
-        return db.insert("PhongTro", null, values);
+        long result = db.insert("PhongTro", null, values);
+        android.util.Log.d("PhongTroDao", "Insert - Result: " + result + ", Room: " + obj.getTenPhong());
+        return result;
     }
 
     public int update(PhongTro obj) {
@@ -45,7 +48,7 @@ public class phongTroDao {
         values.put("giaTien", obj.getGia());
         values.put("tienNghi", obj.getTienNghi());
         values.put("trangThai", obj.getTrangThai());
-        values.put("imagePath", obj.getImagePath());
+        values.put("imagePath", obj.getImagePath()); // Thêm lại imagePath
         values.put("diaChi", obj.getDiaChi());
         values.put("timNguoiOGhep", obj.getTimNguoiOGhep());
         values.put("soNguoiHienTai", obj.getSoNguoiHienTai());
@@ -94,19 +97,26 @@ public class phongTroDao {
             
             // Load ảnh chính từ bảng PhongTroImages
             try {
-                PhongTroImage mainImage = imageDao.getMainImageByMaPhong(obj.getMaPhong());
-                if (mainImage != null) {
-                    obj.setImagePath(mainImage.getImagePath());
-                } else {
-                    // Nếu không có ảnh chính, lấy ảnh đầu tiên
-                    PhongTroImage firstImage = imageDao.getFirstImageByMaPhong(obj.getMaPhong());
-                    if (firstImage != null) {
-                        obj.setImagePath(firstImage.getImagePath());
+                if (imageDao != null) {
+                    PhongTroImage mainImage = imageDao.getMainImageByMaPhong(obj.getMaPhong());
+                    if (mainImage != null) {
+                        obj.setImagePath(mainImage.getImagePath());
+                    } else {
+                        // Nếu không có ảnh chính, lấy ảnh đầu tiên
+                        PhongTroImage firstImage = imageDao.getFirstImageByMaPhong(obj.getMaPhong());
+                        if (firstImage != null) {
+                            obj.setImagePath(firstImage.getImagePath());
+                        } else {
+                            obj.setImagePath(""); // Set empty string nếu không có ảnh
+                        }
                     }
+                } else {
+                    obj.setImagePath(""); // Set empty string nếu imageDao null
                 }
             } catch (Exception e) {
-                // Nếu lỗi load ảnh thì bỏ qua
-                e.printStackTrace();
+                // Nếu lỗi load ảnh thì set empty string
+                obj.setImagePath("");
+                android.util.Log.e("PhongTroDao", "Error loading image for room " + obj.getMaPhong(), e);
             }
             
             list.add(obj);
@@ -171,6 +181,25 @@ public class phongTroDao {
     // Đặt ảnh chính cho phòng
     public void setMainImageForPhong(int imageId, int maPhong) {
         imageDao.setMainImage(imageId, maPhong);
+    }
+
+    // Lưu nhiều ảnh cho phòng sau khi insert thành công
+    public void saveImagesForPhong(int maPhong, List<Uri> imageUris) {
+        if (imageUris != null && !imageUris.isEmpty()) {
+            for (int i = 0; i < imageUris.size(); i++) {
+                String imagePath = imageUris.get(i).toString();
+                boolean isMain = (i == 0); // Ảnh đầu tiên là ảnh chính
+                addImageToPhong(maPhong, imagePath, i + 1, isMain);
+            }
+            
+            // Cập nhật imagePath chính cho bảng PhongTro
+            if (!imageUris.isEmpty()) {
+                String mainImagePath = imageUris.get(0).toString();
+                ContentValues values = new ContentValues();
+                values.put("imagePath", mainImagePath);
+                db.update("PhongTro", values, "maPhong=?", new String[]{String.valueOf(maPhong)});
+            }
+        }
     }
 
 }

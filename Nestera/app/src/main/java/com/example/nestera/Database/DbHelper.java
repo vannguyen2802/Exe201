@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 
 public class DbHelper extends SQLiteOpenHelper {
     static final String dbName="Nestera";
-    static final int dbVersion=7; // Thêm trường địa chỉ
+    static final int dbVersion=8; // Thêm imagePath column
     Context context;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public DbHelper(@Nullable Context context) {
@@ -295,6 +295,13 @@ public class DbHelper extends SQLiteOpenHelper {
                 // Thêm cột địa chỉ
                 sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN diaChi TEXT");
                 
+                // Thêm cột imagePath nếu chưa có
+                try {
+                    sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN imagePath TEXT");
+                } catch (Exception e) {
+                    // Column có thể đã tồn tại, bỏ qua lỗi
+                }
+                
                 // Cập nhật địa chỉ mẫu cho các phòng hiện có
                 sqLiteDatabase.execSQL("UPDATE PhongTro SET diaChi = '123 Đường ABC, Quận 1, TP.HCM' WHERE maPhong = 1");
                 sqLiteDatabase.execSQL("UPDATE PhongTro SET diaChi = '456 Đường XYZ, Quận 2, TP.HCM' WHERE maPhong = 2");
@@ -302,6 +309,27 @@ public class DbHelper extends SQLiteOpenHelper {
                 
             } catch (Exception e) {
                 e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 8) {
+            try {
+                // Đảm bảo column imagePath tồn tại
+                try {
+                    sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN imagePath TEXT");
+                    android.util.Log.d("DbHelper", "Added imagePath column successfully");
+                } catch (Exception e) {
+                    // Column có thể đã tồn tại
+                    android.util.Log.d("DbHelper", "imagePath column may already exist: " + e.getMessage());
+                }
+                
+                // Cập nhật imagePath cho các phòng hiện có từ bảng PhongTroImages
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET imagePath = " +
+                    "(SELECT imagePath FROM PhongTroImages WHERE PhongTroImages.maPhong = PhongTro.maPhong AND isMain = 1 LIMIT 1) " +
+                    "WHERE EXISTS (SELECT 1 FROM PhongTroImages WHERE PhongTroImages.maPhong = PhongTro.maPhong AND isMain = 1)");
+                    
+            } catch (Exception e) {
+                android.util.Log.e("DbHelper", "Error upgrading to version 8", e);
             }
         }
     }

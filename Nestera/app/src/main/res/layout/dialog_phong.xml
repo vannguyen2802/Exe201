@@ -40,22 +40,23 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="6dp"
+        android:paddingStart="6dp"
         android:paddingTop="10dp"
         android:text="Loại phòng"
         android:textColor="@color/gray_dark" />
     <Spinner
         android:id="@+id/spnLoaiPhong"
         android:layout_width="match_parent"
-        android:layout_height="33dp"
-        android:paddingLeft="10dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
         android:backgroundTint="@color/gray_dark"
         android:popupBackground="@color/black"
-        android:textSize="17dp" />
+        android:textSize="17sp" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="6dp"
+        android:paddingStart="6dp"
         android:paddingTop="10dp"
         android:text="Giá phòng"
         android:textColor="@color/gray_dark" />
@@ -67,7 +68,7 @@
         android:padding="5dp"
         android:textColor="@color/gray_dark"
         android:textColorHint="@color/gray_medium"
-        android:textSize="17dp" />
+        android:textSize="17sp" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -83,16 +84,16 @@
         android:padding="5dp"
         android:textColor="@color/gray_dark"
         android:textColorHint="@color/gray_medium"
-        android:textSize="17dp" />
+        android:textSize="17sp" />
     <CheckBox
         android:layout_gravity="start"
         android:id="@+id/chkDaChoThue"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:buttonTint="@color/gray_dark"
-        android:layout_marginLeft="-4dp"
+        android:layout_marginStart="-4dp"
         android:textColor="@color/gray_dark"
-        android:textSize="12dp"
+        android:textSize="12sp"
         android:layout_marginTop="10dp"
         android:text="Đã cho thuê"/>
 
@@ -100,7 +101,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="6dp"
+        android:paddingStart="6dp"
         android:paddingTop="10dp"
         android:text="Địa chỉ"
         android:textColor="@color/gray_dark" />
@@ -114,13 +115,13 @@
         android:hint="Nhập địa chỉ phòng trọ"
         android:textColor="@color/gray_dark"
         android:textColorHint="@color/gray_medium"
-        android:textSize="17dp" />
+        android:textSize="17sp" />
 
     <!-- Phần chọn ảnh phòng trọ -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="6dp"
+        android:paddingStart="6dp"
         android:paddingTop="10dp"
         android:text="Ảnh phòng trọ"
         android:textColor="@color/gray_dark" />
@@ -133,21 +134,23 @@
 
         <Button
             android:id="@+id/btnChonAnh"
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_weight="1"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:minWidth="100dp"
             android:background="@drawable/filter_button_background"
             android:text="Chọn ảnh"
             android:textColor="@color/white"
-            android:textSize="14sp"
-            android:layout_marginEnd="5dp" />
+            android:textSize="12sp"
+            android:layout_marginEnd="8dp" />
 
         <TextView
             android:id="@+id/txtSoAnhDaChon"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="36dp"
             android:layout_weight="1"
-            android:gravity="center"
+            android:gravity="center_vertical"
             android:text="0 ảnh được chọn"
             android:textColor="@color/gray_dark"
             android:textSize="14sp"
