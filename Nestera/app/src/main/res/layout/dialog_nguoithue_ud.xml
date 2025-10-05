@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:background="@drawable/background"
+    android:background="@drawable/card_background"
     android:padding="20dp">
 
     <TextView
@@ -14,15 +14,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Họ tên"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtHoTen"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <RadioGroup
         android:id="@+id/radio_group"
@@ -36,34 +36,34 @@
             android:layout_height="wrap_content"
             android:layout_margin="3dp"
             android:text="Giới tính: "
-            android:textColor="@color/white"
+            android:textColor="@color/gray_dark"
             android:textSize="20dp" />
 
         <RadioButton
             android:id="@+id/rdoNam"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:buttonTint="#FFFFFF"
+            android:buttonTint="@color/gray_dark"
             android:text="Nam"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <RadioButton
             android:id="@+id/rdoNu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:buttonTint="@color/white"
+            android:buttonTint="@color/gray_dark"
             android:text="Nữ"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <RadioButton
             android:id="@+id/rdoKhac"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
-            android:buttonTint="@color/white"
+            android:buttonTint="@color/gray_dark"
             android:text="Khác"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
     </RadioGroup>
 
@@ -79,7 +79,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Ngày sinh"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -88,7 +88,7 @@
             android:paddingLeft="18dp"
             android:paddingTop="10dp"
             android:text="Số điẹn thoại"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -101,10 +101,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -112,10 +112,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -125,16 +125,16 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Thường trú"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
 
     <EditText
         android:id="@+id/edtThuongTru"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -143,16 +143,16 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="CCCD/CMND"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
 
     <EditText
         android:id="@+id/edtCCCD"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
 
@@ -161,7 +161,7 @@
         android:layout_width="match_parent"
         android:layout_height="33dp"
         android:layout_marginTop="10dp"
-        android:backgroundTint="@color/white"
+        android:backgroundTint="@color/gray_dark"
         android:popupBackground="@color/black"
         android:textSize="17dp" />
     <LinearLayout
@@ -174,8 +174,8 @@
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:text="Xác nhận"
-            android:textColor="#AAF84B"
-            android:background="@drawable/khung_login"
+            android:textColor="#FFFFFF"
+            android:background="@drawable/filter_button_background"
             android:layout_margin="20dp"
             />
         <Button
@@ -183,8 +183,8 @@
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:text="Hủy"
-            android:textColor="#F84B4B"
-            android:background="@drawable/khung_login"
+            android:textColor="#FFFFFF"
+            android:background="@color/pink"
             android:layout_margin="20dp"
             />
     </LinearLayout>

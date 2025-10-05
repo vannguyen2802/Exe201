@@ -7,13 +7,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14dp"
-        android:textColor="@color/white"
+        android:textColor="@color/gray_dark"
         android:id="@+id/txtmaloai"/>
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="14dp"
-        android:textColor="@color/white"
+        android:textColor="@color/gray_dark"
         android:id="@+id/txttenloai"/>
 
 </LinearLayout>

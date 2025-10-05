@@ -21,13 +21,13 @@
             android:textStyle="bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="#AAF84B"
+            android:textColor="@color/gray_dark"
             android:textSize="18sp" />
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:layout_margin="3dp"
-            android:background="@color/white"/>
+            android:background="@color/gray_dark"/>
 
         <TextView
             android:id="@+id/txtDoanhThu"

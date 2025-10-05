@@ -5,18 +5,18 @@
     android:layout_height="match_parent"
     android:gravity="center_vertical"
     android:orientation="vertical"
-    android:background="@drawable/khungedt"
+    android:background="@drawable/card_background"
     android:padding="20dp">
     <EditText
         android:id="@+id/edtID"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:hint="Tên tài khoản"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -24,15 +24,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Tên tài khoản"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtTenTKNganHang"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -40,15 +40,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Tên ngân hàng"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtTenNganHang"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <TextView
         android:layout_width="wrap_content"
@@ -56,15 +56,15 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Số tài khoản"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
     <EditText
         android:id="@+id/edtSTK"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
     <ImageView
         android:id="@+id/imgAnhQR"
@@ -92,18 +92,18 @@
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@drawable/filter_button_background"
             android:text="Xác nhận"
-            android:textColor="#AAF84B" />
+            android:textColor="#FFFFFF" />
 
         <Button
             android:id="@+id/btnHuy"
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@color/pink"
             android:text="Hủy"
-            android:textColor="#F84B4B" />
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 
 

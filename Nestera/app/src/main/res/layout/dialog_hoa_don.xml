@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/background"
+    android:background="@drawable/card_background"
     android:orientation="vertical"
 
     android:padding="20dp">
@@ -13,11 +13,11 @@
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="10dp"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/card_background"
         android:hint="Mã hóa đơn"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
 
     <TextView
@@ -26,31 +26,34 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Phòng"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
 
     <Spinner
         android:id="@+id/spnPhong"
         android:layout_width="match_parent"
         android:layout_height="33dp"
-        android:backgroundTint="@color/white"
+        android:background="@drawable/border_selector"
         android:popupBackground="@color/black"
         android:textSize="17dp" />
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Người thuê"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
+
     <EditText
         android:id="@+id/edtNguoiThue"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:padding="5dp"
-        android:textColor="@color/white"
-        android:textColorHint="#9F9B9B"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
         android:textSize="17dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,7 +66,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Ngày tạo"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -72,7 +75,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Số điện thoại"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -85,21 +88,22 @@
             android:id="@+id/edtNgayTao"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/khungedt"
-            android:padding="5dp"
             android:layout_weight="1"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:background="@drawable/border_selector"
+            android:padding="5dp"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
+
         <EditText
             android:id="@+id/edtSdt"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -116,7 +120,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Phí dịch vụ"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -125,7 +129,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Tiền phòng"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -138,10 +142,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -149,10 +153,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
 
@@ -168,7 +172,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Số điện"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -177,7 +181,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Giá điện"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -190,10 +194,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_dark"
             android:textSize="17dp" />
 
         <EditText
@@ -201,10 +205,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_dark"
             android:textSize="17dp" />
 
     </LinearLayout>
@@ -221,7 +225,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Số người"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -230,7 +234,7 @@
             android:paddingLeft="6dp"
             android:paddingTop="10dp"
             android:text="Giá nước"
-            android:textColor="@color/white" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
     <LinearLayout
@@ -243,10 +247,10 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
 
         <EditText
@@ -254,15 +258,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/khungedt"
+            android:background="@drawable/border_selector"
             android:padding="5dp"
-            android:textColor="@color/white"
-            android:textColorHint="#9F9B9B"
+            android:textColor="@color/gray_dark"
+            android:textColorHint="@color/gray_medium"
             android:textSize="17dp" />
     </LinearLayout>
-
-
-
 
 
     <TextView
@@ -271,20 +272,20 @@
         android:paddingLeft="6dp"
         android:paddingTop="10dp"
         android:text="Ghi chú"
-        android:textColor="@color/white" />
+        android:textColor="@color/gray_dark" />
 
     <EditText
         android:id="@+id/edtGhiChu_hd"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         android:layout_marginTop="5dp"
-        android:background="@drawable/khungedt"
+        android:background="@drawable/border_selector"
         android:gravity="start"
         android:padding="10dp"
         android:paddingLeft="7dp"
         android:text="Ghi chú"
-        android:textColor="@color/white"
-        android:textColorHint="@color/white" />
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium" />
 
     <ImageView
         android:id="@+id/imgAnhQR"
@@ -301,9 +302,8 @@
         android:layout_gravity="start"
         android:layout_marginLeft="-4dp"
         android:layout_marginTop="10dp"
-        android:buttonTint="@color/white"
         android:text="Đã thanh toán"
-        android:textColor="@color/white"
+        android:textColor="@color/gray_dark"
         android:textSize="12dp" />
 
     <LinearLayout
@@ -317,18 +317,18 @@
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@drawable/filter_button_background"
             android:text="Xác nhận"
-            android:textColor="#AAF84B" />
+            android:textColor="@color/gray_dark" />
 
         <Button
             android:id="@+id/btnHuy"
             android:layout_width="120dp"
             android:layout_height="40dp"
             android:layout_margin="20dp"
-            android:background="@drawable/khung_login"
+            android:background="@color/pink"
             android:text="Hủy"
-            android:textColor="#F84B4B" />
+            android:textColor="@color/gray_dark" />
     </LinearLayout>
 
 

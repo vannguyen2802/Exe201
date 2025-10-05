@@ -34,17 +34,17 @@
                 android:layout_weight="2"
                 android:layout_height="wrap_content"
                 android:text="Giới tính: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtGioiTinh"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
             <TextView
                 android:id="@+id/txtNamSinh"
@@ -52,17 +52,17 @@
                 android:layout_weight="2"
                 android:layout_height="wrap_content"
                 android:text="Năm sinh: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtNamSinh"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
 
             <TextView
@@ -70,17 +70,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Sđt: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtSDT"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
 
             <TextView
@@ -88,34 +88,34 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Thường trú: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtThuongTru"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
             <TextView
                 android:id="@+id/txtPhong"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Phòng: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtPhong"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
 
 
@@ -124,17 +124,17 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="CCCD: "
-                android:textColor="@color/white"
+                android:textColor="@color/gray_dark"
                 android:textSize="18sp" />
             <EditText
                 android:id="@+id/edtCCCD"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:background="@drawable/khungedt"
+                android:background="@drawable/border_selector"
                 android:padding="5dp"
-                android:textColor="@color/white"
-                android:textColorHint="#9F9B9B"
+                android:textColor="@color/gray_dark"
+                android:textColorHint="@color/gray_medium"
                 android:textSize="17dp" />
 
         </LinearLayout>
