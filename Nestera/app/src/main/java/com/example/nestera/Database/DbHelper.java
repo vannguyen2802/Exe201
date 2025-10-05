@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 
 public class DbHelper extends SQLiteOpenHelper {
     static final String dbName="Nestera";
-    static final int dbVersion=5; // Tăng version để thêm dữ liệu đa dạng hơn
+    static final int dbVersion=7; // Thêm trường địa chỉ
     Context context;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public DbHelper(@Nullable Context context) {
@@ -54,14 +54,17 @@ public class DbHelper extends SQLiteOpenHelper {
                 "giaTien INTEGER NOT NULL," +
                 "tienNghi TEXT NOT NULL," +
                 "trangThai INTEGER NOT NULL," +
-                "imagePath TEXT)"; // Lưu đường dẫn ảnh thay vì BLOB
+                "imagePath TEXT," + // Lưu đường dẫn ảnh thay vì BLOB
+                "diaChi TEXT," + // Địa chỉ phòng trọ
+                "timNguoiOGhep INTEGER DEFAULT 0," + // 0: không tìm, 1-4: số người cần tìm
+                "soNguoiHienTai INTEGER DEFAULT 0)"; // Số người hiện tại đang ở
         sqLiteDatabase.execSQL(createTablePhongTro);
 
         //Thêm dữ liệu bảng PhongTro (với ảnh thật)
-        sqLiteDatabase.execSQL("insert into PhongTro(maLoai,tenPhong,giaTien,tienNghi,trangThai,imagePath) values" +
-                "(1,'P102',3500000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_1')," +
-                "(2,'P102',3200000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_3')," +
-                "(1,'P202',3800000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo, Máy giặt',0,'phong_tro_1_2')");
+        sqLiteDatabase.execSQL("insert into PhongTro(maLoai,tenPhong,giaTien,tienNghi,trangThai,imagePath,diaChi,timNguoiOGhep,soNguoiHienTai) values" +
+                "(1,'P102',3500000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_1','123 Đường ABC, Quận 1, TP.HCM',0,0)," +
+                "(2,'P103',3200000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo',0,'phong_tro_1_3','456 Đường XYZ, Quận 2, TP.HCM',2,1)," + // Phòng đang tìm 2 người, hiện có 1 người
+                "(1,'P202',3800000,'Điều hoà, Nóng lạnh, Tủ lạnh, Tủ quần áo, Máy giặt',0,'phong_tro_1_2','789 Đường DEF, Quận 3, TP.HCM',1,2)"); // Phòng đang tìm 1 người, hiện có 2 người
 
         //Tạo bảng PhongTroImages để lưu nhiều ảnh cho mỗi phòng
         String createTablePhongTroImages = "create table PhongTroImages(" +
@@ -138,23 +141,22 @@ public class DbHelper extends SQLiteOpenHelper {
                 "('huy','huy','Phạm Quang Huy','Hải Dương','123456789','123456789','03/09/2004',1,1),"+
                 "('nam','nam','Nguyễn Phương Nam','Hà Nội','3456789987','847837487','03/05/2004',1,2)");
 
-        //Tạo bảng HopDong
+        //Tạo bảng HopDong (đơn giản hóa)
         String createTableHopDong = "create table HopDong(" +
                 "maHopDong INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "sdt TEXT NOT NULL," +
-                "CCCD INTEGER NOT NULL," +
-                "thuongTru TEXT NOT NULL," +
                 "ngayKy DATE NOT NULL," +
-                "thoiHan INTEGER NOT NULL," +
-                "tienCoc INTEGER NOT NULL," +
-                "giaTien INTEGER NOT NULL," +
-                "soNguoi INTEGER NOT NULL," +
-                "soXe INTEGER NOT NULL," +
-                "ghiChu TEXT," +
-                "hinhAnh BLOB," +
                 "maNguoiThue TEXT REFERENCES NguoiThue(maNguoiThue)," +
                 "maPhong INTEGER REFERENCES PhongTro(maPhong))";
         sqLiteDatabase.execSQL(createTableHopDong);
+
+        //Tạo bảng HinhAnhHopDong để lưu ảnh hợp đồng và CCCD
+        String createTableHinhAnhHopDong = "create table HinhAnhHopDong(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "maHopDong INTEGER REFERENCES HopDong(maHopDong)," +
+                "loaiHinh INTEGER NOT NULL," + // 1: Ảnh hợp đồng, 2: Ảnh CCCD
+                "duongDanAnh TEXT NOT NULL," +
+                "ngayTao DATE DEFAULT CURRENT_TIMESTAMP)";
+        sqLiteDatabase.execSQL(createTableHinhAnhHopDong);
 
 
         //Tạo bảng SuCo
@@ -260,6 +262,44 @@ public class DbHelper extends SQLiteOpenHelper {
                         "(3,'phong_tro_1_2',1,1)," +
                         "(3,'phong_tro_1_3',2,0)," + 
                         "(3,'phong_tro_1_1',3,0)");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 6) {
+            try {
+                // Thêm cột timNguoiOGhep và soNguoiHienTai vào bảng PhongTro
+                sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN timNguoiOGhep INTEGER DEFAULT 0");
+                sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN soNguoiHienTai INTEGER DEFAULT 0");
+                
+                // Tạo bảng HinhAnhHopDong mới
+                sqLiteDatabase.execSQL("CREATE TABLE HinhAnhHopDong(" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "maHopDong INTEGER REFERENCES HopDong(maHopDong)," +
+                        "loaiHinh INTEGER NOT NULL," +
+                        "duongDanAnh TEXT NOT NULL," +
+                        "ngayTao DATE DEFAULT CURRENT_TIMESTAMP)");
+                
+                // Cập nhật dữ liệu mẫu cho phòng có tìm người ở ghép
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET timNguoiOGhep = 2, soNguoiHienTai = 1 WHERE maPhong = 2");
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET timNguoiOGhep = 1, soNguoiHienTai = 2 WHERE maPhong = 3");
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        
+        if (oldVersion < 7) {
+            try {
+                // Thêm cột địa chỉ
+                sqLiteDatabase.execSQL("ALTER TABLE PhongTro ADD COLUMN diaChi TEXT");
+                
+                // Cập nhật địa chỉ mẫu cho các phòng hiện có
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET diaChi = '123 Đường ABC, Quận 1, TP.HCM' WHERE maPhong = 1");
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET diaChi = '456 Đường XYZ, Quận 2, TP.HCM' WHERE maPhong = 2");
+                sqLiteDatabase.execSQL("UPDATE PhongTro SET diaChi = '789 Đường DEF, Quận 3, TP.HCM' WHERE maPhong = 3");
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }

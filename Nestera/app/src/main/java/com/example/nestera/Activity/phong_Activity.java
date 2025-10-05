@@ -4,6 +4,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.net.Uri;
+import android.provider.MediaStore;
 
 import android.app.Dialog;
 import android.content.Context;
@@ -24,10 +31,12 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nestera.Adapter.LoaiPhongSpinnerAdapter;
 import com.example.nestera.Adapter.Phong_Adapter;
+import com.example.nestera.Adapter.ImagePreviewAdapter;
 import com.example.nestera.Dao.LoaiPhongDao;
 import com.example.nestera.Dao.phongTroDao;
 import com.example.nestera.MainActivity;
@@ -36,6 +45,7 @@ import com.example.nestera.model.LoaiPhong;
 import com.example.nestera.model.PhongTro;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class phong_Activity extends AppCompatActivity {
     ListView lstPhong;
@@ -46,11 +56,18 @@ public class phong_Activity extends AppCompatActivity {
     PhongTro item;
     phongTroDao dao;
     ImageView btnAdd;
-    EditText edtmaPhong, edttenPhong, edtGia, edtTienNghi,edtSearch;
-    Button btnHuy, btnXacNhan;
+    EditText edtmaPhong, edttenPhong, edtGia, edtTienNghi, edtSearch, edtDiaChi;
+    Button btnHuy, btnXacNhan, btnChonAnh;
     Spinner spinner;
     int position, maLoaiPhong;
     CheckBox chk;
+    
+    // Xử lý ảnh
+    private static final int REQUEST_IMAGE_PICK = 1001;
+    private ArrayList<Uri> selectedImages;
+    private RecyclerView recyclerViewImages;
+    private ImagePreviewAdapter imageAdapter;
+    private TextView txtSoAnhDaChon;
     LoaiPhongDao dao_lp;
     LoaiPhong item_lp;
     LoaiPhongSpinnerAdapter spinnerAdapter;
@@ -109,6 +126,16 @@ public class phong_Activity extends AppCompatActivity {
 
 
         capNhapLv();
+        setupEventListeners();
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        handleImagePickerResult(requestCode, resultCode, data);
+    }
+    
+    private void setupEventListeners() {
         btnAdd.setOnClickListener(new View.OnClickListener() {
                                       @Override
                                       public void onClick(View view) {
@@ -133,11 +160,39 @@ public class phong_Activity extends AppCompatActivity {
         edtTienNghi = dialog.findViewById(R.id.edtTienNghi);
         edttenPhong = dialog.findViewById(R.id.edtTenPhong);
         edtGia = dialog.findViewById(R.id.edtGia);
+        edtDiaChi = dialog.findViewById(R.id.edtDiaChi);
         chk = dialog.findViewById(R.id.chkDaChoThue);
         spinner = dialog.findViewById(R.id.spnLoaiPhong);
         btnHuy = dialog.findViewById(R.id.btnHuy);
         btnXacNhan = dialog.findViewById(R.id.btnXacNhan);
+        btnChonAnh = dialog.findViewById(R.id.btnChonAnh);
+        txtSoAnhDaChon = dialog.findViewById(R.id.txtSoAnhDaChon);
+        recyclerViewImages = dialog.findViewById(R.id.recyclerViewImages);
         chk.setVisibility(View.GONE);
+        
+        // Setup RecyclerView cho ảnh
+        selectedImages = new ArrayList<>();
+        imageAdapter = new ImagePreviewAdapter(context, selectedImages, position -> {
+            selectedImages.remove(position);
+            imageAdapter.notifyItemRemoved(position);
+            updateImageCount();
+        });
+        recyclerViewImages.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
+        recyclerViewImages.setAdapter(imageAdapter);
+        
+        // Khởi tạo số lượng ảnh
+        updateImageCount();
+        
+        // Xử lý chọn ảnh
+        btnChonAnh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                ((Activity) context).startActivityForResult(intent, REQUEST_IMAGE_PICK);
+            }
+        });
+        
         list_lp = new ArrayList<LoaiPhong>();
         dao_lp = new LoaiPhongDao(context);
         list_lp = (ArrayList<LoaiPhong>) dao_lp.getAll();
@@ -155,6 +210,7 @@ public class phong_Activity extends AppCompatActivity {
 
             }
         });
+        
         edtmaPhong.setEnabled(false);
         edtTienNghi.setInputType(InputType.TYPE_NULL);
         edtTienNghi.setOnClickListener(new View.OnClickListener() {
@@ -214,6 +270,7 @@ public class phong_Activity extends AppCompatActivity {
             edttenPhong.setText(item.getTenPhong() + "");
             edtTienNghi.setText(item.getTienNghi() + "");
             edtGia.setText(item.getGia() + "");
+            edtDiaChi.setText(item.getDiaChi() + "");
 
             if (item.getTrangThai() == 1) {
                 chk.setChecked(true);
@@ -221,6 +278,7 @@ public class phong_Activity extends AppCompatActivity {
                 edttenPhong.setEnabled(false);
                 edtTienNghi.setEnabled(false);
                 edtGia.setEnabled(false);
+                edtDiaChi.setEnabled(false);
                 spinner.setEnabled(false);
             } else {
                 chk.setChecked(false);
@@ -242,7 +300,8 @@ public class phong_Activity extends AppCompatActivity {
             btnXacNhan.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    if (TextUtils.isEmpty(edttenPhong.getText().toString()) || TextUtils.isEmpty(edtTienNghi.getText().toString()) || TextUtils.isEmpty(edtGia.getText().toString())) {
+                    if (TextUtils.isEmpty(edttenPhong.getText().toString()) || TextUtils.isEmpty(edtTienNghi.getText().toString()) || 
+                    TextUtils.isEmpty(edtGia.getText().toString()) || TextUtils.isEmpty(edtDiaChi.getText().toString())) {
                         Toast.makeText(context, "Bạn phải nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -271,7 +330,11 @@ public class phong_Activity extends AppCompatActivity {
                     item.setTenPhong(edttenPhong.getText().toString());
                     item.setTienNghi(edtTienNghi.getText().toString());
                     item.setGia(Integer.parseInt(edtGia.getText().toString()));
+                    item.setDiaChi(edtDiaChi.getText().toString());
                     item.setMaLoai(maLoaiPhong);
+                    // Mặc định khi tạo phòng: không tìm người ở ghép, 0 người hiện tại
+                    item.setTimNguoiOGhep(0);
+                    item.setSoNguoiHienTai(0);
                     if (chk.isChecked()) {
                         item.setTrangThai(1);
                     } else {
@@ -337,6 +400,37 @@ public class phong_Activity extends AppCompatActivity {
         Intent intent = new Intent(phong_Activity.this, hopDong_Activity.class);
         intent.putExtra("maphong", maPhong);
         startActivity(intent);
+    }
+    
+    private void updateImageCount() {
+        if (txtSoAnhDaChon != null) {
+            txtSoAnhDaChon.setText("Đã chọn: " + selectedImages.size() + " ảnh");
+            recyclerViewImages.setVisibility(selectedImages.isEmpty() ? View.GONE : View.VISIBLE);
+        }
+    }
+    
+    public void handleImagePickerResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_IMAGE_PICK && resultCode == Activity.RESULT_OK && data != null) {
+            if (data.getClipData() != null) {
+                // Nhiều ảnh được chọn
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    Uri imageUri = data.getClipData().getItemAt(i).getUri();
+                    if (!selectedImages.contains(imageUri)) {
+                        selectedImages.add(imageUri);
+                    }
+                }
+            } else if (data.getData() != null) {
+                // Một ảnh được chọn
+                Uri imageUri = data.getData();
+                if (!selectedImages.contains(imageUri)) {
+                    selectedImages.add(imageUri);
+                }
+            }
+            
+            imageAdapter.notifyDataSetChanged();
+            updateImageCount();
+        }
     }
 
 }

@@ -96,6 +96,75 @@
         android:layout_marginTop="10dp"
         android:text="Đã cho thuê"/>
 
+    <!-- Thêm trường địa chỉ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="6dp"
+        android:paddingTop="10dp"
+        android:text="Địa chỉ"
+        android:textColor="@color/gray_dark" />
+    
+    <EditText
+        android:id="@+id/edtDiaChi"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_selector"
+        android:padding="5dp"
+        android:hint="Nhập địa chỉ phòng trọ"
+        android:textColor="@color/gray_dark"
+        android:textColorHint="@color/gray_medium"
+        android:textSize="17dp" />
+
+    <!-- Phần chọn ảnh phòng trọ -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="6dp"
+        android:paddingTop="10dp"
+        android:text="Ảnh phòng trọ"
+        android:textColor="@color/gray_dark" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="5dp">
+
+        <Button
+            android:id="@+id/btnChonAnh"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:background="@drawable/filter_button_background"
+            android:text="Chọn ảnh"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:layout_marginEnd="5dp" />
+
+        <TextView
+            android:id="@+id/txtSoAnhDaChon"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="0 ảnh được chọn"
+            android:textColor="@color/gray_dark"
+            android:textSize="14sp"
+            android:background="@drawable/border_selector"
+            android:layout_marginStart="5dp" />
+
+    </LinearLayout>
+
+    <!-- RecyclerView để hiển thị ảnh đã chọn -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewImages"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal"
+        android:visibility="gone" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -31,6 +31,9 @@ public class phongTroDao {
         values.put("tienNghi", obj.getTienNghi());
         values.put("trangThai", obj.getTrangThai());
         values.put("imagePath", obj.getImagePath());
+        values.put("diaChi", obj.getDiaChi());
+        values.put("timNguoiOGhep", obj.getTimNguoiOGhep());
+        values.put("soNguoiHienTai", obj.getSoNguoiHienTai());
         
         return db.insert("PhongTro", null, values);
     }
@@ -43,6 +46,9 @@ public class phongTroDao {
         values.put("tienNghi", obj.getTienNghi());
         values.put("trangThai", obj.getTrangThai());
         values.put("imagePath", obj.getImagePath());
+        values.put("diaChi", obj.getDiaChi());
+        values.put("timNguoiOGhep", obj.getTimNguoiOGhep());
+        values.put("soNguoiHienTai", obj.getSoNguoiHienTai());
         
         return db.update("PhongTro", values, "maPhong=?", new String[]{String.valueOf(obj.getMaPhong())});
     }
@@ -73,6 +79,18 @@ public class phongTroDao {
             obj.setGia(Integer.parseInt(c.getString(c.getColumnIndex("giaTien"))));
             obj.setTienNghi(c.getString(c.getColumnIndex("tienNghi")));
             obj.setTrangThai(Integer.parseInt(c.getString(c.getColumnIndex("trangThai"))));
+            
+            // Đọc các field mới (với kiểm tra tồn tại)
+            try {
+                obj.setDiaChi(c.getString(c.getColumnIndex("diaChi")));
+                obj.setTimNguoiOGhep(c.getInt(c.getColumnIndex("timNguoiOGhep")));
+                obj.setSoNguoiHienTai(c.getInt(c.getColumnIndex("soNguoiHienTai")));
+            } catch (Exception e) {
+                // Nếu column chưa tồn tại (database cũ), set giá trị mặc định
+                obj.setDiaChi("Chưa cập nhật");
+                obj.setTimNguoiOGhep(0);
+                obj.setSoNguoiHienTai(0);
+            }
             
             // Load ảnh chính từ bảng PhongTroImages
             try {

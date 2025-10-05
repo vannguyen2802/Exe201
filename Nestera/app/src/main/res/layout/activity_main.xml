@@ -57,7 +57,7 @@
                     <Button
                         android:id="@+id/btnLoaiPhong"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -68,7 +68,7 @@
                     <Button
                         android:id="@+id/btnPhong"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -89,7 +89,7 @@
                     <Button
                         android:id="@+id/btnNguoiThue"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -100,7 +100,7 @@
                     <Button
                         android:id="@+id/btnThongKe"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -120,7 +120,7 @@
                     <Button
                         android:id="@+id/btnHoaDon"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -131,7 +131,7 @@
                     <Button
                         android:id="@+id/btnSuCo"
                         android:layout_width="0dp"
-                        android:layout_height="80dp"
+                        android:layout_height="90dp"
                         android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
@@ -139,7 +139,7 @@
                         android:drawableStart="@drawable/icon_suco"
                         android:padding="20dp"
                         android:textSize="15sp"
-                        android:text="Sự cố phản ánh"/>
+                        android:text="Phản ánh\nSự cố"/>
 
                 </LinearLayout>
                 <LinearLayout
