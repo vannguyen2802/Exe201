@@ -93,6 +93,13 @@
             android:text="Hủy"
             android:textColor="@color/gray_dark" />
     </LinearLayout>
-
+    <Button
+        android:id="@+id/btnMoMo"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_margin="20dp"
+        android:background="@drawable/filter_button_background"
+        android:text="Thanh toán bằng Momo"
+        android:textColor="@color/gray_light" />
 
 </LinearLayout>
