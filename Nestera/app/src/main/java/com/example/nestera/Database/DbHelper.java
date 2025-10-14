@@ -15,7 +15,7 @@ import java.text.SimpleDateFormat;
 
 public class DbHelper extends SQLiteOpenHelper {
     static final String dbName="Nestera";
-    static final int dbVersion=5; // Tăng version để thêm dữ liệu đa dạng hơn
+    static final int dbVersion=12; // Add maPhong to BaiDang
     Context context;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public DbHelper(@Nullable Context context) {
@@ -26,6 +26,23 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
+        //Tạo bảng ChuTro (Chủ trọ)
+        String createTableChuTro = "create table ChuTro(" +
+                "maChuTro TEXT PRIMARY KEY," +
+                "matKhau TEXT NOT NULL," +
+                "tenChuTro TEXT," +
+                "email TEXT," +
+                "sdt TEXT," +
+                "cccd TEXT," +
+                "approved INTEGER DEFAULT 0," +
+                "banned INTEGER DEFAULT 0)";
+        sqLiteDatabase.execSQL(createTableChuTro);
+
+        // Thêm dữ liệu mẫu cho Chủ trọ
+        sqLiteDatabase.execSQL("insert into ChuTro(maChuTro, matKhau, tenChuTro, email, sdt, cccd, approved, banned) values" +
+                "('chutro1','12345','Chủ trọ 1','ct1@example.com','0900000001','012345678901',1,0)," +
+                "('chutro2','12345','Chủ trọ 2','ct2@example.com','0900000002','012345678902',1,0)," +
+                "('chutro3','12345','Chủ trọ 3','ct3@example.com','0900000003','012345678903',1,0)");
         //Tạo bảng KeToan
         String createTableKeToan="create table KeToan(" +
                 "maKeToan TEXT PRIMARY KEY," +
@@ -77,7 +94,7 @@ public class DbHelper extends SQLiteOpenHelper {
                 "(1,'phong_tro_1_1',1,1)," + // Ảnh chính phòng 1
                 "(1,'phong_tro_1_2',2,0)," + // Ảnh phụ phòng 1 - ảnh 1
                 "(1,'phong_tro_1_3',3,0)," + // Ảnh phụ phòng 1 - ảnh 2
-                "(2,'phong_tro_1_3',1,1)," + // Ảnh chính phòng 2 
+                "(2,'phong_tro_1_3',1,1)," + // Ảnh chính phòng 2
                 "(2,'phong_tro_1_1',2,0)," + // Ảnh phụ phòng 2 - ảnh 1
                 "(2,'phong_tro_1_2',3,0)," + // Ảnh phụ phòng 2 - ảnh 2
                 "(3,'phong_tro_1_2',1,1)," + // Ảnh chính phòng 3
@@ -180,6 +197,20 @@ public class DbHelper extends SQLiteOpenHelper {
                 "HinhAnh BLOB)";
         sqLiteDatabase.execSQL(createTableNganHang);
 
+        //Tạo bảng BaiDang (bài đăng cho thuê)
+        String createTableBaiDang = "create table BaiDang(" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                "tieuDe TEXT NOT NULL," +
+                "diaChi TEXT," +
+                "giaThang INTEGER," +
+                "dienTich REAL," +
+                "tienNghi TEXT," +
+                "trangThai TEXT," +
+                "hinhAnh TEXT," +
+                "maPhong INTEGER," +
+                "chuTroId TEXT REFERENCES ChuTro(maChuTro))";
+        sqLiteDatabase.execSQL(createTableBaiDang);
+
     }
 
     @Override
@@ -263,6 +294,84 @@ public class DbHelper extends SQLiteOpenHelper {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        if (oldVersion < 6) {
+            try {
+                // Tạo bảng ChuTro nếu chưa có và thêm dữ liệu mẫu
+                sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS ChuTro(" +
+                        "maChuTro TEXT PRIMARY KEY," +
+                        "matKhau TEXT NOT NULL," +
+                        "tenChuTro TEXT," +
+                        "sdt TEXT)");
+
+                sqLiteDatabase.execSQL("INSERT OR IGNORE INTO ChuTro(maChuTro, matKhau, tenChuTro, sdt) VALUES " +
+                        "('chutro1','12345','Chủ trọ 1','0900000001')," +
+                        "('chutro2','12345','Chủ trọ 2','0900000002')," +
+                        "('chutro3','12345','Chủ trọ 3','0900000003')");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (oldVersion < 7) {
+            try {
+                // Thêm cột approved cho ChuTro nếu chưa có
+                sqLiteDatabase.execSQL("ALTER TABLE ChuTro ADD COLUMN approved INTEGER DEFAULT 0");
+                // Duyệt sẵn các tài khoản seed
+                sqLiteDatabase.execSQL("UPDATE ChuTro SET approved = 1 WHERE maChuTro IN ('chutro1','chutro2','chutro3')");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (oldVersion < 8) {
+            try {
+                // Thêm cột email và cccd nếu chưa có
+                sqLiteDatabase.execSQL("ALTER TABLE ChuTro ADD COLUMN email TEXT");
+                sqLiteDatabase.execSQL("ALTER TABLE ChuTro ADD COLUMN cccd TEXT");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (oldVersion < 9) {
+            try {
+                sqLiteDatabase.execSQL("ALTER TABLE ChuTro ADD COLUMN banned INTEGER DEFAULT 0");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Create BaiDang table for upgraded users
+        if (oldVersion < 10) {
+            try {
+                String createTableBaiDang = "create table IF NOT EXISTS BaiDang(" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                        "tieuDe TEXT NOT NULL," +
+                        "diaChi TEXT," +
+                        "giaThang INTEGER," +
+                        "dienTich REAL," +
+                        "tienNghi TEXT," +
+                        "trangThai TEXT," +
+                        "hinhAnh TEXT," +
+                        "chuTroId TEXT REFERENCES ChuTro(maChuTro))";
+                sqLiteDatabase.execSQL(createTableBaiDang);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if (oldVersion < 11) {
+            try {
+                // Ensure table exists even if missed in v10
+                sqLiteDatabase.execSQL("CREATE TABLE IF NOT EXISTS BaiDang (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT, tieuDe TEXT NOT NULL, diaChi TEXT, giaThang INTEGER, dienTich REAL, tienNghi TEXT, trangThai TEXT, hinhAnh TEXT, maPhong INTEGER, chuTroId TEXT REFERENCES ChuTro(maChuTro))");
+            } catch (Exception e) { e.printStackTrace(); }
+        }
+        if (oldVersion < 12) {
+            try {
+                sqLiteDatabase.execSQL("ALTER TABLE BaiDang ADD COLUMN maPhong INTEGER");
+            } catch (Exception e) { /* might already exist */ }
         }
     }
 }

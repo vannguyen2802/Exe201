@@ -161,7 +161,7 @@
                     android:layout_height="wrap_content"
                     android:text="Gần tôi"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -188,7 +188,7 @@
                     android:layout_height="wrap_content"
                     android:text="Đánh giá cao"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -215,7 +215,7 @@
                     android:layout_height="wrap_content"
                     android:text="Giá rẻ"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -242,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:text="Yêu thích"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:cardview="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F8F9FB">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:orientation="vertical">
+
+        <!-- ========== CHỦ TRỌ ========== -->
+        <TextView
+            android:id="@+id/tvLandlordsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chủ trọ (Tất cả)"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#0F172A" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            cardview:cardUseCompatPadding="true"
+            cardview:cardElevation="3dp"
+            cardview:cardCornerRadius="12dp">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:padding="8dp">
+
+                <TableLayout
+                    android:id="@+id/tlLandlords"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:divider="@android:color/transparent"
+                    android:showDividers="none" />
+            </HorizontalScrollView>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ========== ĐANG CHỜ DUYỆT ========== -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvPendingTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Đang chờ duyệt"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="#0F172A" />
+
+            <Button
+                android:id="@+id/btnApproveAll"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DUYỆT TẤT CẢ"
+                android:textAllCaps="false"
+                android:paddingHorizontal="16dp"
+                android:paddingVertical="8dp"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_btn_primary"
+                android:elevation="2dp" />
+        </LinearLayout>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            cardview:cardUseCompatPadding="true"
+            cardview:cardElevation="3dp"
+            cardview:cardCornerRadius="12dp">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:padding="8dp">
+
+                <TableLayout
+                    android:id="@+id/tlPending"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:divider="@android:color/transparent"
+                    android:showDividers="none" />
+            </HorizontalScrollView>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ========== NGƯỜI THUÊ ========== -->
+        <TextView
+            android:id="@+id/tvTenantsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Người thuê (Từ bảng NguoiThue)"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:textColor="#0F172A" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            cardview:cardUseCompatPadding="true"
+            cardview:cardElevation="3dp"
+            cardview:cardCornerRadius="12dp">
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fillViewport="true"
+                android:padding="8dp">
+
+                <TableLayout
+                    android:id="@+id/tlTenants"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:divider="@android:color/transparent"
+                    android:showDividers="none" />
+            </HorizontalScrollView>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>

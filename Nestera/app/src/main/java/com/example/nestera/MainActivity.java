@@ -80,6 +80,12 @@ public class MainActivity extends AppCompatActivity {
         btnThongKe = findViewById(R.id.btnThongKe);
         btnSuCo = findViewById(R.id.btnSuCo);
         btnHopDong = findViewById(R.id.btnHopDong);
+        Button btnBaiDang = new Button(this);
+        btnBaiDang.setId(View.generateViewId());
+        btnBaiDang.setText("Bài đăng");
+        btnBaiDang.setBackgroundResource(R.drawable.khungedt);
+        btnBaiDang.setTextColor(getResources().getColor(R.color.white));
+        btnBaiDang.setPadding(20,20,20,20);
         btnLoaiPhong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -123,11 +129,18 @@ public class MainActivity extends AppCompatActivity {
                 IntentClass(hopDong_Activity.class);
             }
         });
+        btnBaiDang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IntentClass(com.example.nestera.Activity.BaiDangActivity.class);
+            }
+        });
 
         nav.setItemIconTintList(null);
         drawerLayout.closeDrawers();
         SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
         String username = preferences.getString("username11", "...");
+        String role = preferences.getString("role", "");
         Bundle bundle = new Bundle();
         bundle.putString("key", username);
         frg_thongtintaikhoan frgThongtintaikhoan=new frg_thongtintaikhoan();
@@ -135,11 +148,20 @@ public class MainActivity extends AppCompatActivity {
 
 
         String user = username;
-        if(user.equalsIgnoreCase("admin")){
+        if ("LANDLORD".equalsIgnoreCase(role) || user.equalsIgnoreCase("landlord")) {
+            // Chủ trọ: ẩn mục dành cho người thuê
             nav.getMenu().findItem(R.id.nav_ChangePass).setVisible(false);
             nav.getMenu().findItem(R.id.nav_profileUser).setVisible(false);
             btnHopDong.setVisibility(View.GONE);
-        }else {
+            txtUser.setText("Welcome Chủ trọ");
+            // thêm nút Bài đăng cạnh các nút landlord
+            ((android.widget.LinearLayout)((android.widget.FrameLayout)findViewById(R.id.frmnav)).getChildAt(0)).addView(btnBaiDang);
+        } else if ("ADMIN".equalsIgnoreCase(role) || user.equalsIgnoreCase("admin")) {
+            // Admin: có thể hiển thị menu dành cho Admin sau
+            btnHopDong.setVisibility(View.GONE);
+            txtUser.setText("Welcome Admin");
+        } else {
+            // Người thuê
             btnLoaiPhong.setVisibility(View.GONE);
             btnNguoiThue.setVisibility(View.GONE);
             btnThongKe.setVisibility(View.GONE);
@@ -149,7 +171,15 @@ public class MainActivity extends AppCompatActivity {
             String u = nt.getTenNguoiThue();
             txtUser.setText("Welcome "+u);
             nav.getMenu().findItem(R.id.nav_NganHang).setVisible(false);
+            // người dùng cũng có nút Bài đăng
+            ((android.widget.LinearLayout)((android.widget.FrameLayout)findViewById(R.id.frmnav)).getChildAt(0)).addView(btnBaiDang);
         }
+        // Show/hide admin items depending on role
+        if (!"ADMIN".equalsIgnoreCase(role)) {
+            nav.getMenu().findItem(R.id.nav_AdminDashboard).setVisible(false);
+            nav.getMenu().findItem(R.id.nav_ManageAccounts).setVisible(false);
+        }
+
         nav.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -170,6 +200,10 @@ public class MainActivity extends AppCompatActivity {
                     setTitle("Ngân Hàng Thanh Toán");
                     frg_NganHang frg_nh=new frg_NganHang();
                     replaceFrg(frg_nh);
+                } else if (item.getItemId() == R.id.nav_AdminDashboard) {
+                    IntentClass(com.example.nestera.Activity.AdminDashboardActivity.class);
+                } else if (item.getItemId() == R.id.nav_ManageAccounts) {
+                    IntentClass(com.example.nestera.Activity.ManageAccountsActivity.class);
                 }
 
                 drawerLayout.close();

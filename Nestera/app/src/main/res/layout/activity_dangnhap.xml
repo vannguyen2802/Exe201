@@ -110,5 +110,15 @@
         android:text="Đăng nhập"
         android:textColor="#FFFFFF" />
 
+    <TextView
+        android:id="@+id/txtDangKyChuTro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="16dp"
+        android:text="Đăng ký chủ trọ"
+        android:textColor="@color/gray_dark"
+        android:textStyle="bold" />
+
 
 </LinearLayout>

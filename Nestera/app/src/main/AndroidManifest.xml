@@ -44,6 +44,30 @@
             android:name=".MainActivity"
             android:exported="false" />
         <activity
+            android:name=".Activity.AdminDashboardActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.GlobalDataActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.CatalogActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.SystemConfigActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.SystemStatsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.BaiDangActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.BaiDangDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Activity.ManageAccountsActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activity.thongKe_Activity"
             android:exported="false" />
         <activity
@@ -68,6 +92,9 @@
             android:name=".dangnhap"
             android:exported="false" />
         <activity
+            android:name=".Activity.RegisterLandlordActivity"
+            android:exported="false" />
+        <activity
             android:name=".Activity.demoSpinner"
             android:exported="false" />
         <activity
@@ -81,5 +108,13 @@
         </activity>
         <service android:name=".myservice"/>
     </application>
+
+    <!-- Query intents (Android 11+) should be at manifest root -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT" />
+            <data android:mimeType="image/*" />
+        </intent>
+    </queries>
 
 </manifest>
