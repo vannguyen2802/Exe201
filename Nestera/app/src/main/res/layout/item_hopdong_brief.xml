@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/card_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+        <TextView
+            android:id="@+id/tvMaHD"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Mã: 0"
+            android:textColor="#333333"
+            android:textStyle="bold"/>
+        <TextView
+            android:id="@+id/tvNgayKy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2025-01-01"
+            android:textColor="#666666"/>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvTrangThaiHD"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Đang Thuê"
+        android:textColor="#22C55E"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvTenKhach"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Khách: --"
+        android:textColor="#333333"/>
+
+    <TextView
+        android:id="@+id/tvSoPhong"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Phòng: --"
+        android:textColor="#333333"/>
+
+    <Button
+        android:id="@+id/btnChiTiet"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/detail_button_background"
+        android:text="Chi tiết"
+        android:textColor="@android:color/white"/>
+
+</LinearLayout>
+
+
+
+
+

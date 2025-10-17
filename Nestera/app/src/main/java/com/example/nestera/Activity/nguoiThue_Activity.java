@@ -68,7 +68,14 @@ public class nguoiThue_Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nguoi_thue);
-        getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
+        
+        try {
+            // Lấy thông tin user hiện tại
+            android.content.SharedPreferences prefs = getSharedPreferences("user11", MODE_PRIVATE);
+            String username = prefs.getString("username11", "");
+            String role = prefs.getString("role", "");
+            android.util.Log.d("NguoiThueDebug", "Username: " + username + ", Role: " + role);
+            getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
         btnadd=findViewById(R.id.btnadd_toolbar);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -87,52 +94,99 @@ public class nguoiThue_Activity extends AppCompatActivity {
         });
 
 
-        lstNguoiThue=findViewById(R.id.lstNguoiThue);
-        dao =new nguoiThueDao(nguoiThue_Activity.this);
+            lstNguoiThue=findViewById(R.id.lstNguoiThue);
+            dao =new nguoiThueDao(nguoiThue_Activity.this);
 
-        listtemp= (ArrayList<NguoiThue>) dao.getAll();
-        edtSearch=findViewById(R.id.edtSearch);
-        edtSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
+            // Khởi tạo list trước
+            list = new ArrayList<>();
+            listtemp = new ArrayList<>();
+            
+            android.util.Log.d("NguoiThueDebug", "Starting to load data...");
+            
+            // Load danh sách theo role
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                // Admin xem tất cả
+                android.util.Log.d("NguoiThueDebug", "Loading all for ADMIN");
+                listtemp = (ArrayList<NguoiThue>) dao.getAll();
+            } else if ("LANDLORD".equalsIgnoreCase(role)) {
+                // Chủ trọ chỉ xem người thuê do mình tạo (lọc theo chuTroId)
+                android.util.Log.d("NguoiThueDebug", "Loading for LANDLORD: " + username);
+                if (username != null && !username.isEmpty()) {
+                    listtemp = (ArrayList<NguoiThue>) dao.getByChuTro(username);
+                    android.util.Log.d("NguoiThueDebug", "Found " + listtemp.size() + " tenants");
+                } else {
+                    listtemp = new ArrayList<>();
+                    android.util.Log.d("NguoiThueDebug", "Username is empty");
+                }
+            } else {
+                // Role khác không xem được
+                android.util.Log.d("NguoiThueDebug", "Unknown role: " + role);
+                listtemp = new ArrayList<>();
             }
+            
+            // Copy từ listtemp sang list
+            if (listtemp != null) {
+                list.addAll(listtemp);
+            }
+            android.util.Log.d("NguoiThueDebug", "Total in list: " + list.size());
+            
+            // Khởi tạo adapter
+            try {
+                nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, this, list);
+                lstNguoiThue.setAdapter(nguoiThueAdapter);
+                android.util.Log.d("NguoiThueDebug", "Adapter set successfully");
+            } catch (Exception e) {
+                android.util.Log.e("NguoiThueDebug", "Error setting adapter", e);
+            }
+        
+            edtSearch=findViewById(R.id.edtSearch);
+            edtSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                list.clear();
-                for (NguoiThue nt : listtemp){
-                    if (nt.getTenNguoiThue().contains(charSequence.toString())){
-                        list.add(nt);
+                }
+
+                @Override
+                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                    if (list != null && listtemp != null) {
+                        list.clear();
+                        for (NguoiThue nt : listtemp){
+                            if (nt.getTenNguoiThue() != null && nt.getTenNguoiThue().contains(charSequence.toString())){
+                                list.add(nt);
+                            }
+                        }
+                        if (nguoiThueAdapter != null) {
+                            nguoiThueAdapter.notifyDataSetChanged();
+                        }
                     }
                 }
-                nguoiThueAdapter.notifyDataSetChanged();
-            }
 
-            @Override
-            public void afterTextChanged(Editable editable) {
+                @Override
+                public void afterTextChanged(Editable editable) {
 
-            }
-        });
+                }
+            });
 
-
-        capNhatList();
-
-        btnadd.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                openDialogAdd(nguoiThue_Activity.this);
-            }
-        });
-        lstNguoiThue.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                nguoiThue=list.get(i);
-                openDialogUpdate(nguoiThue_Activity.this);
-                return false;
-            }
-        });
-
+            btnadd.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    openDialogAdd(nguoiThue_Activity.this);
+                }
+            });
+            
+            lstNguoiThue.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                @Override
+                public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    nguoiThue=list.get(i);
+                    openDialogUpdate(nguoiThue_Activity.this);
+                    return false;
+                }
+            });
+            
+        } catch (Exception e) {
+            android.util.Log.e("NguoiThueDebug", "Error in onCreate", e);
+            Toast.makeText(this, "Lỗi khi tải dữ liệu: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
     protected void openDialogAdd(final Context context){
         dialog = new Dialog(context);
@@ -156,8 +210,37 @@ public class nguoiThue_Activity extends AppCompatActivity {
         troDao=new phongTroDao(context);
         listpt = new ArrayList<PhongTro>();
         listpt= (ArrayList<PhongTro>) troDao.getAll();
+        
+        // Chỉ hiển thị phòng do chủ trọ hiện tại sở hữu (dựa theo BaiDang.chuTroId)
+        try {
+            android.content.SharedPreferences sp = getSharedPreferences("user11", MODE_PRIVATE);
+            String currentOwner = sp.getString("username11", "");
+            java.util.HashSet<Integer> ownedRooms = new java.util.HashSet<>();
+            java.util.List<com.example.nestera.model.BaiDang> posts = new com.example.nestera.Dao.baiDangDao(context).getByChuTro(currentOwner);
+            for (com.example.nestera.model.BaiDang bd : posts) {
+                try { if (bd.getMaPhong() != null) ownedRooms.add(bd.getMaPhong()); } catch (Exception ignored) {}
+            }
+            java.util.ArrayList<PhongTro> filtered = new java.util.ArrayList<>();
+            for (PhongTro p : listpt) {
+                if (ownedRooms.contains(p.getMaPhong())) filtered.add(p);
+            }
+            listpt = filtered;
+        } catch (Exception e) { /* fallback: keep list as-is */ }
+        
+        // Thêm option "Chưa có phòng" ở đầu danh sách
+        PhongTro phongTrong = new PhongTro();
+        phongTrong.setMaPhong(0); // maPhong = 0 nghĩa là chưa có phòng
+        phongTrong.setTenPhong("Chưa có phòng");
+        phongTrong.setGia(0);
+        listpt.add(0, phongTrong); // Thêm vào đầu danh sách
+        
         spPhongAdapter=new SPPhong_Adapter(context,listpt);
         spnPhong.setAdapter(spPhongAdapter);
+        
+        // Mặc định chọn "Chưa có phòng"
+        spnPhong.setSelection(0);
+        maPhongTro = 0;
+        
         edtNamSinh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -225,14 +308,19 @@ public class nguoiThue_Activity extends AppCompatActivity {
                 nguoiThue.setcCCD(edtCCCD.getText().toString());
                 nguoiThue.setNamSinh(edtNamSinh.getText().toString());
 
+                // Lưu chuTroId (username của chủ trọ hiện tại)
+                android.content.SharedPreferences prefs = getSharedPreferences("user11", MODE_PRIVATE);
+                String currentUsername = prefs.getString("username11", "");
+                nguoiThue.setChuTroId(currentUsername);
 
                 nguoiThue.setMaPhong(maPhongTro);
+                // Giới tính: 1 = Nam, 0 = Nữ, 2 = Khác
                 if (rdoNam.isChecked()){
-                    nguoiThue.setGioiTinh(0);
+                    nguoiThue.setGioiTinh(1); // Nam
                 } else if (rdoNu.isChecked()) {
-                    nguoiThue.setGioiTinh(1);
+                    nguoiThue.setGioiTinh(0); // Nữ
                 } else if (rdoKhac.isChecked()){
-                    nguoiThue.setGioiTinh(2);
+                    nguoiThue.setGioiTinh(2); // Khác
                 }
 
                 if (!nguoiThue.getSdt().matches("^0\\d{9}$")){
@@ -303,6 +391,30 @@ public class nguoiThue_Activity extends AppCompatActivity {
         troDao=new phongTroDao(context);
         listpt = new ArrayList<PhongTro>();
         listpt= (ArrayList<PhongTro>) troDao.getAll();
+        
+        // Chỉ hiển thị phòng do chủ trọ hiện tại sở hữu (dựa theo BaiDang.chuTroId)
+        try {
+            android.content.SharedPreferences sp = getSharedPreferences("user11", MODE_PRIVATE);
+            String currentOwner = sp.getString("username11", "");
+            java.util.HashSet<Integer> ownedRooms = new java.util.HashSet<>();
+            java.util.List<com.example.nestera.model.BaiDang> posts = new com.example.nestera.Dao.baiDangDao(context).getByChuTro(currentOwner);
+            for (com.example.nestera.model.BaiDang bd : posts) {
+                try { if (bd.getMaPhong() != null) ownedRooms.add(bd.getMaPhong()); } catch (Exception ignored) {}
+            }
+            java.util.ArrayList<PhongTro> filtered = new java.util.ArrayList<>();
+            for (PhongTro p : listpt) {
+                if (ownedRooms.contains(p.getMaPhong())) filtered.add(p);
+            }
+            listpt = filtered;
+        } catch (Exception e) { /* fallback: keep list as-is */ }
+        
+        // Thêm option "Chưa có phòng" ở đầu danh sách
+        PhongTro phongTrong = new PhongTro();
+        phongTrong.setMaPhong(0);
+        phongTrong.setTenPhong("Chưa có phòng");
+        phongTrong.setGia(0);
+        listpt.add(0, phongTrong);
+        
         spPhongAdapter=new SPPhong_Adapter(context,listpt);
         spnPhong.setAdapter(spPhongAdapter);
 
@@ -349,10 +461,13 @@ public class nguoiThue_Activity extends AppCompatActivity {
         }
         spnPhong.setSelection(maPhongTro);
 
-        if (nguoiThue.getGioiTinh()==0){
-            rdoNam.setChecked(true);
-        } else if (nguoiThue.getGioiTinh()==1) {
-            rdoNu.setChecked(true);
+        // Giới tính: 1 = Nam, 0 = Nữ, 2 = Khác
+        if (nguoiThue.getGioiTinh()==1){
+            rdoNam.setChecked(true); // Nam
+        } else if (nguoiThue.getGioiTinh()==0) {
+            rdoNu.setChecked(true); // Nữ
+        } else if (nguoiThue.getGioiTinh()==2) {
+            rdoKhac.setChecked(true); // Khác
         }
         spnPhong.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -376,23 +491,28 @@ public class nguoiThue_Activity extends AppCompatActivity {
         btnXacNhan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // Lưu lại các thông tin cần giữ trước khi tạo object mới
+                String oldMaNguoiThue = nguoiThue.getMaNguoithue();
+                String oldChuTroId = nguoiThue.getChuTroId();
+                
                 nguoiThue = new NguoiThue();
-                nguoiThue.setMaNguoithue(edtUser.getText().toString());
+                nguoiThue.setMaNguoithue(oldMaNguoiThue); // Giữ mã người thuê cũ
                 nguoiThue.setMatKhauNT(edtPass.getText().toString());
                 nguoiThue.setTenNguoiThue(edtHoTen.getText().toString());
                 nguoiThue.setThuongTru(edtThuongTru.getText().toString());
                 nguoiThue.setSdt(edtSDT.getText().toString());
                 nguoiThue.setcCCD(edtCCCD.getText().toString());
                 nguoiThue.setNamSinh(edtNamSinh.getText().toString());
-
-                nguoiThue.setcCCD(edtCCCD.getText().toString());
                 nguoiThue.setMaPhong(maPhongTro);
+                nguoiThue.setChuTroId(oldChuTroId); // Giữ lại chuTroId cũ
+                
+                // Giới tính: 1 = Nam, 0 = Nữ, 2 = Khác
                 if (rdoNam.isChecked()){
-                    nguoiThue.setGioiTinh(0);
+                    nguoiThue.setGioiTinh(1); // Nam
                 } else if (rdoNu.isChecked()) {
-                    nguoiThue.setGioiTinh(1);
+                    nguoiThue.setGioiTinh(0); // Nữ
                 }else if (rdoKhac.isChecked()){
-                    nguoiThue.setGioiTinh(2);
+                    nguoiThue.setGioiTinh(2); // Khác
                 }
                 if (TextUtils.isEmpty(edtUser.getText().toString())||TextUtils.isEmpty(edtPass.getText().toString())||TextUtils.isEmpty(edtThuongTru.getText().toString())||TextUtils.isEmpty(edtHoTen.getText().toString())||TextUtils.isEmpty(edtCCCD.getText().toString())||TextUtils.isEmpty(edtSDT.getText().toString())||TextUtils.isEmpty(edtNamSinh.getText().toString())){
                     Toast.makeText(context, "Bạn phải nhập đầy đủ", Toast.LENGTH_SHORT).show();
@@ -431,7 +551,31 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
     }
     void capNhatList(){
-        list = (ArrayList<NguoiThue>) dao.getAll();
+        // Lấy thông tin user hiện tại
+        android.content.SharedPreferences prefs = getSharedPreferences("user11", MODE_PRIVATE);
+        String username = prefs.getString("username11", "");
+        String role = prefs.getString("role", "");
+        
+        // Load danh sách theo role
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            // Admin xem tất cả
+            list = (ArrayList<NguoiThue>) dao.getAll();
+            listtemp = (ArrayList<NguoiThue>) dao.getAll();
+        } else if ("LANDLORD".equalsIgnoreCase(role)) {
+            // Chủ trọ chỉ xem người thuê của mình
+            if (username != null && !username.isEmpty()) {
+                list = (ArrayList<NguoiThue>) dao.getByChuTro(username);
+                listtemp = (ArrayList<NguoiThue>) dao.getByChuTro(username);
+            } else {
+                list = new ArrayList<>();
+                listtemp = new ArrayList<>();
+            }
+        } else {
+            // Role khác không xem được
+            list = new ArrayList<>();
+            listtemp = new ArrayList<>();
+        }
+        
         nguoiThueAdapter=new NguoiThue_Adapter(nguoiThue_Activity.this,this,list);
         lstNguoiThue.setAdapter(nguoiThueAdapter);
     }

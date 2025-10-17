@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <EditText android:id="@+id/edtTieuDe"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Mã Phòng"/>
+        <EditText android:id="@+id/edtDiaChi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Địa chỉ"/>
+        <EditText android:id="@+id/edtGia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:hint="Giá / tháng (VND)"/>
+        <EditText android:id="@+id/edtDienTich"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:hint="Diện tích (m2)"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tiện nghi"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="4dp">
+            <CheckBox android:id="@+id/chkAmenity1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Điều hoà"/>
+            <CheckBox android:id="@+id/chkAmenity2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Nóng lạnh"/>
+            <CheckBox android:id="@+id/chkAmenity3" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tủ lạnh"/>
+            <CheckBox android:id="@+id/chkAmenity4" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tủ quần áo"/>
+            <CheckBox android:id="@+id/chkAmenity5" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Máy giặt"/>
+            <CheckBox android:id="@+id/chkAmenity6" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wifi"/>
+            <CheckBox android:id="@+id/chkAmenity7" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Bãi gửi xe"/>
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Trạng thái"/>
+        <Spinner
+            android:id="@+id/spTrangThai"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/trang_thai_baidang"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Hình ảnh phòng (có thể chọn nhiều)"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <Button
+                android:id="@+id/btnPickImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Chọn ảnh"/>
+            <TextView
+                android:id="@+id/tvSelectedImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="12dp"
+                android:text="Chưa chọn ảnh"/>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>
+
+

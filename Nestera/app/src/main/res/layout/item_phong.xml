@@ -16,14 +16,13 @@
         <!-- Container cho ảnh -->
         <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="200dp">
+            android:layout_height="240dp">
 
             <ImageView
                 android:id="@+id/ivRoomImage"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/phong_tro_1_1" />
+                android:scaleType="centerCrop" />
 
             <!-- Status badge với background rõ ràng hơn -->
             <TextView
@@ -65,7 +64,7 @@
         <!-- Thông tin phòng với chiều cao cố định -->
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="160dp"
+            android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -74,12 +73,12 @@
                 android:id="@+id/txtPhong"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:text="Phòng trọ cao cấp Quận 1"
                 android:textColor="@color/black"
                 android:textSize="18sp"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end" />
+                android:textStyle="bold" />
 
             <!-- Địa chỉ -->
             <LinearLayout
@@ -101,7 +100,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="6dp"
                     android:layout_weight="1"
-                    android:text="123 Nguyễn Huệ, Quận 1"
+                    android:text=""
                     android:textColor="#666666"
                     android:textSize="14sp" />
 
@@ -173,11 +172,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                android:ellipsize="end"
+                android:maxLines="3"
                 android:text="Điều hoà • Tủ lạnh • Nóng lạnh • WiFi"
                 android:textColor="#666666"
-                android:textSize="14sp"
-                android:maxLines="2"
-                android:ellipsize="end" />
+                android:textSize="14sp" />
 
             <!-- Spacer để đẩy content xuống dưới -->
             <View
@@ -189,27 +188,27 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <TextView
-                    android:id="@+id/txtLoaiPhong_Phong"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Full option"
-                    android:textColor="#4285F4"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+<!--                <TextView-->
+<!--                    android:id="@+id/txtLoaiPhong_Phong"-->
+<!--                    android:layout_width="0dp"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:layout_weight="1"-->
+<!--                    android:text="Full option"-->
+<!--                    android:textColor="#4285F4"-->
+<!--                    android:textSize="14sp"-->
+<!--                    android:textStyle="bold" />-->
 
                 <TextView
                     android:id="@+id/txtXemHopDong"
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:background="@drawable/detail_button_background"
-                    android:paddingHorizontal="16dp"
                     android:gravity="center"
+                    android:paddingHorizontal="16dp"
                     android:text="Xem chi tiết"
                     android:textColor="@color/white"
                     android:textSize="12sp"

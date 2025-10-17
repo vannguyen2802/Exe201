@@ -5,6 +5,7 @@ public class NguoiThue {
     private String namSinh;
     private int gioiTinh;
     private int maPhong;
+    private String chuTroId; // Chủ trọ nào tạo người thuê này
 
     public NguoiThue() {
     }
@@ -79,6 +80,14 @@ public class NguoiThue {
 
     public void setMaPhong(int maPhong) {
         this.maPhong = maPhong;
+    }
+
+    public String getChuTroId() {
+        return chuTroId;
+    }
+
+    public void setChuTroId(String chuTroId) {
+        this.chuTroId = chuTroId;
     }
 
     public NguoiThue(String maNguoithue, String matKhauNT, String tenNguoiThue, String thuongTru, String sdt, String cCCD, String namSinh, int gioiTinh, int maPhong) {

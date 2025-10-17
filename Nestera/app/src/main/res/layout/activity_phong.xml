@@ -11,28 +11,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
-        <com.google.android.material.textfield.TextInputLayout
+        android:orientation="horizontal"
+        android:layout_margin="12dp">
+
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:background="@drawable/search_background"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="16dp">
 
-            app:startIconDrawable="@drawable/ic_search"
-            app:startIconTint="#FFFFFF"
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_search"
+                android:alpha="0.6" />
 
-            app:boxBackgroundMode="outline"
-            app:boxBackgroundColor="#AAF84B"
-            app:endIconMode="clear_text"
-            app:endIconTint="@color/gray_dark"
-            android:layout_margin="10dp"
-            >
-            <com.google.android.material.textfield.TextInputEditText
+            <EditText
                 android:id="@+id/edtSearch"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/filter_button_background"
-                android:textColor="@color/gray_dark"
-                />
-        </com.google.android.material.textfield.TextInputLayout>
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="Tìm kiếm phòng..."
+                android:textColor="#333333"
+                android:textColorHint="#999999"
+                android:textSize="14sp"
+                android:layout_marginStart="12dp"
+                android:background="@android:color/transparent"
+                android:padding="4dp" />
+
+        </LinearLayout>
 
     </LinearLayout>
     <ListView

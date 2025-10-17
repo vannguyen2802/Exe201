@@ -13,6 +13,14 @@
         android:title="Đổi mật khẩu"
         android:icon="@drawable/ic_key"/>
     <item
+        android:id="@+id/nav_AdminDashboard"
+        android:title="Admin Dashboard"
+        android:icon="@drawable/home"/>
+    <item
+        android:id="@+id/nav_ManageAccounts"
+        android:title="Quản lý tài khoản"
+        android:icon="@drawable/baseline_person_24"/>
+    <item
         android:id="@+id/nav_NganHang"
         android:title="Ngân Hàng Thanh Toán"
         android:icon="@drawable/bank"/>

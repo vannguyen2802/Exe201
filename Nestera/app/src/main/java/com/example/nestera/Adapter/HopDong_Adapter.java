@@ -94,6 +94,11 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             edtTienPhong_hd.setEnabled(false);
             edtNgayki_hd.setEnabled(false);
             edtTienCoc_hd.setEnabled(false);
+            // Khóa chỉnh sửa tất cả các trường khi hợp đồng đã tạo (chỉ xem)
+            edtSothang_hd.setEnabled(false); edtSothang_hd.setFocusable(false); edtSothang_hd.setFocusableInTouchMode(false); edtSothang_hd.setCursorVisible(false);
+            edtSonguoi_hd.setEnabled(false); edtSonguoi_hd.setFocusable(false); edtSonguoi_hd.setFocusableInTouchMode(false); edtSonguoi_hd.setCursorVisible(false);
+            edtSoxe_hd.setEnabled(false); edtSoxe_hd.setFocusable(false); edtSoxe_hd.setFocusableInTouchMode(false); edtSoxe_hd.setCursorVisible(false);
+            edtGhiChu_hd.setEnabled(false); edtGhiChu_hd.setFocusable(false); edtGhiChu_hd.setFocusableInTouchMode(false); edtGhiChu_hd.setCursorVisible(false);
 
             edtma_hd.setText(hd.getMaHopDong() + "");
 
@@ -105,8 +110,20 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             edtSothang_hd.setText(hd.getThoiHan() + "");
 
             ptDao = new phongTroDao(context);
-            PhongTro phongTro = ptDao.getID(String.valueOf(hd.getMaPhong()));
-            edtSoPhong_hd.setText(phongTro.getTenPhong());
+            String tenPhong = null;
+            boolean isEnded = false; // Đã Kết Thúc khi phòng về trạng thái trống
+            try {
+                PhongTro phongTro = ptDao.getID(String.valueOf(hd.getMaPhong()));
+                if (phongTro != null) {
+                    tenPhong = phongTro.getTenPhong();
+                    try { isEnded = (phongTro.getTrangThai() == 0); } catch (Exception ignored2) {}
+                }
+            } catch (Exception ignored) {}
+            if (tenPhong == null || tenPhong.isEmpty()) {
+                tenPhong = hd.getTenPhong();
+            }
+            if (tenPhong == null) tenPhong = String.valueOf(hd.getMaPhong());
+            edtSoPhong_hd.setText(tenPhong);
             edtTienCoc_hd.setText(hd.getTienCoc() + "");
             edtTienPhong_hd.setText(hd.getGiaTien() + "");
             edtSonguoi_hd.setText(hd.getSoNguoi() + "");
@@ -120,17 +137,52 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             ntDao = new nguoiThueDao(context);
             NguoiThue nguoiThue = ntDao.getID(hd.getMaNguoiThue());
             edtTenkh_hd.setText(String.valueOf(nguoiThue.getTenNguoiThue()));
-            if(username.equalsIgnoreCase("admin")) {
+            if(username.equalsIgnoreCase("admin") || username.equalsIgnoreCase("landlord") || context.getSharedPreferences("user11", MODE_PRIVATE).getString("role", "").equalsIgnoreCase("LANDLORD")) {
+            // Nếu hợp đồng đã kết thúc (phòng trống) thì chỉ cho phép Gia hạn thêm; ẩn Kết thúc
+            if (isEnded) {
+                btnKetThuc.setVisibility(View.GONE);
+            } else {
+                btnKetThuc.setVisibility(View.VISIBLE);
+            }
             btnCapNhap.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    int soNguoi = Integer.parseInt(edtSonguoi_hd.getText().toString());
-                    int soXe = Integer.parseInt(edtSoxe_hd.getText().toString());
-                    hd.setSoNguoi(soNguoi);
-                    hd.setSoXe(soXe);
-                    dao.update(hd);
-                    notifyDataSetChanged();
-                    Toast.makeText(context, "Cập nhập hợp đồng thàng công", Toast.LENGTH_SHORT).show();
+                    // Gia hạn thêm: mở dialog nhập số tháng mới (các trường hiển thị readonly)
+                    android.widget.LinearLayout container = new android.widget.LinearLayout(context);
+                    container.setOrientation(android.widget.LinearLayout.VERTICAL);
+                    int pad = (int) (context.getResources().getDisplayMetrics().density*16);
+                    container.setPadding(pad, pad, pad, pad);
+                    final android.widget.EditText input = new android.widget.EditText(context);
+                    input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+                    input.setHint(String.valueOf(hd.getThoiHan()));
+                    input.setHintTextColor(0xFF999999);
+                    input.setTextColor(0xFF333333);
+                    container.addView(input);
+                    new androidx.appcompat.app.AlertDialog.Builder(context)
+                            .setTitle("Gia hạn – số tháng mới")
+                            .setView(container)
+                            .setPositiveButton("Tiếp tục", new android.content.DialogInterface.OnClickListener() {
+                                @Override public void onClick(android.content.DialogInterface dialog, int which) {
+                                    try {
+                                        int thoiHanMoi = Integer.parseInt(input.getText().toString());
+                                        if (thoiHanMoi <= 0) { Toast.makeText(context, "Số tháng phải > 0", Toast.LENGTH_SHORT).show(); return; }
+                                        // Lưu tham số để Activity xử lý cập nhật ngày ký và ảnh sau khi chọn ảnh
+                                        if (hopDong_activity instanceof com.example.nestera.Activity.hopDong_Activity) {
+                                            com.example.nestera.Activity.hopDong_Activity act = (com.example.nestera.Activity.hopDong_Activity) hopDong_activity;
+                                            act.pendingRenewHopDongId = hd.getMaHopDong();
+                                            act.pendingRenewThoiHan = thoiHanMoi;
+                                            act.pendingRenewNewMaPhong = null;
+                                            act.pendingRenewOldMaPhong = null;
+                                            act.pendingRenewImageBytes = null;
+                                            act.startPickRenewImage();
+                                        }
+                                    } catch (Exception ex) {
+                                        Toast.makeText(context, "Dữ liệu không hợp lệ", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            })
+                            .setNegativeButton("Hủy", null)
+                            .show();
                 }
             });
             btnKetThuc.setOnClickListener(new View.OnClickListener() {

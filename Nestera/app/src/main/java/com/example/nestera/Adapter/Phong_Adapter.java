@@ -54,14 +54,20 @@ public class Phong_Adapter extends ArrayAdapter<PhongTro> {
             ivRoomImage = v.findViewById(R.id.ivRoomImage);
             txtGia = v.findViewById(R.id.txtGia);
             txtTienNghi = v.findViewById(R.id.txtTienNghi);
-            txtCoSo_Phong = v.findViewById(R.id.txtLoaiPhong_Phong);
+//            txtCoSo_Phong = v.findViewById(R.id.txtLoaiPhong_Phong);
             txtTinhTrang = v.findViewById(R.id.tvStatus);
             txtXemHopDong = v.findViewById(R.id.txtXemHopDong);
+            TextView tvLocation = v.findViewById(R.id.tvLocation);
 
 
             txtPhong.setText("Phòng: " + phongTro.getTenPhong());
             txtGia.setText("Giá: " + phongTro.getGia());
             txtTienNghi.setText("Tiện nghi: " + phongTro.getTienNghi());
+            if (tvLocation != null) {
+                String dc = phongTro.getDiaChi();
+                if (dc == null || dc.isEmpty()) dc = "";
+                tvLocation.setText(dc);
+            }
 
             loaiPhongDao=new LoaiPhongDao(context);
             LoaiPhong loaiPhong=loaiPhongDao.getID(String.valueOf(phongTro.getMaLoai()));
@@ -104,26 +110,19 @@ public class Phong_Adapter extends ArrayAdapter<PhongTro> {
                 }
             });
             
-            // Load ảnh từ imagePath
+            // Load ảnh: ưu tiên ảnh URI từ bài đăng (nếu đồng bộ), nếu không thì dùng imagePath drawable
             if (ivRoomImage != null) {
                 String imagePath = phongTro.getImagePath();
-                if (imagePath != null && !imagePath.isEmpty()) {
+                if (imagePath != null && imagePath.startsWith("content:")) {
+                    try { ivRoomImage.setImageURI(android.net.Uri.parse(imagePath)); } catch (Exception e) { ivRoomImage.setImageResource(R.drawable.phong_tro_1_1); }
+                } else if (imagePath != null && !imagePath.isEmpty()) {
                     String imageName = imagePath;
-                    // Loại bỏ extension nếu có
                     if (imageName.contains(".")) {
                         imageName = imageName.substring(0, imageName.lastIndexOf("."));
                     }
-                    
-                    int imageResId = context.getResources().getIdentifier(
-                        imageName, "drawable", context.getPackageName());
-                    if (imageResId != 0) {
-                        ivRoomImage.setImageResource(imageResId);
-                    } else {
-                        // Fallback với ảnh mặc định
-                        ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
-                    }
+                    int imageResId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
+                    if (imageResId != 0) ivRoomImage.setImageResource(imageResId); else ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
                 } else {
-                    // Sử dụng ảnh mặc định
                     ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
                 }
             }

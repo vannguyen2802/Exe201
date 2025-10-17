@@ -70,13 +70,17 @@
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:layout_marginEnd="8dp" />
 
-            <ImageView
-                android:id="@+id/ivAvatar"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_user"
-                android:background="@drawable/avatar_background"
-                android:layout_marginEnd="4dp" />
+            <Button
+                android:id="@+id/btnLogin"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:text="Đăng nhập"
+                android:textSize="14sp"
+                android:textColor="@android:color/white"
+                android:background="@drawable/bg_btn_primary"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:layout_marginEnd="8dp" />
 
         </LinearLayout>
 
@@ -104,14 +108,18 @@
                     android:src="@drawable/ic_search"
                     android:alpha="0.6" />
 
-                <TextView
+                <EditText
+                    android:id="@+id/edtSearch"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Tìm kiếm trọ, khu vực..."
-                    android:textColor="#999999"
+                    android:hint="Tìm kiếm trọ, khu vực..."
+                    android:textColor="#333333"
+                    android:textColorHint="#999999"
                     android:textSize="14sp"
-                    android:layout_marginStart="12dp" />
+                    android:layout_marginStart="12dp"
+                    android:background="@android:color/transparent"
+                    android:padding="4dp" />
 
             </LinearLayout>
 
@@ -161,7 +169,7 @@
                     android:layout_height="wrap_content"
                     android:text="Gần tôi"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -188,7 +196,7 @@
                     android:layout_height="wrap_content"
                     android:text="Đánh giá cao"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -213,9 +221,9 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Giá rẻ"
+                    android:text="Lọc giá"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>
@@ -242,7 +250,7 @@
                     android:layout_height="wrap_content"
                     android:text="Yêu thích"
                     android:textSize="12sp"
-                    android:textColor="#333333"
+                    android:textColor="@color/white"
                     android:layout_marginTop="4dp" />
 
             </LinearLayout>

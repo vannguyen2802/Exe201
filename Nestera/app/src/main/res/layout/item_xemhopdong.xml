@@ -313,7 +313,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="2"
-                android:text="Kết thúc HĐ"
+                android:text="Kết thúc hợp đồng"
                 android:textColor="@color/gray_dark"
                 android:background="@drawable/border_selector"/>
 
@@ -325,7 +325,7 @@
                 android:layout_marginLeft="7dp"
                 android:textColor="@color/gray_dark"
                 android:background="@drawable/border_selector"
-                android:text="Cập nhật"/>
+                android:text="Gia hạn thêm"/>
         </LinearLayout>
 
     </LinearLayout>
