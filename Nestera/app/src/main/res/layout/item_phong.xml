@@ -64,7 +64,9 @@
         <!-- Thông tin phòng với chiều cao cố định -->
         <LinearLayout
             android:layout_width="match_parent"
+
             android:layout_height="wrap_content"
+
             android:orientation="vertical"
             android:padding="16dp">
 
@@ -174,6 +176,7 @@
                 android:layout_marginTop="8dp"
                 android:ellipsize="end"
                 android:maxLines="3"
+
                 android:text="Điều hoà • Tủ lạnh • Nóng lạnh • WiFi"
                 android:textColor="#666666"
                 android:textSize="14sp" />

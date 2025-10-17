@@ -43,7 +43,9 @@ public class BaiDangAdapter extends ArrayAdapter<BaiDang> {
             h.amenities = convertView.findViewById(R.id.tvAmenities);
             h.area = convertView.findViewById(R.id.tvArea);
             h.btnDetail = convertView.findViewById(R.id.btnDetail);
+
             h.landlordName = convertView.findViewById(R.id.tvLandlordName);
+
             convertView.setTag(h);
         } else {
             h = (ViewHolder) convertView.getTag();
@@ -87,6 +89,7 @@ public class BaiDangAdapter extends ArrayAdapter<BaiDang> {
             if (display == null || display.isEmpty()) display = landlordId != null ? landlordId : "--";
             h.landlordName.setText("Chủ trọ: " + display);
 
+
             h.btnDetail.setOnClickListener(v -> {
                 android.content.Intent it = new android.content.Intent(getContext(), com.example.nestera.Activity.BaiDangDetailActivity.class);
                 it.putExtra("postId", b.getId());
@@ -107,7 +110,9 @@ public class BaiDangAdapter extends ArrayAdapter<BaiDang> {
     }
 
     static class ViewHolder {
+
         ImageView img; TextView badge; TextView title; TextView location; TextView price; TextView amenities; TextView area; Button btnDetail; TextView landlordName;
+
     }
 }
 

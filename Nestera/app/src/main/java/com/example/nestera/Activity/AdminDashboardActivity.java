@@ -40,6 +40,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
         nav.setNavigationItemSelectedListener(new com.google.android.material.navigation.NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(android.view.MenuItem item) {
+
                 if (item.getItemId() == R.id.nav_Loguot) {
                     // Xóa session và đăng xuất
                     android.content.SharedPreferences prefs = getSharedPreferences("user11", MODE_PRIVATE);
@@ -49,6 +50,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
                     // Quay về trang Catalog
                     startActivity(new android.content.Intent(AdminDashboardActivity.this, CatalogActivity.class));
                     finish();
+
                 }
                 drawerLayout.close();
                 return true;
@@ -62,6 +64,7 @@ public class AdminDashboardActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new android.content.Intent(AdminDashboardActivity.this, ManageAccountsActivity.class));
+
             }
         });
         btnStats.setOnClickListener(new View.OnClickListener() {

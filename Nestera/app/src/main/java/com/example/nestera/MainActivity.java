@@ -185,6 +185,8 @@ public class MainActivity extends AppCompatActivity {
         } else if ("ADMIN".equalsIgnoreCase(role) || user.equalsIgnoreCase("admin")) {
             // Admin: có thể hiển thị menu dành cho Admin sau
             btnHopDong.setVisibility(View.GONE);
+
+
             txtUser.setText("Welcome Admin");
         } else {
             // Người thuê

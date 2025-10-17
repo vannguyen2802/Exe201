@@ -50,7 +50,9 @@ public class RoomFromPostAdapter extends ArrayAdapter<BaiDang> {
             TextView tvStatus = v.findViewById(R.id.tvStatus);
             TextView btnDetail = v.findViewById(R.id.txtXemHopDong);
 
+
             txtPhong.setText("Phòng: " + b.getTieuDe());
+
             tvLocation.setText(b.getDiaChi());
             txtGia.setText(NumberFormat.getNumberInstance(new Locale("vi","VN")).format(b.getGiaThang()));
             txtTienNghi.setText("Tiện nghi: " + b.getTienNghi());

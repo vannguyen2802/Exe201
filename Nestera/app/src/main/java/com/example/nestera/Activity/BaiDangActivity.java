@@ -30,6 +30,7 @@ public class BaiDangActivity extends AppCompatActivity {
     private android.widget.TextView tvSelectedGlobal;
     private android.widget.EditText edtSearchPost;
 
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,12 +77,14 @@ public class BaiDangActivity extends AppCompatActivity {
             });
         }
 
+
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 openCreateDialog();
             }
         });
+
 
         // Tab click listeners for USER
         btnTabChuTroCuaBan.setOnClickListener(new View.OnClickListener() {
@@ -112,6 +115,7 @@ public class BaiDangActivity extends AppCompatActivity {
                 @Override public void run() { btnTabChuTroCuaBan.performClick(); }
             });
         }
+
     }
 
     private void loadData(){
@@ -126,6 +130,7 @@ public class BaiDangActivity extends AppCompatActivity {
             String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
             list = dao.getByChuTro(currentUser);
         }
+
         com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(this, list);
         lv.setAdapter(adapter);
     }
@@ -188,6 +193,7 @@ public class BaiDangActivity extends AppCompatActivity {
         } catch (Exception ignored) {}
         return null;
     }
+
 
     private void openCreateDialog(){
         View view = getLayoutInflater().inflate(R.layout.dialog_baidang,null);

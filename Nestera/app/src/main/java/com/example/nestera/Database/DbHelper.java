@@ -15,7 +15,9 @@ import java.text.SimpleDateFormat;
 
 public class DbHelper extends SQLiteOpenHelper {
     static final String dbName="Nestera";
+
     static final int dbVersion=13; // Add chuTroId to NguoiThue
+
     Context context;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     public DbHelper(@Nullable Context context) {
@@ -41,7 +43,9 @@ public class DbHelper extends SQLiteOpenHelper {
         // Thêm dữ liệu mẫu cho Chủ trọ
         sqLiteDatabase.execSQL("insert into ChuTro(maChuTro, matKhau, tenChuTro, email, sdt, cccd, approved, banned) values" +
                 "('chutro1','12345','Chủ trọ 1','ct1@example.com','0900000001','012345678901',1,0)," +
+
                 "('chutro2','12345','Chủ trọ 2','ct3@example.com','0900000003','012345678903',1,0)");
+
         //Tạo bảng KeToan
         String createTableKeToan="create table KeToan(" +
                 "maKeToan TEXT PRIMARY KEY," +
@@ -382,5 +386,6 @@ public class DbHelper extends SQLiteOpenHelper {
                 e.printStackTrace();
             }
         }
+
     }
 }

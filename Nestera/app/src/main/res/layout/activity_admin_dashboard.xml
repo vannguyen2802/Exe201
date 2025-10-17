@@ -56,7 +56,9 @@
                     android:gravity="center"
                     android:padding="10dp">
                     <Button
+
                         android:id="@+id/btnManageAccounts"
+
                         android:layout_width="0dp"
                         android:layout_height="80dp"
                         android:layout_weight="1"
@@ -65,7 +67,9 @@
                         android:drawableStart="@drawable/icon_coso"
                         android:padding="20dp"
                         android:textSize="15sp"
+
                         android:text="QUẢN LÝ\nTÀI KHOẢN"/>
+
                     <Button
                         android:id="@+id/btnStats"
                         android:layout_width="0dp"
@@ -77,7 +81,9 @@
                         android:drawableStart="@drawable/icon_thongke"
                         android:padding="20dp"
                         android:textSize="15sp"
+
                         android:text="THỐNG KÊ\nTOÀN HỆ"/>
+
                 </LinearLayout>
 
             </LinearLayout>

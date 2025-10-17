@@ -98,7 +98,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         tvPrice.setText(String.format(java.util.Locale.getDefault(), "%s/tháng", java.text.NumberFormat.getNumberInstance(new java.util.Locale("vi","VN")).format(giaThang)));
         tvAmenities.setText(tienNghi);
         tvArea.setText(String.valueOf(dienTich) + "m²");
-        
+
         // Hiển thị trạng thái với style khác nhau
         tvStatus.setText(trangThai);
         tvStatus.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16); // Tăng size chữ
@@ -109,6 +109,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         } else {
             tvStatus.setTextColor(0xFF22C55E); // Màu xanh lá (Còn trống)
         }
+
         // Hiển thị mã phòng nếu có
         int maPhong = it.getIntExtra("maPhong", -1);
         if (maPhong >= 0) {
@@ -197,6 +198,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                 String ownerName = (ct.getTenChuTro()==null||ct.getTenChuTro().trim().isEmpty())? chuTroId : ct.getTenChuTro();
                 tvOwner.setText(ownerName);
                 tvPhone.setText("📱 " + ct.getSdt());
+
                 btnCall.setEnabled(ct.getSdt()!=null && !ct.getSdt().isEmpty());
                 btnCall.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -206,11 +208,14 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     }
                 });
             } else {
+
                 tvOwner.setText("Không có thông tin");
                 tvPhone.setText("");
+
                 btnCall.setEnabled(false);
             }
         }
+
 
     }
 

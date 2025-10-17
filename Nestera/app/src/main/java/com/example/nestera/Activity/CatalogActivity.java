@@ -245,6 +245,7 @@ public class CatalogActivity extends AppCompatActivity {
         loadAllBaiDang();
         // Cập nhật text button login
         updateLoginButton();
+
     }
 }
 

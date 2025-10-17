@@ -126,6 +126,7 @@
         android:text="Đăng bài mới"
         android:layout_margin="12dp"/>
 
+
 </LinearLayout>
 
 

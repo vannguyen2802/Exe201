@@ -5,7 +5,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+
 import android.widget.ImageView;
+
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -24,7 +26,9 @@ import java.util.List;
 public class ManageAccountsActivity extends AppCompatActivity {
     android.widget.TableLayout tlLandlords, tlPending, tlTenants;
     Button btnApproveAll;
+
     ImageView ivBack;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -36,6 +40,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
         tlPending = findViewById(R.id.tlPending);
         tlTenants = findViewById(R.id.tlTenants);
         btnApproveAll = findViewById(R.id.btnApproveAll);
+
         ivBack = findViewById(R.id.ivBack);
         
         // Xử lý nút back
@@ -45,6 +50,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
                 finish();
             }
         });
+
 
         chuTroDao ctDao = new chuTroDao(this);
         nguoiThueDao ntDao = new nguoiThueDao(this);
@@ -89,6 +95,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
             addDataRowWithApprove(tlPending, ct, ctDao);
         }
 
+
         addHeaderRow(tlTenants, new String[]{"Mã","Họ tên","Thường trú","SĐT","CCCD","Giới tính","Số Phòng","Chủ trọ"});
         List<NguoiThue> tenants = ntDao.getAll();
         for (NguoiThue nt : tenants) {
@@ -119,15 +126,18 @@ public class ManageAccountsActivity extends AppCompatActivity {
             } catch (Exception e) {
                 landlordName = nt.getChuTroId();
             }
+
             addDataRow(tlTenants, new String[]{
                     nullSafe(nt.getMaNguoithue()),
                     nullSafe(nt.getTenNguoiThue()),
                     nullSafe(nt.getThuongTru()),
                     nullSafe(nt.getSdt()),
                     nullSafe(nt.getcCCD()),
+
                     gioiTinh,
                     soPhong,
                     nullSafe(landlordName)
+
             }, false);
         }
 

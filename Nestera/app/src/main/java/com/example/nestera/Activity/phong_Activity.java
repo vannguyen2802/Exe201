@@ -98,10 +98,12 @@ public class phong_Activity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
                 list.clear();
+
                 // Lấy username của chủ trọ hiện tại
                 String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
                 // Tìm theo tiêu đề hoặc địa chỉ trong bài đăng của chủ trọ hiện tại
                 java.util.ArrayList<com.example.nestera.model.BaiDang> src = new java.util.ArrayList<>(new com.example.nestera.Dao.baiDangDao(phong_Activity.this).getByChuTro(currentUser));
+
                 list.clear();
                 for (com.example.nestera.model.BaiDang b : src){
                     if ((b.getTieuDe()!=null && b.getTieuDe().toLowerCase().contains(charSequence.toString().toLowerCase())) ||
@@ -277,10 +279,12 @@ public class phong_Activity extends AppCompatActivity {
     }
 
     public void capNhapLv() {
+
         // Lấy username của chủ trọ hiện tại
         String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
         // Chỉ hiển thị bài đăng của chủ trọ hiện tại
         list = (java.util.ArrayList<com.example.nestera.model.BaiDang>) new com.example.nestera.Dao.baiDangDao(this).getByChuTro(currentUser);
+
         adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
         lstPhong.setAdapter(adapter);
     }
