@@ -1,248 +1,235 @@
-package com.example.nestera.Activity;
-
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-
+package  com.example.nestera.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
-import vn.momo.momo_partner.AppMoMoLib;
-import vn.momo.momo_partner.MoMoParameterNameMap;
-import com.example.nestera.Adapter.HoaDon_Adapter;
+import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.nestera.Activity.VNPAYConfig;
 import com.example.nestera.Adapter.NganHangSpinner_Adapter;
 import com.example.nestera.Dao.NganHangDao;
 import com.example.nestera.Dao.hoaDonDao;
 import com.example.nestera.R;
-import com.example.nestera.model.HoaDon;
 import com.example.nestera.model.NganHang;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.Calendar;
 
 public class ThanhToan_Activity extends AppCompatActivity {
+    private Button btnThanhToanVNPAY;
+
     Spinner spNganHang;
     ImageView imgAnhQR_tt, imgAnhThanhToan;
-    ListView lstHoaDon;
-    Button btnChonAnhtt,btnXacNhantt,btnHuytt;
-    EditText edtmaHoaDon;
-    ArrayList<HoaDon> list;
-    HoaDon_Adapter hoaDonAdapter;
-    hoaDon_Activity hoaDonActivity;
-    ArrayList<NganHang> listnh;
+    Button btnChonAnhtt, btnXacNhantt, btnHuytt;
+    final int REQUEST_CODE_FOLDER = 456;
     hoaDonDao hoadonDao;
     NganHangDao nhDao;
-    HoaDon hoaDon;
-    NganHangSpinner_Adapter nganHangSpinnerAdapter;
-    int maNganHang;
-    byte[] anhthanhtoan;
-    byte[] anhqr;
     int mahoadon;
-    final int REQUEST_CODE_FOLDER = 456;
-    private String amount = "10000";
-    private String fee = "0";
-    int environment = 0;//developer default
-    private String merchantName = "NESTERA";
-    private String merchantCode = "MOMOYQVY20251008";
-    private String merchantNameLabel = "NESTERA";
-    private String description = "Thanh toán dịch vụ tro";
+    String amount;
 
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_thanh_toan);
-        AppMoMoLib.getInstance().setEnvironment(AppMoMoLib.ENVIRONMENT.DEVELOPMENT); // AppMoMoLib.ENVIRONMENT.PRODUCTION
 
-        spNganHang=findViewById(R.id.spnNganHang);
-        imgAnhQR_tt=findViewById(R.id.imgAnhQR_tt);
-        imgAnhThanhToan=findViewById(R.id.imgAnhThanhToan);
-        btnChonAnhtt=findViewById(R.id.btnChonAnhtt);
-        btnXacNhantt=findViewById(R.id.btnXacNhantt);
-        btnHuytt=findViewById(R.id.btnHuytt);
-        edtmaHoaDon=findViewById(R.id.edtMaHoaDon);
-        edtmaHoaDon.setVisibility(View.GONE);
-        hoaDonActivity=new hoaDon_Activity();
-        hoadonDao=new hoaDonDao(ThanhToan_Activity.this);
-        list= (ArrayList<HoaDon>) hoadonDao.getAll();
-        hoaDon=new HoaDon();
+        // --- Bỏ dòng khởi tạo apiService ---
+        // apiService = RetrofitClient.getClient(SERVER_URL).create(ApiService.class);
 
-        mahoadon=getIntent().getIntExtra("mahoadon",-1);
+        anhXaView();
+        hoadonDao = new hoaDonDao(this);
+        nhDao = new NganHangDao(this);
 
-        btnChonAnhtt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent,REQUEST_CODE_FOLDER);
-//                ActivityCompat.requestPermissions(getActivity(),new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_CODE_FOLDER);
+        mahoadon = getIntent().getIntExtra("mahoadon", -1);
+        if (mahoadon == -1) {
+            Toast.makeText(this, "Lỗi: Không tìm thấy hóa đơn", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        int tongTien = hoadonDao.getTongTien(mahoadon);
+        amount = String.valueOf(tongTien);
+
+        // Cập nhật logic kiểm tra tổng tiền cho nút VNPAY
+        if (tongTien <= 0) {
+            btnThanhToanVNPAY.setEnabled(false);
+            btnThanhToanVNPAY.setText("Không thể thanh toán (0đ)");
+        }
+
+        setupNganHangSpinner();
+        setupButtonClickListeners();
+    }
+
+    private void anhXaView() {
+        spNganHang = findViewById(R.id.spnNganHang);
+        imgAnhQR_tt = findViewById(R.id.imgAnhQR_tt);
+        imgAnhThanhToan = findViewById(R.id.imgAnhThanhToan);
+        btnChonAnhtt = findViewById(R.id.btnChonAnhtt);
+        btnXacNhantt = findViewById(R.id.btnXacNhantt);
+        btnHuytt = findViewById(R.id.btnHuytt);
+        // Ánh xạ lại nút VNPAY
+        btnThanhToanVNPAY = findViewById(R.id.btnThanhToanVNPAY);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void setupButtonClickListeners() {
+        // Thay đổi listener cho nút VNPAY
+        btnThanhToanVNPAY.setOnClickListener(v -> createVnpayPaymentUrl());
+        // ... (giữ nguyên code các nút khác)
+        btnHuytt.setOnClickListener(v-> finish());
+    }
+
+
+    // --- THÊM HÀM TẠO URL THANH TOÁN VNPAY ---
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void createVnpayPaymentUrl() {
+        String vnp_TxnRef = VNPAYConfig.getRandomNumber(8); // Mã giao dịch, mỗi lần tạo phải khác nhau
+        String vnp_IpAddr = "127.0.0.1"; // IP Address, trên mobile có thể để mặc định
+        String vnp_TmnCode = VNPAYConfig.vnp_TmnCode;
+
+        // VNPAY yêu cầu số tiền nhân 100
+        long amountValue = Long.parseLong(amount) * 100;
+
+        Map<String, String> vnp_Params = new HashMap<>();
+        vnp_Params.put("vnp_Version", VNPAYConfig.vnp_Version);
+        vnp_Params.put("vnp_Command", VNPAYConfig.vnp_Command);
+        vnp_Params.put("vnp_TmnCode", vnp_TmnCode);
+        vnp_Params.put("vnp_Amount", String.valueOf(amountValue));
+        vnp_Params.put("vnp_CurrCode", "VND");
+        vnp_Params.put("vnp_TxnRef", vnp_TxnRef);
+        vnp_Params.put("vnp_OrderInfo", "Thanh toan don hang: " + vnp_TxnRef);
+        vnp_Params.put("vnp_OrderType", "other");
+        vnp_Params.put("vnp_Locale", "vn");
+
+        // URL trả về sau khi thanh toán thành công/thất bại.
+        // Cần phải định nghĩa một scheme cho ứng dụng của bạn trong AndroidManifest.xml
+        // Ví dụ: app://nestera
+        vnp_Params.put("vnp_ReturnUrl", "app://nestera");
+
+        vnp_Params.put("vnp_IpAddr", vnp_IpAddr);
+
+        // Định dạng ngày tạo giao dịch
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
+        String vnp_CreateDate = formatter.format(cld.getTime());
+        vnp_Params.put("vnp_CreateDate", vnp_CreateDate);
+
+        // Sắp xếp các tham số theo thứ tự alphabet
+        List<String> fieldNames = new ArrayList<>(vnp_Params.keySet());
+        Collections.sort(fieldNames);
+        StringBuilder hashData = new StringBuilder();
+        StringBuilder query = new StringBuilder();
+        Iterator<String> itr = fieldNames.iterator();
+        while (itr.hasNext()) {
+            String fieldName = itr.next();
+            String fieldValue = vnp_Params.get(fieldName);
+            if ((fieldValue != null) && (fieldValue.length() > 0)) {
+                //Build hash data
+                hashData.append(fieldName);
+                hashData.append('=');
+                hashData.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                //Build query
+                query.append(URLEncoder.encode(fieldName, StandardCharsets.US_ASCII));
+                query.append('=');
+                query.append(URLEncoder.encode(fieldValue, StandardCharsets.US_ASCII));
+                if (itr.hasNext()) {
+                    query.append('&');
+                    hashData.append('&');
+                }
             }
-        });
+        }
 
-        nhDao = new NganHangDao(ThanhToan_Activity.this);
-        listnh=new ArrayList<NganHang>();
-        listnh= (ArrayList<NganHang>) nhDao.getAll();
-        nganHangSpinnerAdapter = new NganHangSpinner_Adapter(ThanhToan_Activity.this,listnh);
+        String queryUrl = query.toString();
+        String vnp_SecureHash = VNPAYConfig.hmacSHA512(VNPAYConfig.vnp_HashSecret, hashData.toString());
+        queryUrl += "&vnp_SecureHash=" + vnp_SecureHash;
+
+        String paymentUrl = VNPAYConfig.vnp_PayUrl + "?" + queryUrl;
+
+        // Mở URL thanh toán bằng trình duyệt
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(paymentUrl));
+        startActivity(browserIntent);
+    }
+
+    private void setupNganHangSpinner() {
+
+        ArrayList<NganHang> listnh = (ArrayList<NganHang>) nhDao.getAll();
+
+        NganHangSpinner_Adapter nganHangSpinnerAdapter = new NganHangSpinner_Adapter(this, listnh);
+
         spNganHang.setAdapter(nganHangSpinnerAdapter);
+
         spNganHang.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
             @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                maNganHang= listnh.get(i).getId();
-                anhqr=listnh.get(i).getHinhAnh();
-                Bitmap bitmap = BitmapFactory.decodeByteArray(anhqr,0,anhqr.length);
+
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                byte[] anhqr = listnh.get(position).getHinhAnh();
+
+                Bitmap bitmap = BitmapFactory.decodeByteArray(anhqr, 0, anhqr.length);
+
                 imgAnhQR_tt.setImageBitmap(bitmap);
 
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
 
-            }
-        });
-        edtmaHoaDon.setText(String.valueOf(mahoadon));
+            public void onNothingSelected(AdapterView<?> parent) {}
 
-        btnHuytt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-        btnXacNhantt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhThanhToan.getDrawable();
-                Bitmap bitmap = bitmapDrawable.getBitmap();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                anhthanhtoan = byteArrayOutputStream.toByteArray();
-                hoaDon.setAnhThanhToan(anhthanhtoan);
-                hoaDon.setTrangThai(1);
-                hoaDon.setMaHoaDon(Integer.parseInt(edtmaHoaDon.getText().toString()));
-                if (hoadonDao.updateanh(hoaDon)>0){
-                    Toast.makeText(ThanhToan_Activity.this, "Đã gửi", Toast.LENGTH_SHORT).show();
-                    hoadonDao.updateTrangThaiHoaDon(mahoadon,1);
-                }else {
-                    Toast.makeText(ThanhToan_Activity.this, "Thất bại", Toast.LENGTH_SHORT).show();
-                }
-                Intent intent=new Intent(ThanhToan_Activity.this,hoaDon_Activity.class);
-                startActivity(intent);
-
-            }
         });
 
     }
-    //Get token through MoMo app
-    private void requestPayment() {
-        AppMoMoLib.getInstance().setAction(AppMoMoLib.ACTION.PAYMENT);
-        AppMoMoLib.getInstance().setActionType(AppMoMoLib.ACTION_TYPE.GET_TOKEN);
-//        if (mahoadon.getText().toString() != null && edAmount.getText().toString().trim().length() != 0)
-//            amount = edAmount.getText().toString().trim();
 
-        Map<String, Object> eventValue = new HashMap<>();
-        //client Required
-        eventValue.put("merchantname", merchantName); //Tên đối tác. được đăng ký tại https://business.momo.vn. VD: Google, Apple, Tiki , CGV Cinemas
-        eventValue.put("merchantcode", merchantCode); //Mã đối tác, được cung cấp bởi MoMo tại https://business.momo.vn
-        eventValue.put("amount", amount); //Kiểu integer
-        eventValue.put("orderId", "orderId123456789"); //uniqueue id cho Bill order, giá trị duy nhất cho mỗi đơn hàng
-        eventValue.put("orderLabel", "Mã đơn hàng"); //gán nhãn
+// Bỏ phương thức onActivityResult của MoMo SDK vì không còn dùng
 
-        //client Optional - bill info
-        eventValue.put("merchantnamelabel", "Dịch vụ");//gán nhãn
-        eventValue.put("fee", 0); //Kiểu integer
-        eventValue.put("description", description); //mô tả đơn hàng - short description
+    @Override
 
-        //client extra data
-        eventValue.put("requestId",  merchantCode+"merchant_billId_"+System.currentTimeMillis());
-        eventValue.put("partnerCode", merchantCode);
-        //Example extra data
-        JSONObject objExtraData = new JSONObject();
-        try {
-            objExtraData.put("site_code", "008");
-            objExtraData.put("site_name", "CGV Cresent Mall");
-            objExtraData.put("screen_code", 0);
-            objExtraData.put("screen_name", "Special");
-            objExtraData.put("movie_name", "Kẻ Trộm Mặt Trăng 3");
-            objExtraData.put("movie_format", "2D");
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        eventValue.put("extraData", objExtraData.toString());
-
-        eventValue.put("extra", "");
-        AppMoMoLib.getInstance().requestMoMoCallBack(this, eventValue);
-
-
-    }
-    //Get token callback from MoMo app an submit to server side
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode == AppMoMoLib.getInstance().REQUEST_CODE_MOMO && resultCode == -1) {
-            if(data != null) {
-                if(data.getIntExtra("status", -1) == 0) {
-                    //TOKEN IS AVAILABLE
-//                    tvMessage.setText("message: " + "Get token " + data.getStringExtra("message"));
-                    String token = data.getStringExtra("data"); //Token response
-                    String phoneNumber = data.getStringExtra("phonenumber");
-                    String env = data.getStringExtra("env");
-                    if(env == null){
-                        env = "app";
-                    }
 
-                    if(token != null && !token.equals("")) {
-                        // TODO: send phoneNumber & token to your server side to process payment with MoMo server
-                        // IF Momo topup success, continue to process your order
-                    } else {
-//                        tvMessage.setText("message: " + this.getString(R.string.not_receive_info));
-                    }
-                } else if(data.getIntExtra("status", -1) == 1) {
-                    //TOKEN FAIL
-                    String message = data.getStringExtra("message") != null?data.getStringExtra("message"):"Thất bại";
-//                    tvMessage.setText("message: " + message);
-                } else if(data.getIntExtra("status", -1) == 2) {
-                    //TOKEN FAIL
-//                    tvMessage.setText("message: " + this.getString(R.string.not_receive_info));
-                } else {
-                    //TOKEN FAIL
-//                    tvMessage.setText("message: " + this.getString(R.string.not_receive_info));
-                }
-            } else {
-//                tvMessage.setText("message: " + this.getString(R.string.not_receive_info));
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null) {
+
+            try {
+
+                Uri uri = data.getData();
+
+                InputStream inputStream = getContentResolver().openInputStream(uri);
+
+                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+                imgAnhThanhToan.setImageBitmap(bitmap);
+
+            } catch (FileNotFoundException e) {
+
+                e.printStackTrace();
+
             }
-        } else {
-//            tvMessage.setText("message: " + this.getString(R.string.not_receive_info_err));
+
         }
+
     }
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//        if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null){
-//            Uri uri = data.getData();
-//            try {
-//                InputStream inputStream = getContentResolver().openInputStream(uri);
-//                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-//                imgAnhThanhToan.setImageBitmap(bitmap);
-//            } catch (FileNotFoundException e) {
-//                throw new RuntimeException(e);
-//            }
-//
-//        }
-//        super.onActivityResult(requestCode, resultCode, data);
-//    }
 }

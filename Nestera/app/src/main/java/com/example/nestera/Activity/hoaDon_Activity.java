@@ -102,7 +102,6 @@ public class hoaDon_Activity extends AppCompatActivity {
 
         listtemp= (ArrayList<HoaDon>) hdDao.getAll();
         edtSearch=findViewById(R.id.edtSearch);
-//        edtSearch.setEnabled(false);
 
         edtSearch.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -124,9 +123,7 @@ public class hoaDon_Activity extends AppCompatActivity {
 
         edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) { }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -140,9 +137,7 @@ public class hoaDon_Activity extends AppCompatActivity {
             }
 
             @Override
-            public void afterTextChanged(Editable editable) {
-
-            }
+            public void afterTextChanged(Editable editable) { }
         });
 
 
@@ -167,19 +162,10 @@ public class hoaDon_Activity extends AppCompatActivity {
             capNhatLv();
         } else {
             int mp = ntDao.getMaPhongByUser(username);
-            list = new ArrayList<HoaDon>();
             list = (ArrayList<HoaDon>) hdDao.getHoaDonByMaPhong(mp);
             hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, this);
             lstHoaDon.setAdapter(hoaDonAdapter);
         }
-//        lstHoaDon.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            @Override
-//            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-//                hoaDon=list.get(i);
-//                openDialog(hoaDon_Activity.this,1);
-//                return false;
-//            }
-//        });
 
         lstHoaDon.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -219,7 +205,7 @@ public class hoaDon_Activity extends AppCompatActivity {
             }
         });
         AlertDialog alert = builder.create();
-        builder.show();
+        alert.show();
     }
 
     public void udTrangThai(int id) {
@@ -233,7 +219,7 @@ public class hoaDon_Activity extends AppCompatActivity {
                 hdDao.updateTrangThaiHoaDon(id, 2);
                 capNhatLv();
                 dialogInterface.cancel();
-                Toast.makeText(hoaDon_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();
+                Toast.makeText(hoaDon_Activity.this, "Xác nhận thanh toán thành công", Toast.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
@@ -243,9 +229,8 @@ public class hoaDon_Activity extends AppCompatActivity {
             }
         });
         AlertDialog alert = builder.create();
-        builder.show();
+        alert.show();
     }
-
 
     public void capNhatLv() {
         list = (ArrayList<HoaDon>) hdDao.getAll();
@@ -253,15 +238,9 @@ public class hoaDon_Activity extends AppCompatActivity {
         lstHoaDon.setAdapter(hoaDonAdapter);
     }
 
-    public void capNhatLvbyUser() {
-
-    }
-
-
     public void openDialogCTHD(final Context context) {
         dialog = new Dialog(hoaDon_Activity.this);
         dialog.setContentView(R.layout.item_cthoadon);
-
 
         txtNgayTao = dialog.findViewById(R.id.txtNgayTao);
         txtTenTruongPhong = dialog.findViewById(R.id.txtTenTruongPhong);
@@ -286,7 +265,6 @@ public class hoaDon_Activity extends AppCompatActivity {
         NguoiThue nguoiThue = ntDao.getID(hoaDon.getMaNguoiThue());
         txtTenTruongPhong.setText("Trưởng phòng: " + nguoiThue.getTenNguoiThue());
         txtSdt.setText("Điện thoại: " + nguoiThue.getSdt());
-//        String sdt=hoaDon.getSdt();
         txtSoDien.setText("Số điện: " + hoaDon.getSoDien());
         txtGiaDien.setText("Giá điện: " + hoaDon.getDonGiaDien() + "đ/số");
         txtTongDien.setText("Tổng điện: " + hdDao.getTongTienDien(hoaDon.getMaHoaDon()) + "đ");
@@ -297,13 +275,10 @@ public class hoaDon_Activity extends AppCompatActivity {
         txtTienPhong_hd.setText("Tiền phòng: " + hoaDon.getTienPhong() + "đ");
         txtGhiChu_hd.setText("Ghi chú: " + hoaDon.getGhiChu());
 
-        int tong = 0;
-        tong = hdDao.getTongTienDien(hoaDon.getMaHoaDon()) + hdDao.getTongTienNuoc(hoaDon.getMaHoaDon()) + hoaDon.getPhiDichVu() + hoaDon.getTienPhong();
+        int tong = hdDao.getTongTien(hoaDon.getMaHoaDon());
         txtTongHd.setText("Tổng tiền: " + tong + "đ");
 
         dialog.show();
-
-
     }
 
     public void openDialog(final Context context, final int type) {
@@ -325,6 +300,7 @@ public class hoaDon_Activity extends AppCompatActivity {
         spPhong = dialog.findViewById(R.id.spnPhong);
         edtNguoithue = dialog.findViewById(R.id.edtNguoiThue);
         imgAnhhd = dialog.findViewById(R.id.imgAnhQR);
+
         chkDaThanhToan.setVisibility(View.GONE);
         edtNgayTao.setEnabled(false);
         edtSoNguoi.setEnabled(false);
@@ -334,23 +310,14 @@ public class hoaDon_Activity extends AppCompatActivity {
         edtTienphong.setEnabled(false);
         edtNguoithue.setEnabled(false);
         edtSdt.setEnabled(false);
-//        edtSoNguoi.setText(hdDao.getSoNguoiByMaPhong(maPhong));
 
-        edtNgayTao.setText("" + sdf.format(new Date()));
+        edtNgayTao.setText(sdf.format(new Date()));
         edtMaHoaDon.setVisibility(View.GONE);
 
-
-        ntDao = new nguoiThueDao(hoaDon_Activity.this);
-        listnt = new ArrayList<NguoiThue>();
-        listnt = (ArrayList<NguoiThue>) ntDao.getAll();
-        nguoiThueSpinerAdapter = new NguoiThueSpinerAdapter(hoaDon_Activity.this, listnt);
-
-
         ptDao = new phongTroDao(hoaDon_Activity.this);
-        listpt = new ArrayList<PhongTro>();
         listpt = (ArrayList<PhongTro>) ptDao.getPhongByTrangThai(1);
         if (listpt.isEmpty()) {
-            Toast.makeText(hoaDon_Activity.this, "Chưa có hợp đồng cho Phòng. Vui lòng tạo hợp đồng trước.", Toast.LENGTH_LONG).show();
+            Toast.makeText(hoaDon_Activity.this, "Chưa có phòng nào có hợp đồng. Vui lòng tạo hợp đồng trước.", Toast.LENGTH_LONG).show();
             dialog.dismiss();
             return;
         }
@@ -361,44 +328,38 @@ public class hoaDon_Activity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 maPhong = listpt.get(i).getMaPhong();
                 tienPhong = listpt.get(i).getGia();
-                edtTienphong.setText("" + tienPhong);
+                edtTienphong.setText(String.valueOf(tienPhong));
+
                 dao_hd = new hopDongDao(hoaDon_Activity.this);
                 songuoii = dao_hd.getSoNguoiByMaPhongHD(maPhong);
-                edtSoNguoi.setText("" + songuoii);
+                edtSoNguoi.setText(String.valueOf(songuoii));
                 sdt = dao_hd.getSDTByMaPhong(maPhong);
                 edtSdt.setText(sdt);
-                maNguoiThue = dao_hd.getMaNguoiThueByMaPhong(maPhong);
-                NguoiThue nt = ntDao.getID(maNguoiThue);
-                String ten = nt.getTenNguoiThue();
-                edtNguoithue.setText(ten);
 
-                ptDao = new phongTroDao(hoaDon_Activity.this);
+                maNguoiThue = dao_hd.getMaNguoiThueByMaPhong(maPhong);
+                ntDao = new nguoiThueDao(hoaDon_Activity.this);
+                NguoiThue nt = ntDao.getID(maNguoiThue);
+                if(nt != null){
+                    edtNguoithue.setText(nt.getTenNguoiThue());
+                }
+
                 dao_lp = new LoaiPhongDao(hoaDon_Activity.this);
                 maloaii = ptDao.getMaLoaiTheoMaPhong(maPhong);
-
                 LoaiPhong lp = dao_lp.getID(String.valueOf(maloaii));
-                int gd = lp.getGiaDien();
-                int gn = lp.getGiaNuoc();
-                int pdv = lp.getPhiDichVu();
-                edtDonGiaDien.setText("" + gd);
-                edtDonGiaNuoc.setText("" + gn);
-                edtPhiDichVu.setText("" + pdv);
-
-
+                if(lp != null){
+                    edtDonGiaDien.setText(String.valueOf(lp.getGiaDien()));
+                    edtDonGiaNuoc.setText(String.valueOf(lp.getGiaNuoc()));
+                    edtPhiDichVu.setText(String.valueOf(lp.getPhiDichVu()));
+                }
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) { }
         });
+
         if (type != 0) {
+            // Logic cho việc cập nhật, hiện tại chỉ để hiển thị
             edtMaHoaDon.setText(String.valueOf(hoaDon.getMaHoaDon()));
-            for (int i = 0; i < listnt.size(); i++) {
-                if (hoaDon.getMaNguoiThue() == (listnt.get(i).getMaNguoithue())) {
-                    positionNT = i;
-                }
-            }
             edtSdt.setText(hoaDon.getSdt());
             edtPhiDichVu.setText(String.valueOf(hoaDon.getPhiDichVu()));
             edtTienphong.setText(String.valueOf(hoaDon.getTienPhong()));
@@ -406,92 +367,81 @@ public class hoaDon_Activity extends AppCompatActivity {
             edtDonGiaDien.setText(String.valueOf(hoaDon.getDonGiaDien()));
             edtSoNguoi.setText(String.valueOf(hoaDon.getSoNguoi()));
             edtDonGiaNuoc.setText(String.valueOf(hoaDon.getDonGiaNuoc()));
-            edtNgayTao.setText("" + sdf.format(new Date()));
+            edtNgayTao.setText(sdf.format(hoaDon.getNgayTao()));
             edtGhiChu_hd.setText(hoaDon.getGhiChu());
-
         }
-        btnHuy.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
+
+        btnHuy.setOnClickListener(view -> dialog.dismiss());
+
+        btnXacNhan.setOnClickListener(view -> {
+            if (TextUtils.isEmpty(edtSoDien.getText().toString())) {
+                Toast.makeText(context, "Bạn phải nhập số điện", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
-
-        btnXacNhan.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (TextUtils.isEmpty(edtSoDien.getText().toString())) {
-                    Toast.makeText(context, "Bạn phải nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
+            try {
+                int sod = Integer.parseInt(edtSoDien.getText().toString());
+                if (sod < 0) {
+                    Toast.makeText(context, "Số điện không được là số âm", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                try {
-                    int sod = Integer.parseInt(edtSoDien.getText().toString());
-                    if (sod <= 0) {
-                        Toast.makeText(context, "Số điện phải lớn hơn 0", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-                } catch (Exception e) {
-                    Toast.makeText(context, "Số điện phải là số", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                hoaDon = new HoaDon();
-                hoaDon.setMaNguoiThue(maNguoiThue);
-                hoaDon.setSdt(sdt);
-                hoaDon.setMaPhong(maPhong);
-                hoaDon.setPhiDichVu(Integer.parseInt(edtPhiDichVu.getText().toString()));
-                hoaDon.setTienPhong(tienPhong);
-                hoaDon.setSoDien(Integer.parseInt(edtSoDien.getText().toString()));
-                hoaDon.setDonGiaDien(Integer.parseInt(edtDonGiaDien.getText().toString()));
-                hoaDon.setSoNguoi(Integer.parseInt(edtSoNguoi.getText().toString()));
-                hoaDon.setDonGiaNuoc(Integer.parseInt(edtDonGiaNuoc.getText().toString()));
-                hoaDon.setNgayTao(new Date());
-                hoaDon.setGhiChu(edtGhiChu_hd.getText().toString());
-                hoaDon.setTrangThai(0);
+            } catch (NumberFormatException e) {
+                Toast.makeText(context, "Số điện phải là một con số", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
+            HoaDon newHoaDon = new HoaDon();
+            newHoaDon.setMaNguoiThue(maNguoiThue);
+            newHoaDon.setSdt(sdt);
+            newHoaDon.setMaPhong(maPhong);
+            newHoaDon.setPhiDichVu(Integer.parseInt(edtPhiDichVu.getText().toString()));
+            newHoaDon.setTienPhong(tienPhong);
+            newHoaDon.setSoDien(Integer.parseInt(edtSoDien.getText().toString()));
+            newHoaDon.setDonGiaDien(Integer.parseInt(edtDonGiaDien.getText().toString()));
+            newHoaDon.setSoNguoi(Integer.parseInt(edtSoNguoi.getText().toString()));
+            newHoaDon.setDonGiaNuoc(Integer.parseInt(edtDonGiaNuoc.getText().toString()));
+            newHoaDon.setNgayTao(new Date());
+            newHoaDon.setGhiChu(edtGhiChu_hd.getText().toString());
+            newHoaDon.setTrangThai(0); // 0 = Chưa thanh toán
 
+            // Xử lý ảnh (nếu có, nếu không thì để null)
+            if (imgAnhhd.getDrawable() != null) {
                 BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhhd.getDrawable();
                 Bitmap bitmap = bitmapDrawable.getBitmap();
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                hinhAnh = byteArrayOutputStream.toByteArray();
-                hoaDon.setAnhThanhToan(hinhAnh);
-
-
-                if (type == 0) {
-                    if (hdDao.insert(hoaDon) > 0) {
-                        Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                        hoaDon.setTrangThai(0);
-                        startSV();
-                    } else {
-                        Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    if (chkDaThanhToan.isChecked()) {
-                        hoaDon.setTrangThai(2);
-                    } else {
-                        hoaDon.setTrangThai(1);
-                    }
-                    hoaDon.setMaHoaDon(Integer.parseInt(edtMaHoaDon.getText().toString()));
-                    if (hdDao.update(hoaDon) > 0) {
-                        Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
-                    }
-                }
-                capNhatLv();
-                dialog.dismiss();
+                newHoaDon.setAnhThanhToan(byteArrayOutputStream.toByteArray());
             }
+
+            if (type == 0) {
+                if (hdDao.insert(newHoaDon) > 0) {
+                    Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
+                    startSV(newHoaDon);
+                } else {
+                    Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
+                }
+            } else {
+                // SỬA LỖI: Gọi đúng phương thức update trạng thái
+                int trangThaiMoi = chkDaThanhToan.isChecked() ? 2 : 1;
+                int maHD = Integer.parseInt(edtMaHoaDon.getText().toString());
+                if (hdDao.updateTrangThaiHoaDon(maHD, trangThaiMoi) > 0) {
+                    Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+            capNhatLv();
+            dialog.dismiss();
         });
         dialog.show();
-
     }
-    public void startSV(){
+
+    public void startSV(HoaDon hoaDonForService){
         Intent intent = new Intent(hoaDon_Activity.this, myservice.class);
         ptDao = new phongTroDao(hoaDon_Activity.this);
-        PhongTro phongTro = ptDao.getID(String.valueOf(hoaDon.getMaPhong()));
-        intent.putExtra("phong",phongTro.getTenPhong());
-        startService(intent);
+        PhongTro phongTro = ptDao.getID(String.valueOf(hoaDonForService.getMaPhong()));
+        if(phongTro != null){
+            intent.putExtra("phong", phongTro.getTenPhong());
+            startService(intent);
+        }
     }
-
-
 }

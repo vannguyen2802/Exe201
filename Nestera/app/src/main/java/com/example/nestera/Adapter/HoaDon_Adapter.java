@@ -74,132 +74,95 @@ public class HoaDon_Adapter extends ArrayAdapter<HoaDon> {
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         View v = convertView;
-        if(v==null){
-            LayoutInflater inflater = ((Activity)context).getLayoutInflater();
-            v=inflater.inflate(R.layout.item_hoadon,null);
+        if (v == null) {
+            LayoutInflater inflater = ((Activity) context).getLayoutInflater();
+            v = inflater.inflate(R.layout.item_hoadon, null);
         }
         final HoaDon hoaDon = list.get(position);
 
         SharedPreferences preferences = context.getSharedPreferences("user11", MODE_PRIVATE);
         String username = preferences.getString("username11", "...");
-        if (hoaDon!=null){
-            txtPhong_HoaDon=v.findViewById(R.id.txtPhong_HoaDon);
-            txtTenTruongPhong_HoaDon=v.findViewById(R.id.txtTenTruongPhong_HoaDon);
-            txtNgayTao_HoaDon=v.findViewById(R.id.txtNgayTao_HoaDon);
-            txtGhiChu_HoaDon=v.findViewById(R.id.txtGhiChu_HoaDon);
-            txtTongHoaDon=v.findViewById(R.id.txtTongHoaDon);
-            txtTrangThai_HoaDon=v.findViewById(R.id.txtTrangThai_HoaDon);
-            btnDelete=v.findViewById(R.id.btnDelete);
-            imgAnh=v.findViewById(R.id.imgAnh);
-            imgXN=v.findViewById(R.id.imgXN);
-            txtTrangThai_HoaDon=v.findViewById(R.id.txtTrangThai_HoaDon);
 
+        if (hoaDon != null) {
+            // Ánh xạ view
+            txtPhong_HoaDon = v.findViewById(R.id.txtPhong_HoaDon);
+            txtTenTruongPhong_HoaDon = v.findViewById(R.id.txtTenTruongPhong_HoaDon);
+            txtNgayTao_HoaDon = v.findViewById(R.id.txtNgayTao_HoaDon);
+            txtGhiChu_HoaDon = v.findViewById(R.id.txtGhiChu_HoaDon);
+            txtTongHoaDon = v.findViewById(R.id.txtTongHoaDon);
+            txtTrangThai_HoaDon = v.findViewById(R.id.txtTrangThai_HoaDon);
+            btnDelete = v.findViewById(R.id.btnDelete);
+            imgAnh = v.findViewById(R.id.imgAnh);
+            imgXN = v.findViewById(R.id.imgXN);
+
+            // Set dữ liệu
             ptDao = new phongTroDao(context);
             PhongTro phongTro = ptDao.getID(String.valueOf(hoaDon.getMaPhong()));
-            txtPhong_HoaDon.setText("Phòng: "+phongTro.getTenPhong());
+            txtPhong_HoaDon.setText("Phòng: " + phongTro.getTenPhong());
+
             ntDao = new nguoiThueDao(context);
             NguoiThue nguoiThue = ntDao.getID(hoaDon.getMaNguoiThue());
-            txtTenTruongPhong_HoaDon.setText("Tên trưởng phòng: "+nguoiThue.getTenNguoiThue());
-            txtNgayTao_HoaDon.setText("Ngày: "+sdf.format(hoaDon.getNgayTao()));
-            txtGhiChu_HoaDon.setText("Ghi chú: "+hoaDon.getGhiChu());
+            txtTenTruongPhong_HoaDon.setText("Tên trưởng phòng: " + nguoiThue.getTenNguoiThue());
+            txtNgayTao_HoaDon.setText("Ngày: " + sdf.format(hoaDon.getNgayTao()));
+            txtGhiChu_HoaDon.setText("Ghi chú: " + hoaDon.getGhiChu());
 
+            hoadonDao = new hoaDonDao(context);
+            int tong = hoadonDao.getTongTien(hoaDon.getMaHoaDon());
+            txtTongHoaDon.setText("Tổng: " + tong + "đ");
 
-            int tong= 0;
-            hoadonDao=new hoaDonDao(context);
-            tong=hoadonDao.getTongTienDien(hoaDon.getMaHoaDon())+hoadonDao.getTongTienNuoc(hoaDon.getMaHoaDon())+hoaDon.getPhiDichVu()+hoaDon.getTienPhong();
-            txtTongHoaDon.setText("Tổng: "+tong+"đ");
-            if (username.equalsIgnoreCase("admin")){
-                imgXN.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                        builder.setTitle("Cảnh báo");
-                        builder.setIcon(R.drawable.baseline_warning_24);
-                        builder.setMessage("Bạn có chắc chắn xác nhận đã thanh toán");
-                        builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                hoadonDao.updateTrangThaiHoaDon(hoaDon.getMaHoaDon(),2);
-                                hoaDon.setTrangThai(2);
-                                notifyDataSetChanged();
-                                dialogInterface.cancel();
-                                Toast.makeText(context, "Đã xác nhận ", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                        builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.cancel();
-                            }
-                        });
-                        AlertDialog alert = builder.create();
-                        builder.show();
+            // --- SỬA LỖI LOGIC HIỂN THỊ VÀ CHỨC NĂNG ---
 
-                    }
-                });
-                btnDelete.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        hoaDonActivity.xoa(String.valueOf(hoaDon.getMaHoaDon()));
-                    }
-                });
-            }else {
-                imgXN.setVisibility(View.GONE);
-                btnDelete.setVisibility(View.GONE);
+            // Mặc định ẩn các nút chức năng của admin
+            btnDelete.setVisibility(View.GONE);
+            imgXN.setVisibility(View.GONE);
+
+            if (username.equalsIgnoreCase("admin")) {
+                btnDelete.setVisibility(View.VISIBLE);
+                btnDelete.setOnClickListener(view -> hoaDonActivity.xoa(String.valueOf(hoaDon.getMaHoaDon())));
+
+                // Chỉ hiển thị nút xác nhận khi hóa đơn đang ở trạng thái "Chờ xác nhận"
+                if (hoaDon.getTrangThai() == 1) {
+                    imgXN.setVisibility(View.VISIBLE);
+                    imgXN.setOnClickListener(view -> hoaDonActivity.udTrangThai(hoaDon.getMaHoaDon()));
+                }
             }
 
-
-
-
-            if (hoaDon.getTrangThai()==0){
-                txtTrangThai_HoaDon.setText("Thanh toán ngay");
-                txtTrangThai_HoaDon.setTextColor(Color.GREEN);
-                imgXN.setVisibility(View.GONE);
-
-            }else if (hoaDon.getTrangThai()==1){
-//                txtTrangThai_HoaDon.setText("Chờ xác nhận");
-//                txtTrangThai_HoaDon.setTextColor(Color.RED);
-                txtTrangThai_HoaDon.setText("Đã thanh toán");
-                txtTrangThai_HoaDon.setTextColor(Color.GREEN);
-                imgXN.setVisibility(View.GONE);
-
-            }else {
-//                txtTrangThai_HoaDon.setText("Đã thanh toán");
-//                txtTrangThai_HoaDon.setTextColor(Color.GREEN);
-                txtTrangThai_HoaDon.setText("Chờ xác nhận");
-                txtTrangThai_HoaDon.setTextColor(Color.RED);
-                imgXN.setVisibility(View.GONE);
+            // Logic trạng thái
+            switch (hoaDon.getTrangThai()) {
+                case 0: // Chưa thanh toán
+                    txtTrangThai_HoaDon.setText("Thanh toán ngay");
+                    txtTrangThai_HoaDon.setTextColor(Color.parseColor("#FF009900")); // Màu xanh lá
+                    break;
+                case 1: // Chờ xác nhận
+                    txtTrangThai_HoaDon.setText("Chờ xác nhận");
+                    txtTrangThai_HoaDon.setTextColor(Color.parseColor("#FFFF8800")); // Màu cam
+                    break;
+                case 2: // Đã thanh toán
+                    txtTrangThai_HoaDon.setText("Đã thanh toán");
+                    txtTrangThai_HoaDon.setTextColor(Color.GRAY);
+                    break;
             }
 
-//            final int[] isButtonClicked = {0};
+            // --- SỬA LỖI CRASH KHI ẢNH NULL ---
+            anhthanhtoan = hoaDon.getAnhThanhToan();
+            if (anhthanhtoan != null && anhthanhtoan.length > 0) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(anhthanhtoan, 0, anhthanhtoan.length);
+                imgAnh.setImageBitmap(bitmap);
+                imgAnh.setVisibility(View.VISIBLE);
+            } else {
+                // Ẩn ImageView đi nếu không có ảnh
+                imgAnh.setVisibility(View.GONE);
+            }
 
-
-//            if (isButtonClicked[0] ==1){
-//                hoadonDao.updateTrangThaiHoaDon(hoaDon.getMaHoaDon(),2);
-//            }
-
-
-            anhthanhtoan=hoaDon.getAnhThanhToan();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(anhthanhtoan,0,anhthanhtoan.length);
-            imgAnh.setImageBitmap(bitmap);
-
-
-
-
-            txtTrangThai_HoaDon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    if (hoaDon.getTrangThai()==0){
-                        Intent intent = new Intent(context, ThanhToan_Activity.class);
-                        intent.putExtra("mahoadon",hoaDon.getMaHoaDon());
-                        context.startActivity(intent);
-                    }
+            // Click để thanh toán
+            txtTrangThai_HoaDon.setOnClickListener(view -> {
+                if (hoaDon.getTrangThai() == 0) { // Chỉ cho phép thanh toán khi chưa thanh toán
+                    Intent intent = new Intent(context, ThanhToan_Activity.class);
+                    intent.putExtra("mahoadon", hoaDon.getMaHoaDon());
+                    context.startActivity(intent);
                 }
             });
         }
-
-
         return v;
     }
-
 }
