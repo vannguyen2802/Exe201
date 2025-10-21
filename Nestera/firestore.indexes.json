@@ -1,0 +1,209 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "chuTro",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "approved",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "banned",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "nguoiThue",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "maPhong",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "phongTro",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "phongTro",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maLoai",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hopDong",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "maPhong",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hopDong",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ngayKy",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hoaDon",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hoaDon",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maPhong",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "thang",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "nam",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "hoaDon",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maNguoiThue",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "suCo",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maPhong",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "suCo",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "maChuTro",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "baiDang",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "chuTroId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "baiDang",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "trangThai",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "ngayDang",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "thongBao",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isRead",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

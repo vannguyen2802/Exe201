@@ -37,6 +37,9 @@ import com.example.nestera.Dao.hoaDonDao;
 import com.example.nestera.Dao.hopDongDao;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.HoaDonHybridDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
+import com.example.nestera.Firebase.NguoiThueHybridDao;
 import com.example.nestera.MainActivity;
 import com.example.nestera.R;
 import com.example.nestera.model.HoaDon;
@@ -60,7 +63,7 @@ public class hoaDon_Activity extends AppCompatActivity {
     ArrayList<NguoiThue> listnt;
     HoaDon_Adapter hoaDonAdapter;
     HoaDon hoaDon;
-    hoaDonDao hdDao;
+    HoaDonHybridDao hybridDao;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     TextView txtNgayTao, txtTenTruongPhong, txtSdt, txtTenPhong, txtSoDien, txtGiaDien, txtTongDien, txtSoNguoi, txtGiaNuoc, txtTongNuoc, txtPhiDichVu_hd, txtTienPhong_hd, txtGhiChu_hd, txtTongHd;
     EditText edtNguoithue, edtMaHoaDon, edtSdt, edtPhiDichVu, edtTienphong, edtSoDien, edtDonGiaDien, edtSoNguoi, edtDonGiaNuoc, edtNgayTao, edtGhiChu_hd;
@@ -75,12 +78,15 @@ public class hoaDon_Activity extends AppCompatActivity {
 
     Button btnXacNhan, btnHuy;
     Dialog dialog;
-    phongTroDao ptDao;
+    PhongTroHybridDao hybridDao_pt;
     byte[] hinhAnh;
+    NguoiThueHybridDao hybridDao_nt;
+    // Keep old DAOs for specialty methods
     nguoiThueDao ntDao;
+    phongTroDao ptDao;
+    LoaiPhongDao dao_lp;
     final int REQUEST_CODE_FOLDER = 456;
     hopDongDao dao_hd;
-    LoaiPhongDao dao_lp;
     int songuoii, maloaii;
 
 
@@ -97,10 +103,11 @@ public class hoaDon_Activity extends AppCompatActivity {
         getSupportActionBar().setHomeAsUpIndicator(upArrow);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         lstHoaDon = findViewById(R.id.lstHoaDon);
-        hdDao = new hoaDonDao(hoaDon_Activity.this);
+        hybridDao = new HoaDonHybridDao(hoaDon_Activity.this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
         btnAdd = findViewById(R.id.btnadd_toolbar);
 
-        listtemp= (ArrayList<HoaDon>) hdDao.getAll();
+        listtemp= (ArrayList<HoaDon>) hybridDao.getAll();
         edtSearch=findViewById(R.id.edtSearch);
 //        edtSearch.setEnabled(false);
 
@@ -168,7 +175,7 @@ public class hoaDon_Activity extends AppCompatActivity {
         } else {
             int mp = ntDao.getMaPhongByUser(username);
             list = new ArrayList<HoaDon>();
-            list = (ArrayList<HoaDon>) hdDao.getHoaDonByMaPhong(mp);
+            list = (ArrayList<HoaDon>) hybridDao.getByMaPhong(mp);
             hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, this);
             lstHoaDon.setAdapter(hoaDonAdapter);
         }
@@ -206,7 +213,7 @@ public class hoaDon_Activity extends AppCompatActivity {
         builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                hdDao.delete(Id);
+                hybridDao.delete(Integer.parseInt(Id));
                 capNhatLv();
                 dialogInterface.cancel();
                 Toast.makeText(hoaDon_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();
@@ -230,10 +237,15 @@ public class hoaDon_Activity extends AppCompatActivity {
         builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                hdDao.updateTrangThaiHoaDon(id, 2);
+                // Get HoaDon, update status, then save
+                HoaDon hd = hybridDao.getById(id);
+                if (hd != null) {
+                    hd.setTrangThai(2); // Đã thanh toán
+                    hybridDao.update(hd);
+                }
                 capNhatLv();
                 dialogInterface.cancel();
-                Toast.makeText(hoaDon_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();
+                Toast.makeText(hoaDon_Activity.this, "Xác nhận thành công", Toast.LENGTH_SHORT).show();
             }
         });
         builder.setNegativeButton("Không", new DialogInterface.OnClickListener() {
@@ -248,7 +260,7 @@ public class hoaDon_Activity extends AppCompatActivity {
 
 
     public void capNhatLv() {
-        list = (ArrayList<HoaDon>) hdDao.getAll();
+        list = (ArrayList<HoaDon>) hybridDao.getAll();
         hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, this);
         lstHoaDon.setAdapter(hoaDonAdapter);
     }
@@ -289,16 +301,18 @@ public class hoaDon_Activity extends AppCompatActivity {
 //        String sdt=hoaDon.getSdt();
         txtSoDien.setText("Số điện: " + hoaDon.getSoDien());
         txtGiaDien.setText("Giá điện: " + hoaDon.getDonGiaDien() + "đ/số");
-        txtTongDien.setText("Tổng điện: " + hdDao.getTongTienDien(hoaDon.getMaHoaDon()) + "đ");
+        int tongDien = hoaDon.getSoDien() * hoaDon.getDonGiaDien();
+        txtTongDien.setText("Tổng điện: " + tongDien + "đ");
         txtSoNguoi.setText("Số người: " + hoaDon.getSoNguoi());
         txtGiaNuoc.setText("Giá nước: " + hoaDon.getDonGiaNuoc() + "đ/người");
-        txtTongNuoc.setText("Tổng nước: " + hdDao.getTongTienNuoc(hoaDon.getMaHoaDon()) + "đ");
+        int tongNuoc = hoaDon.getSoNguoi() * hoaDon.getDonGiaNuoc();
+        txtTongNuoc.setText("Tổng nước: " + tongNuoc + "đ");
         txtPhiDichVu_hd.setText("Phí dịch vụ: " + hoaDon.getPhiDichVu() + "đ");
         txtTienPhong_hd.setText("Tiền phòng: " + hoaDon.getTienPhong() + "đ");
         txtGhiChu_hd.setText("Ghi chú: " + hoaDon.getGhiChu());
 
         int tong = 0;
-        tong = hdDao.getTongTienDien(hoaDon.getMaHoaDon()) + hdDao.getTongTienNuoc(hoaDon.getMaHoaDon()) + hoaDon.getPhiDichVu() + hoaDon.getTienPhong();
+        tong = tongDien + tongNuoc + hoaDon.getPhiDichVu() + hoaDon.getTienPhong();
         txtTongHd.setText("Tổng tiền: " + tong + "đ");
 
         dialog.show();
@@ -458,7 +472,7 @@ public class hoaDon_Activity extends AppCompatActivity {
 
 
                 if (type == 0) {
-                    if (hdDao.insert(hoaDon) > 0) {
+                    if (hybridDao.insert(hoaDon) > 0) {
                         Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
                         hoaDon.setTrangThai(0);
                         startSV();
@@ -472,7 +486,7 @@ public class hoaDon_Activity extends AppCompatActivity {
                         hoaDon.setTrangThai(1);
                     }
                     hoaDon.setMaHoaDon(Integer.parseInt(edtMaHoaDon.getText().toString()));
-                    if (hdDao.update(hoaDon) > 0) {
+                    if (hybridDao.update(hoaDon) > 0) {
                         Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();

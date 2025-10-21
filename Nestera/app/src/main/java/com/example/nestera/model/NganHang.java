@@ -4,6 +4,11 @@ public class NganHang {
     private int Id;
     private String TenTKNganHang, TenNganHang, STK;
     private byte[] HinhAnh;
+    private String imageUrl; // Firebase Storage URL
+    private String soTaiKhoan;
+    private String chuTaiKhoan;
+    private String chiNhanh;
+    private String maChuTro;
 
     public NganHang() {
     }
@@ -55,4 +60,27 @@ public class NganHang {
     public void setHinhAnh(byte[] hinhAnh) {
         HinhAnh = hinhAnh;
     }
+
+    // Alias methods for Repository compatibility
+    public int getMaNganHang() { return getId(); }
+    public void setMaNganHang(int id) { setId(id); }
+    
+    public String getSoTaiKhoan() { return soTaiKhoan != null ? soTaiKhoan : STK; }
+    public void setSoTaiKhoan(String soTaiKhoan) { this.soTaiKhoan = soTaiKhoan; this.STK = soTaiKhoan; }
+    
+    public String getChuTaiKhoan() { return chuTaiKhoan != null ? chuTaiKhoan : TenTKNganHang; }
+    public void setChuTaiKhoan(String chuTaiKhoan) { this.chuTaiKhoan = chuTaiKhoan; this.TenTKNganHang = chuTaiKhoan; }
+    
+    public String getChiNhanh() { return chiNhanh; }
+    public void setChiNhanh(String chiNhanh) { this.chiNhanh = chiNhanh; }
+    
+    public String getMaChuTro() { return maChuTro; }
+    public void setMaChuTro(String maChuTro) { this.maChuTro = maChuTro; }
+    
+    public String getTenNganHangAlias() { return TenNganHang; }
+    public void setTenNganHangAlias(String tenNganHang) { this.TenNganHang = tenNganHang; }
+
+    // Firebase Storage URL getter/setter
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 }

@@ -56,20 +56,33 @@ public class NguoiThue_Adapter extends ArrayAdapter<NguoiThue> {
 
             txtHoTen.setText("Họ tên: "+nguoiThue.getTenNguoiThue());
 
-            if (nguoiThue.getGioiTinh()==0){
+            // Map giới tính: 1 = Nam, 0 = Nữ, 2 = Khác
+            if (nguoiThue.getGioiTinh()==1){
                 txtGioiTinh.setText("Giới tính: Nam");
-            }else if (nguoiThue.getGioiTinh()==1){
+            } else if (nguoiThue.getGioiTinh()==0){
                 txtGioiTinh.setText("Giới tính: Nữ");
-            }else {
+            } else {
                 txtGioiTinh.setText("Giới tính: Khác");
             }
 
             txtNamSinh.setText("Năm sinh: "+String.valueOf(nguoiThue.getNamSinh()));
             txtThuongTru.setText("Thường trú: "+nguoiThue.getThuongTru());
             txtSdt.setText("SĐT: "+nguoiThue.getSdt());
+            // Hiển thị phòng an toàn kể cả khi người thuê chưa có phòng hoặc phòng bị xoá
             ptDao = new phongTroDao(context);
-            PhongTro phongTro = ptDao.getID(String.valueOf(nguoiThue.getMaPhong()));
-            txtPhong.setText("Phòng: "+phongTro.getTenPhong());
+            if (nguoiThue.getMaPhong() <= 0) {
+                txtPhong.setText("Phòng: Chưa có phòng");
+            } else {
+                PhongTro phongTro = null;
+                try {
+                    phongTro = ptDao.getID(String.valueOf(nguoiThue.getMaPhong()));
+                } catch (Exception ignore) { }
+                if (phongTro != null) {
+                    txtPhong.setText("Phòng: "+phongTro.getTenPhong());
+                } else {
+                    txtPhong.setText("Phòng: #"+nguoiThue.getMaPhong());
+                }
+            }
 
             txtCCCD.setText("CCCD: "+nguoiThue.getcCCD());
 

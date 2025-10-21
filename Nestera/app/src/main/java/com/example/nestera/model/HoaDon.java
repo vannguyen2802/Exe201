@@ -7,6 +7,7 @@ public class HoaDon {
     private String sdt,ghiChu,maNguoiThue;
     private Date ngayTao;
     private byte[] anhThanhToan;
+    private String imageUrl; // Firebase Storage URL
 
     public HoaDon() {
     }
@@ -138,5 +139,13 @@ public class HoaDon {
 
     public void setAnhThanhToan(byte[] anhThanhToan) {
         this.anhThanhToan = anhThanhToan;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

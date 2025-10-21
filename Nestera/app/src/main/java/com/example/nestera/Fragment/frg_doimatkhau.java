@@ -13,7 +13,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.example.nestera.Dao.nguoiThueDao;
+import com.example.nestera.Firebase.NguoiThueHybridDao;
 import com.example.nestera.R;
 import com.example.nestera.model.NguoiThue;
 import com.google.android.material.textfield.TextInputEditText;
@@ -21,7 +21,7 @@ import com.google.android.material.textfield.TextInputEditText;
 public class frg_doimatkhau extends Fragment {
     TextInputEditText txtMkc, txtMkm, txtNlMkm;
     Button btnXN;
-    nguoiThueDao dao;
+    NguoiThueHybridDao hybridDao;
     public frg_doimatkhau() {
         // Required empty public constructor
     }
@@ -35,7 +35,8 @@ public class frg_doimatkhau extends Fragment {
         txtMkm = v.findViewById(R.id.edtPassMoi_dmk);
         txtNlMkm = v.findViewById(R.id.edtNhapLaiPass_dmk);
         btnXN = v.findViewById(R.id.btnXacNhan);
-        dao = new nguoiThueDao(getActivity());
+        hybridDao = new NguoiThueHybridDao(getActivity());
+        hybridDao.enableRealtimeSync();
 
         btnXN.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -43,10 +44,10 @@ public class frg_doimatkhau extends Fragment {
                 SharedPreferences preferences = getActivity().getSharedPreferences("USER_FILE", MODE_PRIVATE);
                 String user = preferences.getString("USERNAME", "");
                 if (validate() > 0) {
-                   NguoiThue nt = dao.getID(user);
+                   NguoiThue nt = hybridDao.getID(user);
                     nt.setMatKhauNT(txtMkm.getText().toString());
-                    dao.update(nt);
-                    if (dao.update(nt)>0) {
+                    hybridDao.update(nt);
+                    if (hybridDao.update(nt)>0) {
                         Toast.makeText(getActivity(), "Đổi mật khẩu thành công ", Toast.LENGTH_SHORT).show();
                         txtMkc.setText("");
                         txtMkm.setText("");

@@ -44,7 +44,7 @@ public class myservice extends Service {
         PendingIntent pendingIntent= PendingIntent.getActivity(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         // tao ra 1 thong bao va truyen no vao startForeground services
         Notification notification = new NotificationCompat.Builder(this,CHANNEL_ID).setContentTitle("Hóa đơn mới phòng "+data)
-                .setContentText("Admin đã thêm 1 hóa đơn phòng "+data)
+                .setContentText("Chủ trọ đã thêm 1 hóa đơn phòng "+data)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent).build();
         // id cua startforeground se la 1 so lon hon 0

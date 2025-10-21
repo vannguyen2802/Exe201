@@ -21,6 +21,7 @@ import com.example.nestera.Dao.LoaiPhongDao;
 import com.example.nestera.R;
 import com.example.nestera.model.LoaiPhong;
 import com.example.nestera.model.PhongTro;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -57,23 +58,20 @@ public class Phong_Adapter extends ArrayAdapter<PhongTro> {
             ivRoomImage = v.findViewById(R.id.ivRoomImage);
             txtGia = v.findViewById(R.id.txtGia);
             txtTienNghi = v.findViewById(R.id.txtTienNghi);
-            txtCoSo_Phong = v.findViewById(R.id.txtLoaiPhong_Phong);
+//            txtCoSo_Phong = v.findViewById(R.id.txtLoaiPhong_Phong);
             txtTinhTrang = v.findViewById(R.id.tvStatus);
             txtXemHopDong = v.findViewById(R.id.txtXemHopDong);
-            tvLocation = v.findViewById(R.id.tvLocation);
+            TextView tvLocation = v.findViewById(R.id.tvLocation);
 
 
             txtPhong.setText(phongTro.getTenPhong());
             txtGia.setText(phongTro.getGia() + " VND/tháng");
             txtTienNghi.setText("Tiện nghi: " + phongTro.getTienNghi());
-            
-            // Set địa chỉ
-            if (phongTro.getDiaChi() != null && !phongTro.getDiaChi().isEmpty()) {
-                tvLocation.setText(phongTro.getDiaChi());
-            } else {
-                tvLocation.setText("Chưa cập nhật địa chỉ");
+            if (tvLocation != null) {
+                String dc = phongTro.getDiaChi();
+                if (dc == null || dc.isEmpty()) dc = "";
+                tvLocation.setText(dc);
             }
-            
 
             loaiPhongDao=new LoaiPhongDao(context);
             LoaiPhong loaiPhong=loaiPhongDao.getID(String.valueOf(phongTro.getMaLoai()));
@@ -116,51 +114,35 @@ public class Phong_Adapter extends ArrayAdapter<PhongTro> {
                 }
             });
             
-            // Load ảnh từ imagePath
+            // Load ảnh: ưu tiên Firebase Storage URL, fallback drawable
             if (ivRoomImage != null) {
                 String imagePath = phongTro.getImagePath();
-                android.util.Log.d("PhongAdapter", "Loading image for room " + phongTro.getTenPhong() + " - imagePath: " + imagePath);
-                if (imagePath != null && !imagePath.isEmpty()) {
-                    // Kiểm tra xem có phải URI hay tên file drawable
-                    if (imagePath.startsWith("content://") || imagePath.startsWith("file://")) {
-                        // Load từ URI bằng Glide
-                        try {
-                            Glide.with(context)
-                                .load(Uri.parse(imagePath))
-                                .placeholder(R.drawable.phong_tro_1_1)
-                                .error(R.drawable.phong_tro_1_2)
-                                .into(ivRoomImage);
-                        } catch (Exception e) {
-                            android.util.Log.e("PhongAdapter", "Failed to load URI: " + imagePath, e);
-                            // Fallback với ảnh phòng trọ đa dạng
-                            int[] roomImages = {R.drawable.phong_tro_1_1, R.drawable.phong_tro_1_2, R.drawable.phong_tro_1_3};
-                            int imageIndex = position % roomImages.length;
-                            ivRoomImage.setImageResource(roomImages[imageIndex]);
-                        }
-                    } else {
-                        // Load từ drawable resources
-                        String imageName = imagePath;
-                        // Loại bỏ extension nếu có
-                        if (imageName.contains(".")) {
-                            imageName = imageName.substring(0, imageName.lastIndexOf("."));
-                        }
-                        
-                        int imageResId = context.getResources().getIdentifier(
-                            imageName, "drawable", context.getPackageName());
-                        if (imageResId != 0) {
-                            ivRoomImage.setImageResource(imageResId);
-                        } else {
-                            // Fallback với ảnh phòng trọ đa dạng
-                            int[] roomImages = {R.drawable.phong_tro_1_1, R.drawable.phong_tro_1_2, R.drawable.phong_tro_1_3};
-                            int imageIndex = position % roomImages.length;
-                            ivRoomImage.setImageResource(roomImages[imageIndex]);
-                        }
+                if (imagePath != null && (imagePath.startsWith("http://") || imagePath.startsWith("https://"))) {
+                    // Firebase Storage URL - dùng Glide
+                    Glide.with(context)
+                        .load(imagePath)
+                        .placeholder(R.drawable.phong_tro_1_1)
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(ivRoomImage);
+                } else if (imagePath != null && imagePath.startsWith("content:")) {
+                    // Local URI - dùng Glide
+                    Glide.with(context)
+                        .load(android.net.Uri.parse(imagePath))
+                        .placeholder(R.drawable.phong_tro_1_1)
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(ivRoomImage);
+                } else if (imagePath != null && !imagePath.isEmpty()) {
+                    // Drawable resource name
+                    String imageName = imagePath;
+                    if (imageName.contains(".")) {
+                        imageName = imageName.substring(0, imageName.lastIndexOf("."));
                     }
+                    int imageResId = context.getResources().getIdentifier(imageName, "drawable", context.getPackageName());
+                    if (imageResId != 0) ivRoomImage.setImageResource(imageResId); else ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
                 } else {
-                    // Hiển thị ảnh phòng trọ đa dạng khi chưa có imagePath
-                    int[] roomImages = {R.drawable.phong_tro_1_1, R.drawable.phong_tro_1_2, R.drawable.phong_tro_1_3};
-                    int imageIndex = position % roomImages.length;
-                    ivRoomImage.setImageResource(roomImages[imageIndex]);
+                    ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
                 }
             }
         }

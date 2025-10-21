@@ -147,18 +147,19 @@
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:layout_marginTop="10dp"
-                    android:padding="10dp">
+                    android:padding="10dp"
+                    android:gravity="center">
                     <Button
                         android:id="@+id/btnHopDong"
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="80dp"
-                        android:layout_weight="1"
                         android:background="@drawable/khungedt"
                         android:textColor="@color/white"
-                        android:drawableStart="@drawable/icon_suco"
+                        android:drawableStart="@drawable/icon_coso"
                         android:padding="20dp"
                         android:textSize="18sp"
-                        android:text="Xem hợp đồng"/>
+                        android:gravity="center"
+                        android:text="Quản lý hợp đồng"/>
 
                 </LinearLayout>
 

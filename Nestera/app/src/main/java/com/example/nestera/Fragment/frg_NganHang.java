@@ -17,6 +17,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,7 @@ import android.widget.Toast;
 
 import com.example.nestera.Adapter.NganHang_Adapter;
 import com.example.nestera.Dao.NganHangDao;
+import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.R;
 import com.example.nestera.model.NganHang;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -52,6 +54,7 @@ public class frg_NganHang extends Fragment {
     NganHangDao nganHangDao;
     NganHang_Adapter nganHangAdapter;
     byte[] hinhAnh;
+    Uri selectedImageUri; // URI ảnh được chọn để upload
     final int REQUEST_CODE_FOLDER = 456;
 
     @Override
@@ -97,7 +100,7 @@ public class frg_NganHang extends Fragment {
         edtID=dialog.findViewById(R.id.edtID);
 
         edtID.setVisibility(View.GONE);
-
+        selectedImageUri = null; // Reset khi mở dialog
 
 
         if (type!=0){
@@ -105,6 +108,11 @@ public class frg_NganHang extends Fragment {
             edtTenTKNganHang.setText(item.getTenTKNganHang());
             edtTenNganHang.setText(item.getTenNganHang());
             edtSTK.setText(item.getSTK());
+            hinhAnh = item.getHinhAnh();
+            if (hinhAnh != null && hinhAnh.length > 0) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(hinhAnh, 0, hinhAnh.length);
+                imgAnhQR.setImageBitmap(bitmap);
+            }
         }
 
         btnChonAnh.setOnClickListener(new View.OnClickListener() {
@@ -132,35 +140,40 @@ public class frg_NganHang extends Fragment {
                     return;
                 }
 
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhQR.getDrawable();
-                Bitmap bitmap = bitmapDrawable.getBitmap();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                hinhAnh = byteArrayOutputStream.toByteArray();
+                // Nếu có ảnh được chọn, upload lên Firebase Storage
+                if (selectedImageUri != null) {
+                    android.app.ProgressDialog progress = new android.app.ProgressDialog(context);
+                    progress.setMessage("Đang upload ảnh QR...");
+                    progress.setCancelable(false);
+                    progress.show();
 
-                item=new NganHang();
-                item.setTenTKNganHang(edtTenTKNganHang.getText().toString());
-                item.setTenNganHang(edtTenNganHang.getText().toString());
-                item.setSTK(edtSTK.getText().toString());
-                item.setHinhAnh(hinhAnh);
+                    ImageUploader uploader = new ImageUploader(context);
+                    uploader.uploadImage(selectedImageUri, "nganHang", new ImageUploader.UploadCallback() {
+                        @Override
+                        public void onSuccess(String downloadUrl) {
+                            progress.dismiss();
+                            // Lưu với Firebase Storage URL
+                            saveNganHangWithUrl(downloadUrl, type);
+                        }
 
-                if (type==0){
-                    if (nganHangDao.insert(item)>0){
-                        Toast.makeText(context, "Thêm Thành Công", Toast.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(context, "Thêm Thất Bại", Toast.LENGTH_SHORT).show();
+                        @Override
+                        public void onError(Exception e) {
+                            progress.dismiss();
+                            Toast.makeText(context, "Lỗi upload ảnh: " + e.getMessage() + ". Dữ liệu không được lưu!", Toast.LENGTH_LONG).show();
+                            Log.e("frg_NganHang", "Upload failed, data NOT saved", e);
+                        }
+                    });
+                } else {
+                    // Không có ảnh mới, lưu với BLOB cũ (trường hợp edit)
+                    BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhQR.getDrawable();
+                    if (bitmapDrawable != null) {
+                        Bitmap bitmap = bitmapDrawable.getBitmap();
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+                        hinhAnh = byteArrayOutputStream.toByteArray();
                     }
-                }else {
-                    item.setId(Integer.parseInt(edtID.getText().toString()));
-                    if (nganHangDao.update(item)>0){
-                        Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
-                    }else {
-                        Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
-                    }
+                    saveNganHangWithBlob(type);
                 }
-                capNhatLv();
-                dialog.dismiss();
-
             }
         });
 
@@ -172,17 +185,69 @@ public class frg_NganHang extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null){
-            Uri uri = data.getData();
+            selectedImageUri = data.getData();
             try {
-                InputStream inputStream = requireActivity().getContentResolver().openInputStream(uri);
+                InputStream inputStream = requireActivity().getContentResolver().openInputStream(selectedImageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 imgAnhQR.setImageBitmap(bitmap);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+                Toast.makeText(getContext(), "Lỗi: Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+                selectedImageUri = null;
             }
 
         }
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    // Helper method để lưu NganHang với Firebase URL
+    private void saveNganHangWithUrl(String imageUrl, int type) {
+        item = new NganHang();
+        item.setTenTKNganHang(edtTenTKNganHang.getText().toString());
+        item.setTenNganHang(edtTenNganHang.getText().toString());
+        item.setSTK(edtSTK.getText().toString());
+        item.setImageUrl(imageUrl); // Lưu Firebase URL
+        item.setHinhAnh(null); // BLOB để null
+
+        if (type == 0) {
+            if (nganHangDao.insert(item) > 0) {
+                Toast.makeText(getContext(), "Thêm Thành Công", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Thêm Thất Bại", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            item.setId(Integer.parseInt(edtID.getText().toString()));
+            if (nganHangDao.update(item) > 0) {
+                Toast.makeText(getContext(), "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+            }
+        }
+        capNhatLv();
+        dialog.dismiss();
+        selectedImageUri = null; // Reset
+    }
+
+    // Helper method để lưu NganHang với BLOB (fallback cho edit)
+    private void saveNganHangWithBlob(int type) {
+        item = new NganHang();
+        item.setTenTKNganHang(edtTenTKNganHang.getText().toString());
+        item.setTenNganHang(edtTenNganHang.getText().toString());
+        item.setSTK(edtSTK.getText().toString());
+        item.setHinhAnh(hinhAnh);
+
+        if (type == 0) {
+            Toast.makeText(getContext(), "Vui lòng chọn ảnh QR mới", Toast.LENGTH_SHORT).show();
+            return;
+        } else {
+            item.setId(Integer.parseInt(edtID.getText().toString()));
+            if (nganHangDao.update(item) > 0) {
+                Toast.makeText(getContext(), "Cập nhật thành công", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getContext(), "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
+            }
+        }
+        capNhatLv();
+        dialog.dismiss();
     }
 
 //    @Override

@@ -1,26 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="spinner1_array">
-        <item>Option 1</item>
-        <item>Option 2</item>
-        <!-- Add more items as needed -->
+    <string-array name="amenities_array">
+        <item>Điều hoà</item>
+        <item>Nóng lạnh</item>
+        <item>Tủ lạnh</item>
+        <item>Tủ quần áo</item>
+        <item>Máy giặt</item>
+        <item>Wifi</item>
+        <item>Bãi gửi xe</item>
     </string-array>
 
-    <string-array name="spinner2_array_default">
-        <item>Default 1</item>
-        <item>Default 2</item>
-        <!-- Add more items as needed -->
-    </string-array>
-
-    <string-array name="spinner2_array_option1">
-        <item>Option 1 - A</item>
-        <item>Option 1 - B</item>
-        <!-- Add more items as needed -->
-    </string-array>
-
-    <string-array name="spinner2_array_option2">
-        <item>Option 2 - X</item>
-        <item>Option 2 - Y</item>
-        <!-- Add more items as needed -->
+    <string-array name="trang_thai_baidang">
+        <item>Còn trống</item>
+        <item>Đã thuê</item>
     </string-array>
 </resources>

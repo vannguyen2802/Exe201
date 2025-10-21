@@ -34,6 +34,7 @@ public class nguoiThueDao {
         values.put("namSinh", obj.getNamSinh());
         values.put("gioiTinh", obj.getGioiTinh());
         values.put("maPhong", obj.getMaPhong());
+        values.put("chuTroId", obj.getChuTroId()); // Thêm chuTroId
         return db.insert("NguoiThue", null, values);
     }
 
@@ -48,6 +49,7 @@ public class nguoiThueDao {
         values.put("namSinh", obj.getNamSinh());
         values.put("gioiTinh", obj.getGioiTinh());
         values.put("maPhong", obj.getMaPhong());
+        values.put("chuTroId", obj.getChuTroId()); // Thêm chuTroId
         return db.update("NguoiThue", values, "maNguoiThue=?", new String[]{obj.getMaNguoithue()});
     }
 
@@ -58,6 +60,24 @@ public class nguoiThueDao {
     public List<NguoiThue> getAll() {
         String sql="SELECT * FROM NguoiThue";
         return getData(sql);
+    }
+    
+    // Lấy danh sách người thuê của một chủ trọ cụ thể
+    public List<NguoiThue> getByChuTro(String chuTroId) {
+        if (chuTroId == null || chuTroId.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // Chỉ lấy người thuê có chuTroId khớp
+        String sql="SELECT * FROM NguoiThue WHERE chuTroId=?";
+        return getData(sql, chuTroId);
+    }
+    
+    // Cập nhật chuTroId cho tất cả người thuê cũ (migration helper)
+    public int updateChuTroIdForOldData(String chuTroId) {
+        android.content.ContentValues values = new android.content.ContentValues();
+        values.put("chuTroId", chuTroId);
+        // Cập nhật tất cả người thuê chưa có chuTroId
+        return db.update("NguoiThue", values, "chuTroId IS NULL", null);
     }
 
     public NguoiThue getID(String id) {
@@ -87,6 +107,19 @@ public class nguoiThueDao {
 
             obj.setGioiTinh(Integer.parseInt(c.getString(c.getColumnIndex("gioiTinh"))));
             obj.setMaPhong(Integer.parseInt(c.getString(c.getColumnIndex("maPhong"))));
+            
+            // Đọc chuTroId (có thể null với dữ liệu cũ hoặc cột chưa tồn tại)
+            try {
+                int chuTroIdIndex = c.getColumnIndex("chuTroId");
+                if (chuTroIdIndex >= 0) {
+                    obj.setChuTroId(c.getString(chuTroIdIndex));
+                } else {
+                    obj.setChuTroId(null);
+                }
+            } catch (Exception e) {
+                obj.setChuTroId(null);
+            }
+            
             list.add(obj);
         }
         return list;
@@ -153,6 +186,31 @@ public class nguoiThueDao {
             obj.setNamSinh(cursor.getString(cursor.getColumnIndex("namSinh")));
             obj.setGioiTinh(Integer.parseInt(cursor.getString(cursor.getColumnIndex("gioiTinh"))));
             obj.setMaPhong(Integer.parseInt(cursor.getString(cursor.getColumnIndex("maPhong"))));
+            danhSachNguoiThue.add(obj);
+        }
+
+        cursor.close();
+        return danhSachNguoiThue;
+    }
+
+    @SuppressLint("Range")
+    public ArrayList<NguoiThue> getNguoiThueChuaCoPhong() {
+        // Lấy những người thuê chưa được gán phòng (maPhong IS NULL hoặc maPhong <= 0)
+        String sql = "SELECT * FROM NguoiThue WHERE maPhong IS NULL OR maPhong <= 0";
+        Cursor cursor = db.rawQuery(sql, null);
+        ArrayList<NguoiThue> danhSachNguoiThue = new ArrayList<>();
+
+        while (cursor.moveToNext()) {
+            NguoiThue obj = new NguoiThue();
+            obj.setMaNguoithue(cursor.getString(cursor.getColumnIndex("maNguoiThue")));
+            obj.setMatKhauNT(cursor.getString(cursor.getColumnIndex("matKhauNT")));
+            obj.setTenNguoiThue(cursor.getString(cursor.getColumnIndex("tenNguoiThue")));
+            obj.setThuongTru(cursor.getString(cursor.getColumnIndex("thuongTru")));
+            obj.setSdt(cursor.getString(cursor.getColumnIndex("sdt")));
+            obj.setcCCD(cursor.getString(cursor.getColumnIndex("CCCD")));
+            obj.setNamSinh(cursor.getString(cursor.getColumnIndex("namSinh")));
+            obj.setGioiTinh(Integer.parseInt(cursor.getString(cursor.getColumnIndex("gioiTinh"))));
+            // Không set maPhong vì là null hoặc 0
             danhSachNguoiThue.add(obj);
         }
 

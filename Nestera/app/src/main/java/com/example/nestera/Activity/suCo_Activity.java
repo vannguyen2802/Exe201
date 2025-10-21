@@ -29,6 +29,7 @@ import com.example.nestera.Adapter.SuCo_Adapter;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
 import com.example.nestera.Dao.suCoDao;
+import com.example.nestera.Firebase.SuCoHybridDao;
 import com.example.nestera.R;
 import com.example.nestera.model.NguoiThue;
 import com.example.nestera.model.PhongTro;
@@ -46,7 +47,7 @@ public class suCo_Activity extends AppCompatActivity {
     ArrayList<PhongTro> list_phongtemp;
     SuCo_Adapter adapter;
     suCo item;
-    suCoDao dao;
+    SuCoHybridDao hybridDao;
     ImageView btnAdd;
     EditText edtMaSuCo, edtLoaiSuCo, edtMoTa, edtPhong;
     Button btnHuy, btnXacNhan;
@@ -89,11 +90,12 @@ public class suCo_Activity extends AppCompatActivity {
         });
 
         lstSuCo = findViewById(R.id.lstSuCo);
-        dao = new suCoDao(suCo_Activity.this);
+        hybridDao = new SuCoHybridDao(suCo_Activity.this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
         btnAdd = findViewById(R.id.btnadd_toolbar);
 
 
-        listtemp = (ArrayList<suCo>) dao.getAll();
+        listtemp = (ArrayList<suCo>) hybridDao.getAll();
         list_phongtemp = (ArrayList<PhongTro>) dao_phong.getAll();
         edtSearch = findViewById(R.id.edtSearch);
         edtSearch.addTextChangedListener(new TextWatcher() {
@@ -140,7 +142,7 @@ public class suCo_Activity extends AppCompatActivity {
         } else {
              mp = ntDao.getMaPhongByUser(username);
             list = new ArrayList<suCo>();
-            list = (ArrayList<suCo>) dao.getSuCoByMaPhong(mp);
+            list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
             adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
             lstSuCo.setAdapter(adapter);
         }
@@ -235,14 +237,14 @@ public class suCo_Activity extends AppCompatActivity {
                     item.setTrangThai(0);
                 }
                 if (type == 0) {
-                    if (dao.insert(item) > 0) {
+                    if (hybridDao.insert(item) > 0) {
                         Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
                     }
                 } else {
                     item.setMaSuCo(Integer.parseInt(edtMaSuCo.getText().toString()));
-                    if (dao.update(item) > 0) {
+                    if (hybridDao.update(item) > 0) {
                         Toast.makeText(context, "Sửa thành công", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(context, "Sửa thất bại", Toast.LENGTH_SHORT).show();
@@ -258,15 +260,17 @@ public class suCo_Activity extends AppCompatActivity {
 
     public void capnhatLv() {
 
-        list = (ArrayList<suCo>) dao.getAll();
+        list = (ArrayList<suCo>) hybridDao.getAll();
         adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
         lstSuCo.setAdapter(adapter);
-    }public void capnhatlv_nt(){
+    }
+    
+    public void capnhatlv_nt(){
         SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
         String username = preferences.getString("username11", "...");
         mp = ntDao.getMaPhongByUser(username);
         list = new ArrayList<suCo>();
-        list = (ArrayList<suCo>) dao.getSuCoByMaPhong(mp);
+        list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
         adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
         lstSuCo.setAdapter(adapter);
     }

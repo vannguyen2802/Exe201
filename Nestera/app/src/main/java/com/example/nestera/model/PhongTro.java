@@ -6,9 +6,7 @@ public class PhongTro {
     private int trangThai;
     private String imageUrl;
     private String imagePath; // Đường dẫn ảnh từ database
-    private String diaChi; // Địa chỉ phòng trọ
-    private int timNguoiOGhep; // 0: không tìm, 1-4: số người cần tìm
-    private int soNguoiHienTai; // Số người hiện tại đang ở
+    private String diaChi;
 
     public PhongTro() {
     }
@@ -103,22 +101,6 @@ public class PhongTro {
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
-    }
-
-    public int getTimNguoiOGhep() {
-        return timNguoiOGhep;
-    }
-
-    public void setTimNguoiOGhep(int timNguoiOGhep) {
-        this.timNguoiOGhep = timNguoiOGhep;
-    }
-
-    public int getSoNguoiHienTai() {
-        return soNguoiHienTai;
-    }
-
-    public void setSoNguoiHienTai(int soNguoiHienTai) {
-        this.soNguoiHienTai = soNguoiHienTai;
     }
 
     public String getDiaChi() {

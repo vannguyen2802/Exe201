@@ -9,7 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.nestera.Dao.hoaDonDao;
+import com.example.nestera.Firebase.HoaDonHybridDao;
 import com.example.nestera.R;
 import com.example.nestera.model.HoaDon;
 import com.github.mikephil.charting.charts.BarChart;
@@ -28,7 +28,7 @@ import java.util.List;
 
 public class frg_thongkebieudo extends Fragment {
     ArrayList<HoaDon> list;
-    hoaDonDao hdDao;
+    HoaDonHybridDao hybridDao;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,8 +37,9 @@ public class frg_thongkebieudo extends Fragment {
         View v= inflater.inflate(R.layout.fragment_frg_thongkebieudo, container, false);
 
         BarChart barChart = v.findViewById(R.id.barChart);
-        hdDao = new hoaDonDao(getActivity());
-        list = (ArrayList<HoaDon>) hdDao.getAll();
+        hybridDao = new HoaDonHybridDao(getActivity());
+        hybridDao.enableRealtimeSync();
+        list = (ArrayList<HoaDon>) hybridDao.getAll();
 
         List<BarEntry> monthlyRevenueEntries = getMonthlyRevenue(list);
 
@@ -56,8 +57,10 @@ public class frg_thongkebieudo extends Fragment {
                 Calendar calendar = Calendar.getInstance();
                 calendar.setTime(hoaDon.getNgayTao());
                 int month = calendar.get(Calendar.MONTH);
-                monthlyRevenue[month] += hdDao.getTongTienDien(hoaDon.getMaHoaDon())
-                        + hdDao.getTongTienNuoc(hoaDon.getMaHoaDon())
+                // Tính toán inline thay vì gọi DAO methods
+                int tongTienDien = hoaDon.getSoDien() * hoaDon.getDonGiaDien();
+                int tongTienNuoc = hoaDon.getSoNguoi() * hoaDon.getDonGiaNuoc();
+                monthlyRevenue[month] += tongTienDien + tongTienNuoc
                         + hoaDon.getPhiDichVu() + hoaDon.getTienPhong();
             }
 
