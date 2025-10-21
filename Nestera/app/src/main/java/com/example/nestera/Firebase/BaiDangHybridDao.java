@@ -16,6 +16,7 @@ import java.util.List;
  * - SYNC: Background sync khi có network
  */
 public class BaiDangHybridDao {
+    private static final String TAG = "BaiDangHybridDao";
     private final Context context;
     private final baiDangDao localDao;
     private final BaiDangRepository remoteRepo;
@@ -40,6 +41,36 @@ public class BaiDangHybridDao {
     }
 
     /**
+     * Lấy tất cả với callback - đợi sync Firestore xong
+     */
+    public void getAllWithSync(FirestoreRepository.FirestoreCallback<List<BaiDang>> callback) {
+        remoteRepo.getAll(new FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
+            @Override
+            public void onSuccess(List<BaiDang> remoteData) {
+                // Update local cache
+                for (BaiDang b : remoteData) {
+                    BaiDang existing = localDao.getById(b.getId());
+                    if (existing != null) {
+                        localDao.update(b);
+                    } else {
+                        localDao.insert(b);
+                    }
+                }
+                // Trả về data đã sync
+                callback.onSuccess(localDao.getAll());
+                android.util.Log.d("BaiDangHybrid", "Synced " + remoteData.size() + " records from Firestore");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Fallback to local nếu lỗi
+                callback.onSuccess(localDao.getAll());
+                android.util.Log.e("BaiDangHybrid", "Sync failed, using local data", e);
+            }
+        });
+    }
+
+    /**
      * Lấy theo ID
      */
     public BaiDang getById(int id) {
@@ -61,6 +92,20 @@ public class BaiDangHybridDao {
         });
         
         return local;
+    }
+
+    /**
+     * Lấy bài đăng theo mã phòng
+     */
+    public BaiDang getByMaPhong(int maPhong) {
+        // Try local first
+        List<BaiDang> all = localDao.getAll();
+        for (BaiDang b : all) {
+            if (b.getMaPhong() != null && b.getMaPhong() == maPhong) {
+                return b;
+            }
+        }
+        return null;
     }
 
     /**
@@ -94,28 +139,68 @@ public class BaiDangHybridDao {
     }
 
     /**
-     * Thêm mới - ghi song song
+     * Lấy theo chủ trọ với callback - đợi sync Firestore xong
      */
-    public long insert(BaiDang baiDang) {
-        // 1. Ghi local ngay
-        long localId = localDao.insert(baiDang);
-        baiDang.setId((int) localId);
-        
-        // 2. Ghi remote async
-        remoteRepo.insert(baiDang, new FirestoreRepository.FirestoreCallback<String>() {
+    public void getByChuTroWithSync(String chuTroId, FirestoreRepository.FirestoreCallback<List<BaiDang>> callback) {
+        remoteRepo.getByChuTro(chuTroId, new FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
             @Override
-            public void onSuccess(String documentId) {
-                // Optional: lưu documentId vào local
-                android.util.Log.d("Hybrid", "Synced to Firestore: " + documentId);
+            public void onSuccess(List<BaiDang> result) {
+                // Update local cache
+                for (BaiDang b : result) {
+                    BaiDang existing = localDao.getById(b.getId());
+                    if (existing != null) {
+                        localDao.update(b);
+                    } else {
+                        localDao.insert(b);
+                    }
+                }
+                // Trả về data từ local
+                callback.onSuccess(localDao.getByChuTro(chuTroId));
             }
 
             @Override
             public void onError(Exception e) {
-                android.util.Log.e("Hybrid", "Failed to sync to Firestore", e);
+                // Fallback to local
+                callback.onSuccess(localDao.getByChuTro(chuTroId));
+            }
+        });
+    }
+
+    /**
+     * Thêm mới - ghi song song
+     */
+    public long insert(BaiDang baiDang) {
+        // Debug logging
+        android.util.Log.d("BaiDangHybrid", "=== INSERT START ===");
+        android.util.Log.d("BaiDangHybrid", "Title: " + baiDang.getTieuDe());
+        android.util.Log.d("BaiDangHybrid", "ChuTroId: " + baiDang.getChuTroId());
+        android.util.Log.d("BaiDangHybrid", "ImageURL: " + baiDang.getHinhAnh());
+        
+        // 1. Ghi local ngay
+        long localId = localDao.insert(baiDang);
+        android.util.Log.d("BaiDangHybrid", "Local SQLite insert result: " + localId);
+        baiDang.setId((int) localId);
+        
+        // 2. Ghi remote async sử dụng local ID làm document ID
+        android.util.Log.d("BaiDangHybrid", "Starting Firestore sync with document ID: " + localId);
+        remoteRepo.insert(String.valueOf(localId), baiDang, new FirestoreRepository.FirestoreCallback<String>() {
+            @Override
+            public void onSuccess(String documentId) {
+                android.util.Log.d("BaiDangHybrid", "✅ Firestore insert SUCCESS! DocID: " + documentId);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("BaiDangHybrid", "❌ Firestore insert FAILED!", e);
+                android.util.Log.e("BaiDangHybrid", "Error message: " + e.getMessage());
+                if (e.getCause() != null) {
+                    android.util.Log.e("BaiDangHybrid", "Cause: " + e.getCause().getMessage());
+                }
                 // TODO: Thêm vào queue để retry sau
             }
         });
         
+        android.util.Log.d("BaiDangHybrid", "=== INSERT END (returning localId: " + localId + ") ===");
         return localId;
     }
 
@@ -143,22 +228,30 @@ public class BaiDangHybridDao {
     }
 
     /**
-     * Xóa - ghi song song
+     * Xóa bài đăng - ghi song song
      */
     public int delete(String id) {
-        // 1. Delete local
-        int rows = localDao.delete(id);
+        android.util.Log.d(TAG, "Attempting to delete post with ID: " + id);
         
-        // 2. Delete remote async
+        // Since we now use local ID as Firestore document ID, deletion is simpler
+        android.util.Log.d(TAG, "Local ID = Firestore Document ID: " + id);
+        
+        // 1. Delete local first
+        int rows = localDao.delete(id);
+        android.util.Log.d(TAG, "Local delete result: " + rows + " rows affected");
+        
+        // 2. Delete remote using same ID
         remoteRepo.delete(id, new FirestoreRepository.FirestoreCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                android.util.Log.d("Hybrid", "Deleted from Firestore");
+                android.util.Log.d(TAG, "✅ Post deleted from Firestore successfully - Doc ID: " + id);
             }
 
             @Override
             public void onError(Exception e) {
-                android.util.Log.e("Hybrid", "Failed to delete from Firestore", e);
+                android.util.Log.e(TAG, "❌ Failed to delete post from Firestore - Doc ID: " + id + " - Error: " + e.getMessage(), e);
+                // Try to rollback local delete if remote fails
+                // But for now, we'll just log the error
             }
         });
         

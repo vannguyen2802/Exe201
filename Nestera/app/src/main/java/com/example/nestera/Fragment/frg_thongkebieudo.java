@@ -39,11 +39,23 @@ public class frg_thongkebieudo extends Fragment {
         BarChart barChart = v.findViewById(R.id.barChart);
         hybridDao = new HoaDonHybridDao(getActivity());
         hybridDao.enableRealtimeSync();
-        list = (ArrayList<HoaDon>) hybridDao.getAll();
+        
+        // Load data với callback
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<HoaDon>>() {
+            @Override
+            public void onSuccess(java.util.List<HoaDon> syncedList) {
+                list = (ArrayList<HoaDon>) syncedList;
+                List<BarEntry> monthlyRevenueEntries = getMonthlyRevenue(list);
+                updateBarChart(barChart, monthlyRevenueEntries);
+            }
 
-        List<BarEntry> monthlyRevenueEntries = getMonthlyRevenue(list);
-
-        updateBarChart(barChart, monthlyRevenueEntries);
+            @Override
+            public void onError(Exception e) {
+                list = new ArrayList<>();
+                List<BarEntry> monthlyRevenueEntries = getMonthlyRevenue(list);
+                updateBarChart(barChart, monthlyRevenueEntries);
+            }
+        });
 
         return v;
     }

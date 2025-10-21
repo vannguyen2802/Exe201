@@ -36,6 +36,26 @@ public class SuCoHybridDao {
     }
 
     /**
+     * Lấy tất cả sự cố với callback - đợi sync Firestore xong
+     */
+    public void getAllWithSync(FirestoreRepository.FirestoreCallback<List<suCo>> callback) {
+        remoteRepo.getAll(new FirestoreRepository.FirestoreCallback<List<suCo>>() {
+            @Override
+            public void onSuccess(List<suCo> remoteData) {
+                updateLocalCache(remoteData);
+                callback.onSuccess(localDao.getAll());
+                Log.d(TAG, "Synced " + remoteData.size() + " SuCo from Firestore");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(localDao.getAll());
+                Log.e(TAG, "Sync failed, using local data", e);
+            }
+        });
+    }
+
+    /**
      * Lấy sự cố theo ID
      */
     public suCo getById(int id) {

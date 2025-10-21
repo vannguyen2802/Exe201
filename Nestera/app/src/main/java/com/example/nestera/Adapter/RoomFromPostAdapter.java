@@ -55,6 +55,7 @@ public class RoomFromPostAdapter extends ArrayAdapter<BaiDang> {
             TextView tvArea = v.findViewById(R.id.tvArea);
             TextView tvStatus = v.findViewById(R.id.tvStatus);
             TextView btnDetail = v.findViewById(R.id.txtXemHopDong);
+            ImageView btnDelete = v.findViewById(R.id.btnDeletePhong);
 
 
             txtPhong.setText("Phòng: " + b.getTieuDe());
@@ -80,6 +81,16 @@ public class RoomFromPostAdapter extends ArrayAdapter<BaiDang> {
                     it.putExtra("chuTroId", b.getChuTroId());
                     if (b.getMaPhong()!=null) it.putExtra("maPhong", b.getMaPhong());
                     getContext().startActivity(it);
+                });
+            }
+            
+            // Handle delete button
+            if (btnDelete != null) {
+                btnDelete.setOnClickListener(view -> {
+                    // Delegate to parent activity - cast to phong_Activity
+                    if (getContext() instanceof com.example.nestera.Activity.phong_Activity) {
+                        ((com.example.nestera.Activity.phong_Activity) getContext()).deleteBaiDang(b.getId());
+                    }
                 });
             }
         }

@@ -94,8 +94,7 @@ public class suCo_Activity extends AppCompatActivity {
         hybridDao.enableRealtimeSync(); // Enable real-time sync
         btnAdd = findViewById(R.id.btnadd_toolbar);
 
-
-        listtemp = (ArrayList<suCo>) hybridDao.getAll();
+        listtemp = new ArrayList<>(); // Initialize empty, will load via callback
         list_phongtemp = (ArrayList<PhongTro>) dao_phong.getAll();
         edtSearch = findViewById(R.id.edtSearch);
         edtSearch.addTextChangedListener(new TextWatcher() {
@@ -140,11 +139,40 @@ public class suCo_Activity extends AppCompatActivity {
         if (username.equalsIgnoreCase("admin")) {
             capnhatLv();
         } else {
-             mp = ntDao.getMaPhongByUser(username);
+            // Load data for specific room with callback
+            mp = ntDao.getMaPhongByUser(username);
             list = new ArrayList<suCo>();
-            list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
-            adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
-            lstSuCo.setAdapter(adapter);
+            
+            // Check if SuCoHybridDao has getByMaPhongWithSync method
+            // If not, use getAllWithSync and filter client-side
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<suCo>>() {
+                @Override
+                public void onSuccess(java.util.List<suCo> syncedList) {
+                    runOnUiThread(() -> {
+                        list.clear();
+                        // Filter for specific room
+                        for (suCo sc : syncedList) {
+                            if (sc.getMaPhong() == mp) {
+                                list.add(sc);
+                            }
+                        }
+                        adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                        lstSuCo.setAdapter(adapter);
+                        android.util.Log.d("SuCoDebug", "Loaded " + list.size() + " incidents for room " + mp);
+                    });
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    android.util.Log.e("SuCoDebug", "Failed to load incidents", e);
+                    runOnUiThread(() -> {
+                        // Fallback to direct call
+                        list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
+                        adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                        lstSuCo.setAdapter(adapter);
+                    });
+                }
+            });
         }
         if (username.equalsIgnoreCase("admin")) {
 
@@ -259,19 +287,55 @@ public class suCo_Activity extends AppCompatActivity {
     }
 
     public void capnhatLv() {
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<suCo>>() {
+            @Override
+            public void onSuccess(java.util.List<suCo> syncedList) {
+                list = (ArrayList<suCo>) syncedList;
+                adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                lstSuCo.setAdapter(adapter);
+            }
 
-        list = (ArrayList<suCo>) hybridDao.getAll();
-        adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
-        lstSuCo.setAdapter(adapter);
+            @Override
+            public void onError(Exception e) {
+                list = (ArrayList<suCo>) hybridDao.getAll();
+                adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                lstSuCo.setAdapter(adapter);
+            }
+        });
     }
     
     public void capnhatlv_nt(){
         SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
         String username = preferences.getString("username11", "...");
         mp = ntDao.getMaPhongByUser(username);
-        list = new ArrayList<suCo>();
-        list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
-        adapter = new SuCo_Adapter(suCo_Activity.this, this, list);
-        lstSuCo.setAdapter(adapter);
+        
+        // Use callback to load data properly
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<suCo>>() {
+            @Override
+            public void onSuccess(java.util.List<suCo> syncedList) {
+                runOnUiThread(() -> {
+                    list = new ArrayList<suCo>();
+                    // Filter for specific room
+                    for (suCo sc : syncedList) {
+                        if (sc.getMaPhong() == mp) {
+                            list.add(sc);
+                        }
+                    }
+                    adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                    lstSuCo.setAdapter(adapter);
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    // Fallback to direct call
+                    list = new ArrayList<suCo>();
+                    list = (ArrayList<suCo>) hybridDao.getByMaPhong(mp);
+                    adapter = new SuCo_Adapter(suCo_Activity.this, suCo_Activity.this, list);
+                    lstSuCo.setAdapter(adapter);
+                });
+            }
+        });
     }
 }

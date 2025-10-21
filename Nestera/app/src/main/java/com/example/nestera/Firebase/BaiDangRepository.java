@@ -30,10 +30,35 @@ public class BaiDangRepository extends FirestoreRepository<BaiDang> {
         b.setTienNghi(doc.getString("tienNghi"));
         b.setTrangThai(doc.getString("trangThai"));
         b.setHinhAnh(doc.getString("hinhAnhPath")); // Local path
-        b.setMaPhong(doc.getLong("maPhong") != null ? doc.getLong("maPhong").intValue() : null);
+        
+        // Handle maPhong - if null, try to extract from tieuDe
+        Integer maPhong = doc.getLong("maPhong") != null ? doc.getLong("maPhong").intValue() : null;
+        if (maPhong == null) {
+            // Try to extract room number from title if maPhong is null
+            String tieuDe = doc.getString("tieuDe");
+            if (tieuDe != null) {
+                // Look for patterns like "Phòng 101", "Room 102", or just numbers
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(?:phòng|room)\\s*(\\d+)|^(\\d+)$", java.util.regex.Pattern.CASE_INSENSITIVE);
+                java.util.regex.Matcher matcher = pattern.matcher(tieuDe.trim());
+                if (matcher.find()) {
+                    try {
+                        String roomNum = matcher.group(1) != null ? matcher.group(1) : matcher.group(2);
+                        maPhong = Integer.parseInt(roomNum);
+                        android.util.Log.d("BaiDangRepository", "Extracted maPhong " + maPhong + " from tieuDe: " + tieuDe);
+                    } catch (NumberFormatException e) {
+                        android.util.Log.w("BaiDangRepository", "Could not parse room number from: " + tieuDe);
+                    }
+                }
+            }
+        }
+        b.setMaPhong(maPhong);
         b.setChuTroId(doc.getString("chuTroId"));
-        // Thêm URL từ Storage nếu có
-        String imageUrl = doc.getString("hinhAnhUrl");
+        
+        // Firestore document ID now matches local ID, so set firestoreId = local ID
+        b.setFirestoreId(String.valueOf(b.getId()));
+        
+        // Ưu tiên URL từ Storage nếu có
+        String imageUrl = doc.getString("imageUrl");
         if (imageUrl != null && !imageUrl.isEmpty()) {
             b.setHinhAnh(imageUrl); // Override bằng URL
         }
@@ -53,6 +78,15 @@ public class BaiDangRepository extends FirestoreRepository<BaiDang> {
         map.put("hinhAnhPath", item.getHinhAnh());
         map.put("maPhong", item.getMaPhong());
         map.put("chuTroId", item.getChuTroId());
+        
+        // Lưu cả imageUrl (URL từ Firebase Storage)
+        String imageUrl = item.getHinhAnh();
+        if (imageUrl != null && (imageUrl.startsWith("http://") || imageUrl.startsWith("https://"))) {
+            map.put("imageUrl", imageUrl);
+        } else {
+            map.put("imageUrl", ""); // Local path
+        }
+        
         return map;
     }
 

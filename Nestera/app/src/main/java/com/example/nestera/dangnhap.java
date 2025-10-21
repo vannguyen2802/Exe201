@@ -69,83 +69,75 @@ public class dangnhap extends AppCompatActivity {
         String strPass = edtPass.getText().toString();
         if (strPass.isEmpty() || strUser.isEmpty()) {
             Toast.makeText(getApplicationContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
-        } else {
-            // 1. CHECK ADMIN FIRST (username = "admin")
-            if (strUser.equalsIgnoreCase("admin")) {
-                if (chuTroDao.checkLoginCT(strUser, strPass) > 0) {
-                    Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show();
-                    remember(strUser, strPass, chkluu.isChecked());
-                    Intent i = new Intent(getApplicationContext(), AdminDashboardActivity.class);
-                    i.putExtra("user", strUser);
-                    SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = preferences.edit();
-                    editor.putString("username11", strUser);
-                    editor.putString("role", "ADMIN");
-                    editor.apply();
-                    startActivity(i);
-                    finish();
-                    return;
-                } else {
-                    Toast.makeText(getApplicationContext(), "Sai mật khẩu Admin!", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-            }
-            
-            // 2. CHECK LANDLORD (Chủ trọ)
-            // Landlord (chủ trọ) từ database
-            // Banned check first
-            Integer banned = chuTroDao.getBannedStatus(strUser);
-            if (banned != null && banned == 1) {
-                Toast.makeText(this, "Tài khoản đã bị ban", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (chuTroDao.checkLoginCT(strUser, strPass) > 0) {
-                Toast.makeText(this, "Đăng nhập thành công (Chủ trọ)", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Chỉ tài khoản admin mới check local
+        if (strUser.equalsIgnoreCase("admin")) {
+            if (strPass.equals("NesteraAdmin22102005@")) {
+                Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show();
                 remember(strUser, strPass, chkluu.isChecked());
-                Intent i = new Intent(getApplicationContext(), MainActivity.class);
+                Intent i = new Intent(getApplicationContext(), AdminDashboardActivity.class);
                 i.putExtra("user", strUser);
                 SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
                 SharedPreferences.Editor editor = preferences.edit();
                 editor.putString("username11", strUser);
-                editor.putString("role", "LANDLORD");
+                editor.putString("role", "ADMIN");
                 editor.apply();
-
                 startActivity(i);
                 finish();
-            // Tài khoản chủ trọ tồn tại nhưng chưa được duyệt
-            } else if (chuTroDao.exists(strUser)) {
-                Integer st = chuTroDao.getApprovedStatus(strUser);
-                if (st != null && st == -1) {
-                    Toast.makeText(this, "Tài khoản đã bị từ chối", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this, "Tài khoản đang chờ Admin duyệt", Toast.LENGTH_SHORT).show();
-                }
-            } else if (dao.CheckLoginNT(strUser,strPass)>0){
-                Toast.makeText(this, "Đăng nhập thành công(Người thuê)", Toast.LENGTH_SHORT).show();
-                remember(strUser,strPass,chkluu.isChecked());
-                Intent i = new Intent(getApplicationContext(),MainActivity.class);
-                i.putExtra("user",strUser);
-                Bundle bundle = new Bundle();
-                bundle.putString("key", strUser);
-
-                SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putString("username11", strUser); // Lưu thông tin người dùng vào SharedPreferences
-                editor.putString("role", "USER");
-                editor.apply();
-
-                // Tạo Fragment và gán Bundle vào Fragment
-                frg_thongtintaikhoan myFragment = new frg_thongtintaikhoan();
-                myFragment.setArguments(bundle);
-                startActivity(i);
-
-                finish();
-
-            }else {
-                Toast.makeText(getApplicationContext(), "Username hoặc Password không đúng.", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getApplicationContext(), "Sai mật khẩu Admin!", Toast.LENGTH_SHORT).show();
             }
-
+            return;
         }
+        // Tất cả tài khoản khác: check Firebase (chủ trọ), nếu fail mới check local người thuê
+        chuTroHybridDao.authenticate(strUser, strPass, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<com.example.nestera.model.ChuTro>() {
+            @Override
+            public void onSuccess(com.example.nestera.model.ChuTro chuTro) {
+                runOnUiThread(() -> {
+                    Toast.makeText(dangnhap.this, "Đăng nhập thành công (Chủ trọ)", Toast.LENGTH_SHORT).show();
+                    remember(strUser, strPass, chkluu.isChecked());
+                    Intent i = new Intent(getApplicationContext(), MainActivity.class);
+                    i.putExtra("user", strUser);
+                    SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("username11", strUser);
+                    editor.putString("role", "LANDLORD");
+                    editor.apply();
+                    startActivity(i);
+                    finish();
+                });
+            }
+            @Override
+            public void onError(Exception e) {
+                runOnUiThread(() -> {
+                    // Nếu không phải chủ trọ, thử local người thuê
+                    if (dao.CheckLoginNT(strUser, strPass) > 0) {
+                        Toast.makeText(dangnhap.this, "Đăng nhập thành công (Người thuê)", Toast.LENGTH_SHORT).show();
+                        remember(strUser, strPass, chkluu.isChecked());
+                        Intent i = new Intent(getApplicationContext(), MainActivity.class);
+                        i.putExtra("user", strUser);
+                        SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putString("username11", strUser);
+                        editor.putString("role", "USER");
+                        editor.apply();
+                        startActivity(i);
+                        finish();
+                    } else {
+                        // Thông báo lỗi phù hợp
+                        String errorMsg = e.getMessage();
+                        if (errorMsg != null && (errorMsg.contains("ban") || errorMsg.contains("khóa"))) {
+                            Toast.makeText(dangnhap.this, "Tài khoản đã bị khóa", Toast.LENGTH_SHORT).show();
+                        } else if (errorMsg != null && errorMsg.contains("duyệt")) {
+                            Toast.makeText(dangnhap.this, "Tài khoản đang chờ Admin duyệt", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(dangnhap.this, "Sai tên đăng nhập hoặc mật khẩu", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private void remember(String u, String p, boolean status) {

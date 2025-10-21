@@ -25,7 +25,23 @@ public class HopDongRepository extends FirestoreRepository<HopDong> {
         HopDong h = new HopDong();
         h.setMaHopDong(doc.getLong("maHopDong") != null ? doc.getLong("maHopDong").intValue() : 0);
         h.setSdt(doc.getString("sdt"));
-        h.setCCCD(doc.getLong("CCCD") != null ? doc.getLong("CCCD").intValue() : 0);
+        
+        // Handle CCCD - could be String or Number
+        try {
+            Object cccdObj = doc.get("CCCD");
+            if (cccdObj instanceof String) {
+                h.setCCCD((String) cccdObj);
+            } else if (cccdObj instanceof Long) {
+                h.setCCCD(((Long) cccdObj).intValue());
+            } else if (cccdObj instanceof Integer) {
+                h.setCCCD((Integer) cccdObj);
+            } else {
+                h.setCCCD("");
+            }
+        } catch (Exception e) {
+            h.setCCCD("");
+        }
+        
         h.setThuongTru(doc.getString("thuongTru"));
         
         // Parse date
@@ -47,10 +63,10 @@ public class HopDongRepository extends FirestoreRepository<HopDong> {
         h.setMaNguoiThue(doc.getString("maNguoiThue"));
         h.setMaPhong(doc.getLong("maPhong") != null ? doc.getLong("maPhong").intValue() : 0);
         
-        // Note: BLOB hinhAnh không migrate, dùng URL từ Storage
-        String imageUrl = doc.getString("hinhAnhUrl");
+        // Load imageUrl from Firebase Storage
+        String imageUrl = doc.getString("imageUrl");
         if (imageUrl != null && !imageUrl.isEmpty()) {
-            // TODO: Load image từ URL khi cần
+            h.setImageUrl(imageUrl);
         }
         
         return h;
@@ -72,6 +88,10 @@ public class HopDongRepository extends FirestoreRepository<HopDong> {
         map.put("ghiChu", item.getGhiChu());
         map.put("maNguoiThue", item.getMaNguoiThue());
         map.put("maPhong", item.getMaPhong());
+        // Add imageUrl for Firebase Storage
+        if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+            map.put("imageUrl", item.getImageUrl());
+        }
         return map;
     }
 

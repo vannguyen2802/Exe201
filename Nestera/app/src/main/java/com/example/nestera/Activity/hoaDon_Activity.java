@@ -107,7 +107,7 @@ public class hoaDon_Activity extends AppCompatActivity {
         hybridDao.enableRealtimeSync(); // Enable real-time sync
         btnAdd = findViewById(R.id.btnadd_toolbar);
 
-        listtemp= (ArrayList<HoaDon>) hybridDao.getAll();
+        listtemp = new ArrayList<>(); // Initialize empty, will load via callback
         edtSearch=findViewById(R.id.edtSearch);
 //        edtSearch.setEnabled(false);
 
@@ -156,10 +156,13 @@ public class hoaDon_Activity extends AppCompatActivity {
         ntDao = new nguoiThueDao(hoaDon_Activity.this);
         SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
         String username = preferences.getString("username11", "...");
+        String role = preferences.getString("role", "");
 
         dao_hd = new hopDongDao(hoaDon_Activity.this);
         songuoii = dao_hd.getSoNguoiByMaPhongHD(maPhong);
-        if (username.equalsIgnoreCase("admin")) {
+        
+        // Only LANDLORD can add invoices
+        if ("LANDLORD".equalsIgnoreCase(role) || username.equalsIgnoreCase("admin")) {
             btnAdd.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -260,9 +263,22 @@ public class hoaDon_Activity extends AppCompatActivity {
 
 
     public void capNhatLv() {
-        list = (ArrayList<HoaDon>) hybridDao.getAll();
-        hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, this);
-        lstHoaDon.setAdapter(hoaDonAdapter);
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<HoaDon>>() {
+            @Override
+            public void onSuccess(java.util.List<HoaDon> syncedList) {
+                list = (ArrayList<HoaDon>) syncedList;
+                hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, hoaDon_Activity.this);
+                lstHoaDon.setAdapter(hoaDonAdapter);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Fallback to local
+                list = (ArrayList<HoaDon>) hybridDao.getAll();
+                hoaDonAdapter = new HoaDon_Adapter(hoaDon_Activity.this, list, hoaDon_Activity.this);
+                lstHoaDon.setAdapter(hoaDonAdapter);
+            }
+        });
     }
 
     public void capNhatLvbyUser() {

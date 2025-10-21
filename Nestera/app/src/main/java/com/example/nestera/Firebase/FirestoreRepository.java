@@ -81,20 +81,68 @@ public abstract class FirestoreRepository<T> {
     }
 
     /**
-     * Thêm document mới
+     * Thêm document mới với ID cụ thể (sử dụng local ID)
      */
+    public void insert(String documentId, T item, FirestoreCallback<String> callback) {
+        Map<String, Object> data = toDocument(item);
+        data.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        
+        Log.d(TAG, "=== FIRESTORE INSERT START ===");
+        Log.d(TAG, "Collection: " + collectionName);
+        Log.d(TAG, "Document ID: " + documentId);
+        Log.d(TAG, "Data keys: " + data.keySet().toString());
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            Log.d(TAG, "  " + entry.getKey() + " = " + entry.getValue());
+        }
+        
+        db.collection(collectionName)
+                .document(documentId)
+                .set(data)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ Firestore set() SUCCESS! DocID: " + documentId);
+                    Log.d(TAG, "Document path: " + collectionName + "/" + documentId);
+                    callback.onSuccess(documentId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Firestore set() FAILED for collection: " + collectionName, e);
+                    Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+                    Log.e(TAG, "Error message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        Log.e(TAG, "Caused by: " + e.getCause().getMessage());
+                    }
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Thêm document mới (để Firebase tự tạo ID) - deprecated, sử dụng insert(String, T, callback)
+     */
+    @Deprecated
     public void insert(T item, FirestoreCallback<String> callback) {
         Map<String, Object> data = toDocument(item);
         data.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
         
+        Log.d(TAG, "=== FIRESTORE INSERT START ===");
+        Log.d(TAG, "Collection: " + collectionName);
+        Log.d(TAG, "Data keys: " + data.keySet().toString());
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            Log.d(TAG, "  " + entry.getKey() + " = " + entry.getValue());
+        }
+        
         db.collection(collectionName)
                 .add(data)
                 .addOnSuccessListener(docRef -> {
-                    Log.d(TAG, "Insert success: " + docRef.getId());
+                    Log.d(TAG, "✅ Firestore add() SUCCESS! DocID: " + docRef.getId());
+                    Log.d(TAG, "Document path: " + docRef.getPath());
                     callback.onSuccess(docRef.getId());
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Error inserting " + collectionName, e);
+                    Log.e(TAG, "❌ Firestore add() FAILED for collection: " + collectionName, e);
+                    Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+                    Log.e(TAG, "Error message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        Log.e(TAG, "Caused by: " + e.getCause().getMessage());
+                    }
                     callback.onError(e);
                 });
     }

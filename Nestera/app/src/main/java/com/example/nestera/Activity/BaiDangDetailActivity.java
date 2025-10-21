@@ -57,20 +57,32 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         Intent it = getIntent();
         int postId = it.getIntExtra("postId", -1);
         
-        // Load lại dữ liệu từ Hybrid DAO (có sync Firestore)
-        com.example.nestera.model.BaiDang baiDang = null;
-        try {
-            // Lấy từ local cache hoặc Firestore
-            java.util.List<com.example.nestera.model.BaiDang> allPosts = hybridDao.getAll();
-            for (com.example.nestera.model.BaiDang b : allPosts) {
-                if (b.getId() == postId) {
-                    baiDang = b;
-                    break;
+        // Load dữ liệu với callback để đợi sync
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
+            @Override
+            public void onSuccess(java.util.List<com.example.nestera.model.BaiDang> allPosts) {
+                com.example.nestera.model.BaiDang baiDang = null;
+                for (com.example.nestera.model.BaiDang b : allPosts) {
+                    if (b.getId() == postId) {
+                        baiDang = b;
+                        break;
+                    }
+                }
+                if (baiDang != null) {
+                    setupUI(baiDang);
                 }
             }
-        } catch (Exception e) {
-            android.util.Log.e("BaiDangDetail", "Error loading data", e);
-        }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("BaiDangDetail", "Error loading data", e);
+            }
+        });
+    }
+
+    private void setupUI(com.example.nestera.model.BaiDang baiDang) {
+        android.content.Intent it = getIntent();
+        int postId = it.getIntExtra("postId", -1); // Get postId from Intent
         
         String tieuDe, diaChi, tienNghi, trangThai, hinhAnh, chuTroId;
         int giaThang;

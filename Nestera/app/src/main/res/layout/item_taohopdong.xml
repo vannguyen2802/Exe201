@@ -343,6 +343,15 @@
                 android:layout_gravity="center"
                 android:textSize="30px"
                 android:text="chọn ảnh"/>
+            <TextView
+                android:id="@+id/tvSelectedImages"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Chưa chọn ảnh"
+                android:textSize="12sp"
+                android:textColor="#666666"
+                android:layout_marginTop="4dp"/>
 
         </LinearLayout>
     </LinearLayout>

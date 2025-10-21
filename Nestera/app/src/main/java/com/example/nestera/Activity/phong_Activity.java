@@ -28,6 +28,7 @@ import android.widget.Toast;
 
 import com.example.nestera.Adapter.LoaiPhongSpinnerAdapter;
 import com.example.nestera.Adapter.Phong_Adapter;
+import com.example.nestera.Firebase.BaiDangHybridDao;
 import com.example.nestera.Firebase.LoaiPhongHybridDao;
 import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.MainActivity;
@@ -45,6 +46,7 @@ public class phong_Activity extends AppCompatActivity {
     com.example.nestera.Adapter.RoomFromPostAdapter adapter;
     //PhongTro item;
     PhongTroHybridDao hybridDao;
+    BaiDangHybridDao baiDangHybridDao;
     ImageView btnAdd;
     EditText edtmaPhong, edttenPhong, edtGia, edtTienNghi,edtSearch;
     Button btnHuy, btnXacNhan;
@@ -58,6 +60,10 @@ public class phong_Activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        android.util.Log.d("PhongActivity", "=== onCreate() START ===");  
+        android.util.Log.d("PhongActivity", "Activity: " + this.getClass().getSimpleName());
+        
         setContentView(R.layout.activity_phong);
         getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -81,6 +87,7 @@ public class phong_Activity extends AppCompatActivity {
         lstPhong = findViewById(R.id.lstPhongTro);
         hybridDao = new PhongTroHybridDao(phong_Activity.this);
         hybridDao.enableRealtimeSync(); // Enable real-time sync
+        baiDangHybridDao = new BaiDangHybridDao(phong_Activity.this);
         btnAdd = findViewById(R.id.btnadd_toolbar);
         // Ẩn nút thêm (+) trên màn Phòng trọ
         if (btnAdd != null) {
@@ -98,21 +105,38 @@ public class phong_Activity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                list.clear();
+                try {
+                    // Lấy username của chủ trọ hiện tại
+                    String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+                    
+                    // Use Firebase sync để tìm kiếm
+                    baiDangHybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
+                        @Override
+                        public void onSuccess(java.util.List<com.example.nestera.model.BaiDang> syncedList) {
+                            runOnUiThread(() -> {
+                                list.clear();
+                                if (syncedList != null) {
+                                    for (com.example.nestera.model.BaiDang b : syncedList){
+                                        if ((b.getTieuDe()!=null && b.getTieuDe().toLowerCase().contains(charSequence.toString().toLowerCase())) ||
+                                            (b.getDiaChi()!=null && b.getDiaChi().toLowerCase().contains(charSequence.toString().toLowerCase()))){
+                                            list.add(b);
+                                        }
+                                    }
+                                }
+                                if (adapter != null) {
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
 
-                // Lấy username của chủ trọ hiện tại
-                String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-                // Tìm theo tiêu đề hoặc địa chỉ trong bài đăng của chủ trọ hiện tại
-                java.util.ArrayList<com.example.nestera.model.BaiDang> src = new java.util.ArrayList<>(new com.example.nestera.Dao.baiDangDao(phong_Activity.this).getByChuTro(currentUser));
-
-                list.clear();
-                for (com.example.nestera.model.BaiDang b : src){
-                    if ((b.getTieuDe()!=null && b.getTieuDe().toLowerCase().contains(charSequence.toString().toLowerCase())) ||
-                        (b.getDiaChi()!=null && b.getDiaChi().toLowerCase().contains(charSequence.toString().toLowerCase()))){
-                        list.add(b);
-                    }
+                        @Override
+                        public void onError(Exception e) {
+                            Log.e("phong_Activity", "Error during search", e);
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("phong_Activity", "Error during search", e);
                 }
-                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -279,14 +303,51 @@ public class phong_Activity extends AppCompatActivity {
     }
 
     public void capNhapLv() {
-
         // Lấy username của chủ trọ hiện tại
         String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-        // Chỉ hiển thị bài đăng của chủ trọ hiện tại
-        list = (java.util.ArrayList<com.example.nestera.model.BaiDang>) new com.example.nestera.Dao.baiDangDao(this).getByChuTro(currentUser);
+        
+        android.util.Log.d("PhongActivity", "Loading posts for user: " + currentUser);
+        
+        // Use Firebase sync thay vì local DAO
+        baiDangHybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
+            @Override
+            public void onSuccess(java.util.List<com.example.nestera.model.BaiDang> syncedList) {
+                runOnUiThread(() -> {
+                    try {
+                        if (syncedList != null) {
+                            list.clear(); // Clear existing data first
+                            list.addAll(syncedList);
+                            android.util.Log.d("PhongActivity", "✅ Loaded " + list.size() + " posts from Firebase");
+                        } else {
+                            list.clear();
+                            android.util.Log.w("PhongActivity", "Synced list is null for user: " + currentUser);
+                        }
+                        
+                        // Reuse existing adapter if available
+                        if (adapter == null) {
+                            adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
+                            lstPhong.setAdapter(adapter);
+                        } else {
+                            adapter.notifyDataSetChanged();
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("PhongActivity", "Error setting adapter", e);
+                    }
+                });
+            }
 
-        adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
-        lstPhong.setAdapter(adapter);
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("PhongActivity", "❌ Error loading posts from Firebase", e);
+                runOnUiThread(() -> {
+                    // Fallback to empty list
+                    list = new java.util.ArrayList<>();
+                    adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
+                    lstPhong.setAdapter(adapter);
+                    Toast.makeText(phong_Activity.this, "Lỗi tải dữ liệu từ Firebase", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
     public void xemHD(int i){
         com.example.nestera.model.BaiDang pp = list.get(i);
@@ -295,6 +356,43 @@ public class phong_Activity extends AppCompatActivity {
         Intent intent = new Intent(phong_Activity.this, hopDong_Activity.class);
         intent.putExtra("maphong", maPhong);
         startActivity(intent);
+    }
+    
+    // Method để xóa bài đăng (được gọi từ adapter)
+    public void deleteBaiDang(int postId) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Xác nhận xóa");
+        builder.setMessage("Bạn có chắc chắn muốn xóa bài đăng này?");
+        builder.setPositiveButton("Có", new android.content.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(android.content.DialogInterface dialog, int which) {
+                try {
+                    // Xóa từ Firebase và SQLite
+                    long result = baiDangHybridDao.delete(String.valueOf(postId));
+                    if (result > 0) {
+                        android.widget.Toast.makeText(phong_Activity.this, "Xóa bài đăng thành công", android.widget.Toast.LENGTH_SHORT).show();
+                        // Force sync from Firebase after delete
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            // Force reload from Firebase instead of cache
+                            String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+                            baiDangHybridDao.forceSync(); // Force sync first
+                            
+                            // Then reload UI
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                capNhapLv(); // Reload data after sync
+                            }, 1000);
+                        }, 500);
+                    } else {
+                        android.widget.Toast.makeText(phong_Activity.this, "Xóa thất bại", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("PhongActivity", "Error deleting post", e);
+                    android.widget.Toast.makeText(phong_Activity.this, "Lỗi: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setNegativeButton("Không", null);
+        builder.show();
     }
 
 }

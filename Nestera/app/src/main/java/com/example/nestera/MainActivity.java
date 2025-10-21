@@ -133,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
         btnHopDong.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                android.util.Log.d("MainActivity", "btnHopDong clicked - navigating to hopDong_Activity");
                 IntentClass(hopDong_Activity.class);
             }
         });

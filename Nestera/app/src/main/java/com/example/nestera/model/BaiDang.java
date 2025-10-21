@@ -11,6 +11,7 @@ public class BaiDang {
     private String hinhAnh; // tên resource hoặc path
     private String chuTroId;
     private Integer maPhong; // link sang PhongTro
+    private String firestoreId; // Store Firestore document ID for proper deletion
 
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
@@ -32,6 +33,8 @@ public class BaiDang {
     public void setChuTroId(String chuTroId) { this.chuTroId = chuTroId; }
     public Integer getMaPhong() { return maPhong; }
     public void setMaPhong(Integer maPhong) { this.maPhong = maPhong; }
+    public String getFirestoreId() { return firestoreId; }
+    public void setFirestoreId(String firestoreId) { this.firestoreId = firestoreId; }
 }
 
 

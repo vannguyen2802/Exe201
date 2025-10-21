@@ -107,25 +107,88 @@ public class nguoiThue_Activity extends AppCompatActivity {
             
             android.util.Log.d("NguoiThueDebug", "Starting to load data...");
             
-            // Load danh sách theo role
+            // Load danh sách theo role với callback
             if ("ADMIN".equalsIgnoreCase(role)) {
                 // Admin xem tất cả
                 android.util.Log.d("NguoiThueDebug", "Loading all for ADMIN");
-                listtemp = (ArrayList<NguoiThue>) hybridDao.getAll();
+                hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                    @Override
+                    public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                        runOnUiThread(() -> {
+                            listtemp.clear();
+                            listtemp.addAll(syncedList);
+                            
+                            list.clear();
+                            list.addAll(listtemp);
+                            
+                            if (nguoiThueAdapter != null) {
+                                nguoiThueAdapter.notifyDataSetChanged();
+                            }
+                            
+                            android.util.Log.d("NguoiThueDebug", "ADMIN loaded " + listtemp.size() + " tenants");
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        runOnUiThread(() -> {
+                            listtemp.clear();
+                            list.clear();
+                            
+                            if (nguoiThueAdapter != null) {
+                                nguoiThueAdapter.notifyDataSetChanged();
+                            }
+                            
+                            android.util.Log.e("NguoiThueDebug", "Failed to load tenants for ADMIN", e);
+                        });
+                    }
+                });
             } else if ("LANDLORD".equalsIgnoreCase(role)) {
-                // Chủ trọ chỉ xem người thuê do mình tạo (lọc theo chuTroId)
+                // Chủ trọ chỉ xem người thuê do mình tạo
                 android.util.Log.d("NguoiThueDebug", "Loading for LANDLORD: " + username);
                 if (username != null && !username.isEmpty()) {
-                    listtemp = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
-                    android.util.Log.d("NguoiThueDebug", "Found " + listtemp.size() + " tenants");
+                    hybridDao.getByChuTroWithSync(username, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                        @Override
+                        public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                            runOnUiThread(() -> {
+                                listtemp.clear();
+                                listtemp.addAll(syncedList);
+                                
+                                list.clear();
+                                list.addAll(listtemp);
+                                
+                                if (nguoiThueAdapter != null) {
+                                    nguoiThueAdapter.notifyDataSetChanged();
+                                }
+                                
+                                android.util.Log.d("NguoiThueDebug", "LANDLORD loaded " + listtemp.size() + " tenants");
+                            });
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            runOnUiThread(() -> {
+                                listtemp.clear();
+                                list.clear();
+                                
+                                if (nguoiThueAdapter != null) {
+                                    nguoiThueAdapter.notifyDataSetChanged();
+                                }
+                                
+                                android.util.Log.e("NguoiThueDebug", "Failed to load tenants for LANDLORD", e);
+                            });
+                        }
+                    });
                 } else {
-                    listtemp = new ArrayList<>();
+                    listtemp.clear();
+                    list.clear();
                     android.util.Log.d("NguoiThueDebug", "Username is empty");
                 }
             } else {
                 // Role khác không xem được
                 android.util.Log.d("NguoiThueDebug", "Unknown role: " + role);
-                listtemp = new ArrayList<>();
+                listtemp.clear();
+                list.clear();
             }
             
             // Copy từ listtemp sang list
@@ -562,26 +625,57 @@ public class nguoiThue_Activity extends AppCompatActivity {
         
         // Load danh sách theo role
         if ("ADMIN".equalsIgnoreCase(role)) {
-            // Admin xem tất cả
-            list = (ArrayList<NguoiThue>) hybridDao.getAll();
-            listtemp = (ArrayList<NguoiThue>) hybridDao.getAll();
+            // Admin xem tất cả - sử dụng callback
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                @Override
+                public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                    list = (ArrayList<NguoiThue>) syncedList;
+                    listtemp = (ArrayList<NguoiThue>) syncedList;
+                    nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+                    lstNguoiThue.setAdapter(nguoiThueAdapter);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    list = new ArrayList<>();
+                    listtemp = new ArrayList<>();
+                    nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+                    lstNguoiThue.setAdapter(nguoiThueAdapter);
+                }
+            });
         } else if ("LANDLORD".equalsIgnoreCase(role)) {
-            // Chủ trọ chỉ xem người thuê của mình
+            // Chủ trọ chỉ xem người thuê của mình - sử dụng callback
             if (username != null && !username.isEmpty()) {
-                list = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
-                listtemp = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
+                hybridDao.getByChuTroWithSync(username, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                    @Override
+                    public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                        list = (ArrayList<NguoiThue>) syncedList;
+                        listtemp = (ArrayList<NguoiThue>) syncedList;
+                        nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+                        lstNguoiThue.setAdapter(nguoiThueAdapter);
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        list = new ArrayList<>();
+                        listtemp = new ArrayList<>();
+                        nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+                        lstNguoiThue.setAdapter(nguoiThueAdapter);
+                    }
+                });
             } else {
                 list = new ArrayList<>();
                 listtemp = new ArrayList<>();
+                nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+                lstNguoiThue.setAdapter(nguoiThueAdapter);
             }
         } else {
             // Role khác không xem được
             list = new ArrayList<>();
             listtemp = new ArrayList<>();
+            nguoiThueAdapter = new NguoiThue_Adapter(nguoiThue_Activity.this, nguoiThue_Activity.this, list);
+            lstNguoiThue.setAdapter(nguoiThueAdapter);
         }
-        
-        nguoiThueAdapter=new NguoiThue_Adapter(nguoiThue_Activity.this,this,list);
-        lstNguoiThue.setAdapter(nguoiThueAdapter);
     }
 
     public void xoa(final String  Id){
@@ -593,8 +687,26 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialogInterface, int id) {
-                hybridDao.delete(Id);
-                capNhatList();
+                try {
+                    long result = hybridDao.delete(Id);
+                    if (result > 0) {
+                        android.widget.Toast.makeText(nguoiThue_Activity.this, "Xóa thành công", android.widget.Toast.LENGTH_SHORT).show();
+                        // Add longer delay and force sync from Firebase
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            // Force sync from Firestore first
+                            hybridDao.forceSync();
+                            // Then reload UI after another delay
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                reloadData(); // Reload data properly after sync
+                            }, 1000);
+                        }, 500);
+                    } else {
+                        android.widget.Toast.makeText(nguoiThue_Activity.this, "Xóa thất bại", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("NguoiThueDebug", "Error deleting tenant", e);
+                    android.widget.Toast.makeText(nguoiThue_Activity.this, "Lỗi: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                }
                 dialogInterface.cancel();
             }
         });
@@ -623,5 +735,52 @@ public class nguoiThue_Activity extends AppCompatActivity {
         }
 
         return age;
+    }
+    
+    // Method để reload data sau khi xóa
+    private void reloadData() {
+        android.content.SharedPreferences prefs = getSharedPreferences("user11", MODE_PRIVATE);
+        String username = prefs.getString("username11", "");
+        String role = prefs.getString("role", "");
+        
+        if ("ADMIN".equalsIgnoreCase(role)) {
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                @Override
+                public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                    runOnUiThread(() -> {
+                        listtemp.clear();
+                        listtemp.addAll(syncedList);
+                        list.clear();
+                        list.addAll(listtemp);
+                        if (nguoiThueAdapter != null) {
+                            nguoiThueAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+                @Override
+                public void onError(Exception e) {
+                    android.util.Log.e("NguoiThueDebug", "Error reloading data", e);
+                }
+            });
+        } else if ("LANDLORD".equalsIgnoreCase(role)) {
+            hybridDao.getByChuTroWithSync(username, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                @Override
+                public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                    runOnUiThread(() -> {
+                        listtemp.clear();
+                        listtemp.addAll(syncedList);
+                        list.clear();
+                        list.addAll(listtemp);
+                        if (nguoiThueAdapter != null) {
+                            nguoiThueAdapter.notifyDataSetChanged();
+                        }
+                    });
+                }
+                @Override
+                public void onError(Exception e) {
+                    android.util.Log.e("NguoiThueDebug", "Error reloading data", e);
+                }
+            });
+        }
     }
 }

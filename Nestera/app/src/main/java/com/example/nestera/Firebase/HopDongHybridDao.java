@@ -35,7 +35,28 @@ public class HopDongHybridDao {
     }
 
     /**
-     * Lấy hợp đồng theo ID
+     * Lấy tất cả hợp đồng với callback - đợi sync Firestore xong
+     */
+    public void getAllWithSync(FirestoreRepository.FirestoreCallback<List<HopDong>> callback) {
+        remoteRepo.getAll(new FirestoreRepository.FirestoreCallback<List<HopDong>>() {
+            @Override
+            public void onSuccess(List<HopDong> remoteData) {
+                updateLocalCache(remoteData);
+                callback.onSuccess(localDao.getAll());
+                Log.d(TAG, "Synced " + remoteData.size() + " HopDong from Firestore");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Fallback to local
+                callback.onSuccess(localDao.getAll());
+                Log.e(TAG, "Sync failed, using local data", e);
+            }
+        });
+    }
+
+    /**
+     * Lấy hợp đồng theo ID 
      */
     public HopDong getById(int id) {
         HopDong local = localDao.getID(String.valueOf(id));
@@ -55,10 +76,8 @@ public class HopDongHybridDao {
             }
         });
         
-        return local;
-    }
-
-    /**
+        return local; // May return null if not found
+    }    /**
      * Lấy hợp đồng theo phòng
      */
     public List<HopDong> getByMaPhong(int maPhong) {
@@ -112,9 +131,9 @@ public class HopDongHybridDao {
         // 1. Ghi local ngay
         long localId = localDao.insert(hopDong);
         hopDong.setMaHopDong((int) localId);
-        
-        // 2. Ghi remote async
-        remoteRepo.insert(hopDong, new FirestoreRepository.FirestoreCallback<String>() {
+
+        // 2. Ghi remote async, dùng localId làm documentId
+        remoteRepo.insert(String.valueOf(localId), hopDong, new FirestoreRepository.FirestoreCallback<String>() {
             @Override
             public void onSuccess(String documentId) {
                 Log.d(TAG, "HopDong synced to Firestore: " + documentId);
@@ -125,7 +144,7 @@ public class HopDongHybridDao {
                 Log.e(TAG, "Failed to sync HopDong to Firestore", e);
             }
         });
-        
+
         return localId;
     }
 
@@ -199,11 +218,17 @@ public class HopDongHybridDao {
      */
     private void updateLocalCache(List<HopDong> remoteData) {
         for (HopDong h : remoteData) {
-            HopDong existing = localDao.getID(String.valueOf(h.getMaHopDong()));
-            if (existing != null) {
-                localDao.update(h);
-            } else {
-                localDao.insert(h);
+            if (h != null && h.getMaHopDong() > 0) {
+                try {
+                    HopDong existing = localDao.getID(String.valueOf(h.getMaHopDong()));
+                    if (existing != null) {
+                        localDao.update(h);
+                    } else {
+                        localDao.insert(h);
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Error updating local cache for contract ID: " + h.getMaHopDong(), e);
+                }
             }
         }
     }
@@ -224,11 +249,17 @@ public class HopDongHybridDao {
             public void onSuccess(List<HopDong> result) {
                 // Update local cache inline
                 for (HopDong h : result) {
-                    HopDong existing = localDao.getID(String.valueOf(h.getMaHopDong()));
-                    if (existing != null) {
-                        localDao.update(h);
-                    } else {
-                        localDao.insert(h);
+                    if (h != null && h.getMaHopDong() > 0) {
+                        try {
+                            HopDong existing = localDao.getID(String.valueOf(h.getMaHopDong()));
+                            if (existing != null) {
+                                localDao.update(h);
+                            } else {
+                                localDao.insert(h);
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error syncing contract ID: " + h.getMaHopDong(), e);
+                        }
                     }
                 }
                 Log.d(TAG, "Real-time update: " + result.size() + " contracts");

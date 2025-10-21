@@ -19,6 +19,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+
+import java.util.List;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -26,6 +28,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.nestera.Adapter.HopDong_Adapter;
@@ -34,6 +37,7 @@ import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.Dao.hopDongDao;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.BaiDangHybridDao;
 import com.example.nestera.Firebase.HopDongHybridDao;
 import com.example.nestera.Firebase.NguoiThueHybridDao;
 import com.example.nestera.Firebase.PhongTroHybridDao;
@@ -63,18 +67,21 @@ public class hopDong_Activity extends AppCompatActivity {
     Button btnChonAnh;
     EditText edtma_hd, edtTenkh_hd, edtSdt_hd, edtCCCD_hd, edtDiaChi_hd, edtNgayki_hd, edtSothang_hd, edtSoPhong_hd, edtTienCoc_hd, edtTienPhong_hd, edtSonguoi_hd, edtSoxe_hd, edtGhiChu_hd;
     Spinner spinner;
+    Dialog currentDialog; // Lưu reference của dialog hiện tại
     int position,maphong,gia,mp;
     String mant,dc,sdt,cccd;
     NguoiThueHybridDao hybridDao_nt;
     NguoiThue nt;
     NguoiThueSpinerAdapter spinerAdapter;
     PhongTroHybridDao hybridDao_pt;
+    BaiDangHybridDao baiDangHybridDao;
     // Keep old DAOs for specialty methods
     nguoiThueDao dao_nt;
     phongTroDao dao_pt;
     Button btnTaoHD,btnHuy;
     byte[] hinhAnh;
-    Uri selectedImageUri; // URI ảnh hợp đồng được chọn
+    java.util.ArrayList<Uri> selectedImageUris = new java.util.ArrayList<>(); // Nhiều ảnh hợp đồng
+    TextView tvSelectedImages; // Hiển thị số ảnh đã chọn
     final int REQUEST_CODE_FOLDER = 456;
     public static final int REQUEST_CODE_RENEW = 1004;
     public Integer pendingRenewHopDongId = null;
@@ -86,6 +93,10 @@ public class hopDong_Activity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        android.util.Log.d("HopDongActivity", "=== onCreate() START ===");
+        android.util.Log.d("HopDongActivity", "Activity: " + this.getClass().getSimpleName());
+        
         setContentView(R.layout.activity_hop_dong);
         getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -95,12 +106,92 @@ public class hopDong_Activity extends AppCompatActivity {
         Drawable upArrow = getResources().getDrawable(R.drawable.ic_back);
         getSupportActionBar().setHomeAsUpIndicator(upArrow);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                finish();
+            }
+        });
+        
         btnAdd = findViewById(R.id.btnadd_toolbar);
-        btnAdd.setVisibility(View.GONE);
+        // Enable add button for creating contracts
+        btnAdd.setVisibility(View.VISIBLE);
+        btnAdd.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                openDialog();
+            }
+        });
         lsthopDong = findViewById(R.id.lsthopDong);
         hybridDao = new HopDongHybridDao(hopDong_Activity.this);
         hybridDao.enableRealtimeSync(); // Enable real-time sync
-        list = (ArrayList<HopDong>) hybridDao.getAll();
+        baiDangHybridDao = new BaiDangHybridDao(hopDong_Activity.this);
+        list = new ArrayList<>(); // Initialize empty, will load via callback
+        
+        // Load data from Firebase first
+        android.util.Log.d("HopDongDebug", "Loading contracts from Firebase...");
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<HopDong>>() {
+            @Override
+            public void onSuccess(java.util.List<HopDong> syncedList) {
+                runOnUiThread(() -> {
+                    list.clear();
+                    list.addAll(syncedList);
+                    
+                    android.util.Log.d("HopDongDebug", "✅ Loaded " + list.size() + " contracts from Firebase");
+                    
+                    // Apply landlord filtering if needed
+                    applyLandlordFiltering();
+                    
+                    // Setup adapter after data is loaded
+                    setupContractListAdapter();
+                    
+                    // Handle role-specific logic AFTER data loads
+                    handleRoleSpecificLogic();
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("HopDongDebug", "❌ Failed to load contracts", e);
+                runOnUiThread(() -> {
+                    list.clear();
+                    setupContractListAdapter();
+                    // Still handle role logic even on error
+                    handleRoleSpecificLogic();
+                });
+            }
+        });
+    }
+    
+    private void handleRoleSpecificLogic() {
+        SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
+        String username = preferences.getString("username11", "...");
+        String role = preferences.getString("role", "");
+        
+        android.util.Log.d("HopDongDebug", "=== handleRoleSpecificLogic START ===");
+        android.util.Log.d("HopDongDebug", "Role: " + role + ", Username: " + username);
+        
+        maphong = getIntent().getIntExtra("maphong", -1);
+        android.util.Log.d("HopDongDebug", "Intent maphong: " + maphong);
+        
+        // Simple logic without additional Firebase calls to avoid conflicts
+        if("LANDLORD".equalsIgnoreCase(role)) {
+            if (maphong != -1) {
+                android.util.Log.d("HopDongDebug", "LANDLORD with specific room: " + maphong);
+                // Just show the data that's already loaded
+            } else {
+                android.util.Log.d("HopDongDebug", "LANDLORD viewing all contracts");
+            }
+        } else {
+            android.util.Log.d("HopDongDebug", "Non-LANDLORD role: " + role);
+            // Handle tenant logic if needed
+        }
+        
+        android.util.Log.d("HopDongDebug", "=== handleRoleSpecificLogic END ===");
+    }
+    
+    private void applyLandlordFiltering() {
         // Nếu là Chủ trọ, chỉ hiển thị hợp đồng của phòng thuộc chủ trọ này
         try {
             String roleLocal = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
@@ -115,9 +206,14 @@ public class hopDong_Activity extends AppCompatActivity {
                 for (HopDong hd : list) {
                     if (ownedRooms.contains(hd.getMaPhong())) filtered.add(hd);
                 }
-                list = filtered;
+                list.clear();
+                list.addAll(filtered);
+                android.util.Log.d("HopDongDebug", "Filtered to " + list.size() + " contracts for landlord");
             }
         } catch (Exception ignored) {}
+    }
+    
+    private void setupContractListAdapter() {
         // Mặc định hiển thị danh sách ngắn gọn với nút Chi tiết cho LANDLORD
         lsthopDong.setAdapter(new android.widget.BaseAdapter() {
             @Override public int getCount() { return list.size(); }
@@ -185,13 +281,6 @@ public class hopDong_Activity extends AppCompatActivity {
         String username = preferences.getString("username11", "...");
         String role = preferences.getString("role", "");
         
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                finish();
-            }
-        });
-        
         maphong = getIntent().getIntExtra("maphong", -1);
         list_hdm = new ArrayList<>(hybridDao.getHopDongByMaPhong(maphong));
 
@@ -205,9 +294,13 @@ public class hopDong_Activity extends AppCompatActivity {
             if (maphong != -1) {
                 // Có mã phòng cụ thể
                 if (list_hdm.isEmpty()) {
-                    // Chưa có hợp đồng -> mở dialog tạo hợp đồng
+                    // Chưa có hợp đồng -> hiển thị thông báo và nút tạo thay vì auto-open dialog
                     list.clear();
-                    openDialog();
+                    android.util.Log.d("HopDongDebug", "No contracts for room " + maphong + ", auto-opening create dialog");
+                    // Auto-open create contract dialog for new contracts
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                        openDialog(); // Auto-open create dialog
+                    }, 500);
                 } else {
                     // Đã có hợp đồng -> nếu yêu cầu mở thẳng chi tiết, hiển thị ngay item đầu tiên
                     boolean openDetail = getIntent().getBooleanExtra("openDetail", false);
@@ -216,13 +309,17 @@ public class hopDong_Activity extends AppCompatActivity {
                         single.add(list_hdm.get(0));
                         lsthopDong.setAdapter(new HopDong_Adapter(hopDong_Activity.this, single, hopDong_Activity.this));
                     } else {
-                        list = list_hdm;
-                        ((android.widget.BaseAdapter)lsthopDong.getAdapter()).notifyDataSetChanged();
+                        list.clear();
+                        list.addAll(list_hdm);
+                        if (lsthopDong.getAdapter() != null) {
+                            ((android.widget.BaseAdapter)lsthopDong.getAdapter()).notifyDataSetChanged();
+                        }
                     }
                 }
             } else {
                 // Không có mã phòng -> hiển thị tất cả hợp đồng dạng rút gọn
                 // adapter đã set ở trên
+                android.util.Log.d("HopDongDebug", "Showing all contracts for landlord");
             }
         } else {
             // Người thuê: chỉ xem hợp đồng của mình
@@ -319,33 +416,38 @@ public class hopDong_Activity extends AppCompatActivity {
         builder.show();
     }
     public void openDialog() {
-        Dialog dialog = new Dialog(hopDong_Activity.this);
-        dialog.setContentView(R.layout.item_taohopdong);
+        currentDialog = new Dialog(hopDong_Activity.this);
+        currentDialog.setContentView(R.layout.item_taohopdong);
         
         // Đặt kích thước dialog rộng hơn
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setLayout(
+        if (currentDialog.getWindow() != null) {
+            currentDialog.getWindow().setLayout(
                 (int)(getResources().getDisplayMetrics().widthPixels * 0.95), // 95% chiều rộng màn hình
                 android.view.ViewGroup.LayoutParams.WRAP_CONTENT
             );
         }
         
-        edtSdt_hd = dialog.findViewById(R.id.edtSdt_hd);
-        edtCCCD_hd = dialog.findViewById(R.id.edtCCCD_hd);
-        edtDiaChi_hd = dialog.findViewById(R.id.edtDiaChi_hd);
-        edtNgayki_hd = dialog.findViewById(R.id.edtNgayki_hd);
-        edtSothang_hd = dialog.findViewById(R.id.edtSothang_hd);
-        edtSoPhong_hd = dialog.findViewById(R.id.edtSoPhong_hd);
-        edtTienCoc_hd = dialog.findViewById(R.id.edtTienCoc_hd);
-        edtTienPhong_hd = dialog.findViewById(R.id.edtTienPhong_hd);
-        edtSonguoi_hd = dialog.findViewById(R.id.edtSonguoi_hd);
-        edtSoxe_hd = dialog.findViewById(R.id.edtSoxe_hd);
-        edtGhiChu_hd = dialog.findViewById(R.id.edtGhiChu_hd);
-        btnTaoHD = dialog.findViewById(R.id.btnTao);
-        btnHuy = dialog.findViewById(R.id.btnHuy);
-        imgAnhhd = dialog.findViewById(R.id.imgAnhhd);
-        btnChonAnh = dialog.findViewById(R.id.btnChonAnh);
-        spinner = dialog.findViewById(R.id.spnNguoiThue);
+        edtSdt_hd = currentDialog.findViewById(R.id.edtSdt_hd);
+        edtCCCD_hd = currentDialog.findViewById(R.id.edtCCCD_hd);
+        edtDiaChi_hd = currentDialog.findViewById(R.id.edtDiaChi_hd);
+        edtNgayki_hd = currentDialog.findViewById(R.id.edtNgayki_hd);
+        edtSothang_hd = currentDialog.findViewById(R.id.edtSothang_hd);
+        edtSoPhong_hd = currentDialog.findViewById(R.id.edtSoPhong_hd);
+        edtTienCoc_hd = currentDialog.findViewById(R.id.edtTienCoc_hd);
+        edtTienPhong_hd = currentDialog.findViewById(R.id.edtTienPhong_hd);
+        edtSonguoi_hd = currentDialog.findViewById(R.id.edtSonguoi_hd);
+        edtSoxe_hd = currentDialog.findViewById(R.id.edtSoxe_hd);
+        edtGhiChu_hd = currentDialog.findViewById(R.id.edtGhiChu_hd);
+        btnTaoHD = currentDialog.findViewById(R.id.btnTao);
+        btnHuy = currentDialog.findViewById(R.id.btnHuy);
+        imgAnhhd = currentDialog.findViewById(R.id.imgAnhhd);
+        btnChonAnh = currentDialog.findViewById(R.id.btnChonAnh);
+        tvSelectedImages = currentDialog.findViewById(R.id.tvSelectedImages);
+        spinner = currentDialog.findViewById(R.id.spnNguoiThue);
+        
+        // Reset danh sách ảnh khi mở dialog
+        selectedImageUris.clear();
+        tvSelectedImages.setText("Chưa chọn ảnh");
         
         dao_pt = new phongTroDao(hopDong_Activity.this);
         dao_nt = new nguoiThueDao(hopDong_Activity.this);
@@ -376,7 +478,7 @@ public class hopDong_Activity extends AppCompatActivity {
             Toast.makeText(hopDong_Activity.this, 
                 "Tất cả người thuê đã có hợp đồng. Vui lòng thêm người thuê mới hoặc kết thúc hợp đồng cũ trước.", 
                 Toast.LENGTH_LONG).show();
-            dialog.dismiss();
+            currentDialog.dismiss();
             finish();
             return;
         }
@@ -406,22 +508,54 @@ public class hopDong_Activity extends AppCompatActivity {
         btnChonAnh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_PICK);
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("image/*");
-                startActivityForResult(intent,REQUEST_CODE_FOLDER);
-//                ActivityCompat.requestPermissions(getActivity(),new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_CODE_FOLDER);
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true); // Cho phép chọn nhiều ảnh
+                startActivityForResult(Intent.createChooser(intent, "Chọn ảnh hợp đồng"), REQUEST_CODE_FOLDER);
             }
         });
 
 
         maphong = getIntent().getIntExtra("maphong", -1);
+        android.util.Log.d("HopDongDebug", "Auto-filling for room ID: " + maphong);
+        
+        // Try to get data from PhongTro first
         gia = dao_pt.getGiaPhongTheoMaPhong(maphong);
-        String tenphong=dao_pt.getTenPhongTheoMaPhong(maphong);
+        String tenphongTemp = dao_pt.getTenPhongTheoMaPhong(maphong);
+        
+        // If PhongTro doesn't have data, get from BaiDang by ID
+        if (gia == 0 || tenphongTemp == null || tenphongTemp.isEmpty()) {
+            try {
+                // Use maphong as BaiDang ID since maPhong field is null in Firestore
+                com.example.nestera.model.BaiDang baiDang = baiDangHybridDao.getById(maphong);
+                if (baiDang != null) {
+                    gia = baiDang.getGiaThang();
+                    tenphongTemp = baiDang.getTieuDe(); // Use title as room name
+                    
+                    // If we extracted maPhong from title, use it for room name formatting
+                    if (baiDang.getMaPhong() != null) {
+                        tenphongTemp = "Phòng " + baiDang.getMaPhong();
+                    }
+                    
+                    android.util.Log.d("HopDongDebug", "Using BaiDang data - Price: " + gia + ", Title: " + tenphongTemp + ", MaPhong: " + baiDang.getMaPhong());
+                } else {
+                    android.util.Log.w("HopDongDebug", "No BaiDang found for ID: " + maphong);
+                }
+            } catch (Exception e) {
+                android.util.Log.e("HopDongDebug", "Error getting BaiDang data", e);
+            }
+        }
+        
+        final String tenphong = tenphongTemp; // Make final for inner class usage
+        
+        android.util.Log.d("HopDongDebug", "Final - Room price: " + gia + ", Room name: " + tenphong);
+        
         edtTienPhong_hd.setText(gia + "");
-        edtSoPhong_hd.setText(tenphong);
+        edtSoPhong_hd.setText(tenphong != null ? tenphong : "Phòng " + maphong);
         edtNgayki_hd.setText(sdf.format(new Date()));
-        edtSoPhong_hd.setEnabled(false);
-        edtTienPhong_hd.setEnabled(false);
+        // edtSoPhong_hd.setEnabled(false); // Allow editing room number
+        // edtTienPhong_hd.setEnabled(false); // Allow editing room price
         edtNgayki_hd.setEnabled(false);
         edtCCCD_hd.setEnabled(false);
         edtSdt_hd.setEnabled(false);
@@ -429,7 +563,7 @@ public class hopDong_Activity extends AppCompatActivity {
         btnHuy.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                dialog.dismiss();
+                currentDialog.dismiss();
                 finish();
             }
         });
@@ -487,14 +621,14 @@ public class hopDong_Activity extends AppCompatActivity {
                 }
 
                 // Kiểm tra phải có ảnh hợp đồng
-                if (selectedImageUri == null) {
+                if (selectedImageUris.isEmpty()) {
                     Toast.makeText(hopDong_Activity.this, "Vui lòng chọn ảnh hợp đồng", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                // Upload ảnh hợp đồng lên Firebase Storage
+                // Upload nhiều ảnh hợp đồng lên Firebase Storage
                 android.app.ProgressDialog progress = new android.app.ProgressDialog(hopDong_Activity.this);
-                progress.setMessage("Đang upload ảnh hợp đồng...");
+                progress.setMessage("Đang upload " + selectedImageUris.size() + " ảnh hợp đồng...");
                 progress.setCancelable(false);
                 progress.show();
 
@@ -504,12 +638,16 @@ public class hopDong_Activity extends AppCompatActivity {
                 int soXe = Integer.parseInt(edtSoxe_hd.getText().toString());
 
                 ImageUploader uploader = new ImageUploader(hopDong_Activity.this);
-                uploader.uploadImage(selectedImageUri, "hopDong", new ImageUploader.UploadCallback() {
+                uploader.uploadMultipleImages(selectedImageUris, "hopDong", new ImageUploader.MultiUploadCallback() {
                     @Override
-                    public void onSuccess(String downloadUrl) {
+                    public void onAllSuccess(java.util.List<String> downloadUrls) {
                         progress.dismiss();
                         
-                        // Tạo hợp đồng với Firebase URL
+                        // Lưu URLs cách nhau bằng dấu ";"
+                        String imageUrls = android.text.TextUtils.join(";", downloadUrls);
+                        Log.d("hopDong_Activity", "Upload success: " + downloadUrls.size() + " images");
+                        
+                        // Tạo hợp đồng với Firebase URLs
                         item = new HopDong();
                         item.setMaNguoiThue(mant);
                         item.setMaPhong(maphong);
@@ -524,9 +662,12 @@ public class hopDong_Activity extends AppCompatActivity {
                         item.setTienCoc(tienCoc);
                         item.setSoNguoi(soNguoi);
                         item.setSoXe(soXe);
-                        item.setImageUrl(downloadUrl); // Lưu Firebase URL
+                        item.setImageUrl(imageUrls); // Lưu nhiều Firebase URLs
                         item.setHinhAnhhd(null); // BLOB để null
                         item.setGhiChu(edtGhiChu_hd.getText().toString());
+                        
+                        // Debug log imageUrl
+                        android.util.Log.d("HopDongDebug", "Saving contract with imageUrl: " + imageUrls);
                         
                         if (hybridDao.insert(item) > 0) {
                             // Cập nhật trạng thái phòng đã thuê
@@ -551,7 +692,7 @@ public class hopDong_Activity extends AppCompatActivity {
                             }
                             
                             Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thành công!", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
+                            currentDialog.dismiss();
                             // Reload danh sách hợp đồng
                             list_hdm = new ArrayList<>(hybridDao.getHopDongByMaPhong(maphong));
                             hopDongAdapter = new HopDong_Adapter(hopDong_Activity.this, list_hdm, hopDong_Activity.this);
@@ -561,7 +702,7 @@ public class hopDong_Activity extends AppCompatActivity {
                             finish();
                         } else {
                             Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thất bại", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
+                            currentDialog.dismiss();
                         }
                     }
 
@@ -576,25 +717,70 @@ public class hopDong_Activity extends AppCompatActivity {
                 });
             }
         });
-        dialog.show();
+        currentDialog.show();
     }
     void capNhapLv(){
-        list= (ArrayList<HopDong>) hybridDao.getAll();
-        hopDongAdapter=new HopDong_Adapter(hopDong_Activity.this,list, hopDong_Activity.this);
-        lsthopDong.setAdapter(hopDongAdapter);
+        // ĐỢI sync từ Firestore trước khi hiển thị
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<List<HopDong>>() {
+            @Override
+            public void onSuccess(List<HopDong> syncedList) {
+                list = (ArrayList<HopDong>) syncedList;
+                hopDongAdapter = new HopDong_Adapter(hopDong_Activity.this, list, hopDong_Activity.this);
+                lsthopDong.setAdapter(hopDongAdapter);
+                android.util.Log.d("hopDong_Activity", "capNhapLv: Loaded " + list.size() + " contracts after sync");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Fallback to local data
+                list = (ArrayList<HopDong>) hybridDao.getAll();
+                hopDongAdapter = new HopDong_Adapter(hopDong_Activity.this, list, hopDong_Activity.this);
+                lsthopDong.setAdapter(hopDongAdapter);
+                android.util.Log.e("hopDong_Activity", "Sync failed, using local data", e);
+            }
+        });
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null){
-            selectedImageUri = data.getData();
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                imgAnhhd.setImageBitmap(bitmap);
-            } catch (FileNotFoundException e) {
-                Toast.makeText(this, "Lỗi: Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
-                selectedImageUri = null;
+            selectedImageUris.clear();
+            
+            // Xử lý nhiều ảnh được chọn
+            if (data.getClipData() != null) {
+                // Người dùng chọn nhiều ảnh
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    Uri uri = data.getClipData().getItemAt(i).getUri();
+                    try {
+                        // Lấy quyền truy cập persistent
+                        final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                    } catch (Exception ignored) {}
+                    selectedImageUris.add(uri);
+                }
+            } else if (data.getData() != null) {
+                // Người dùng chỉ chọn 1 ảnh
+                Uri uri = data.getData();
+                try {
+                    final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    getContentResolver().takePersistableUriPermission(uri, takeFlags);
+                } catch (Exception ignored) {}
+                selectedImageUris.add(uri);
+            }
+            
+            // Hiển thị ảnh đầu tiên làm preview
+            if (!selectedImageUris.isEmpty()) {
+                try {
+                    InputStream inputStream = getContentResolver().openInputStream(selectedImageUris.get(0));
+                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                    imgAnhhd.setImageBitmap(bitmap);
+                    tvSelectedImages.setText("Đã chọn " + selectedImageUris.size() + " ảnh");
+                } catch (FileNotFoundException e) {
+                    Toast.makeText(this, "Lỗi: Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+                    selectedImageUris.clear();
+                    tvSelectedImages.setText("Chưa chọn ảnh");
+                }
             }
 
         }

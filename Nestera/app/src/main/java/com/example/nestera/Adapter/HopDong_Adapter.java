@@ -131,12 +131,15 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             edtSoxe_hd.setText(hd.getSoXe() + "");
             edtGhiChu_hd.setText(hd.getGhiChu());
             
-            // Load ảnh: ưu tiên Firebase Storage URL, fallback BLOB
+            // Load ảnh: ưu tiên Firebase Storage URL (có thể nhiều ảnh), fallback BLOB
             hinhAnh = hd.getHinhAnhhd();
             if (hd.getImageUrl() != null && !hd.getImageUrl().isEmpty()) {
-                // Load từ Firebase Storage
+                // Load ảnh đầu tiên từ Firebase Storage (nếu có nhiều ảnh phân cách bởi ";")
+                String[] imageUrls = hd.getImageUrl().split(";");
+                String firstImageUrl = imageUrls[0].trim();
+                
                 Glide.with(context)
-                    .load(hd.getImageUrl())
+                    .load(firstImageUrl)
                     .placeholder(R.drawable.phong_tro_1_1)
                     .error(R.drawable.baseline_warning_24)
                     .into(imgAnhHopDong);
@@ -151,11 +154,20 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             NguoiThue nguoiThue = ntDao.getID(hd.getMaNguoiThue());
             edtTenkh_hd.setText(String.valueOf(nguoiThue.getTenNguoiThue()));
             if(username.equalsIgnoreCase("admin") || username.equalsIgnoreCase("landlord") || context.getSharedPreferences("user11", MODE_PRIVATE).getString("role", "").equalsIgnoreCase("LANDLORD")) {
-            // Nếu hợp đồng đã kết thúc (phòng trống) thì chỉ cho phép Gia hạn thêm; ẩn Kết thúc
+            // Nếu hợp đồng đã kết thúc (phòng trống) thì ẩn tất cả nút và hiển thị trạng thái
             if (isEnded) {
                 btnKetThuc.setVisibility(View.GONE);
+                btnCapNhap.setVisibility(View.GONE);
+                // Thay đổi text của một button thành trạng thái
+                btnCapNhap.setText("ĐÃ HỦY");
+                btnCapNhap.setVisibility(View.VISIBLE);
+                btnCapNhap.setEnabled(false);
+                btnCapNhap.setBackgroundColor(0xFF999999); // Gray color
             } else {
                 btnKetThuc.setVisibility(View.VISIBLE);
+                btnCapNhap.setVisibility(View.VISIBLE);
+                btnCapNhap.setEnabled(true);
+                btnCapNhap.setText("CẬP NHẬT");
             }
             btnCapNhap.setOnClickListener(new View.OnClickListener() {
                 @Override

@@ -36,6 +36,26 @@ public class NguoiThueHybridDao {
     }
 
     /**
+     * Lấy tất cả người thuê với callback - đợi sync Firestore xong
+     */
+    public void getAllWithSync(FirestoreRepository.FirestoreCallback<List<NguoiThue>> callback) {
+        remoteRepo.getAll(new FirestoreRepository.FirestoreCallback<List<NguoiThue>>() {
+            @Override
+            public void onSuccess(List<NguoiThue> remoteData) {
+                updateLocalCache(remoteData);
+                callback.onSuccess(localDao.getAll());
+                Log.d(TAG, "Synced " + remoteData.size() + " NguoiThue from Firestore");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(localDao.getAll());
+                Log.e(TAG, "Sync failed, using local data", e);
+            }
+        });
+    }
+
+    /**
      * Lấy người thuê theo ID
      */
     public NguoiThue getById(String id) {
@@ -86,6 +106,25 @@ public class NguoiThueHybridDao {
         });
         
         return localData;
+    }
+
+    /**
+     * Lấy người thuê theo chủ trọ với callback - đợi sync Firestore xong
+     */
+    public void getByChuTroWithSync(String chuTroId, FirestoreRepository.FirestoreCallback<List<NguoiThue>> callback) {
+        remoteRepo.getByChuTro(chuTroId, new FirestoreRepository.FirestoreCallback<List<NguoiThue>>() {
+            @Override
+            public void onSuccess(List<NguoiThue> result) {
+                updateLocalCache(result);
+                callback.onSuccess(localDao.getByChuTro(chuTroId));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(localDao.getByChuTro(chuTroId));
+                Log.e(TAG, "Sync failed for getByChuTro", e);
+            }
+        });
     }
 
     /**
@@ -146,9 +185,9 @@ public class NguoiThueHybridDao {
     public long insert(NguoiThue nguoiThue) {
         // 1. Ghi local ngay
         localDao.insert(nguoiThue);
-        
-        // 2. Ghi remote async
-        remoteRepo.insert(nguoiThue, new FirestoreRepository.FirestoreCallback<String>() {
+
+        // 2. Ghi remote async, dùng mã người thuê làm documentId
+        remoteRepo.insert(nguoiThue.getMaNguoithue(), nguoiThue, new FirestoreRepository.FirestoreCallback<String>() {
             @Override
             public void onSuccess(String documentId) {
                 Log.d(TAG, "NguoiThue synced to Firestore: " + documentId);
@@ -159,7 +198,7 @@ public class NguoiThueHybridDao {
                 Log.e(TAG, "Failed to sync NguoiThue to Firestore", e);
             }
         });
-        
+
         return 1;
     }
 
@@ -191,8 +230,11 @@ public class NguoiThueHybridDao {
      * Xóa người thuê - ghi song song
      */
     public int delete(String id) {
+        Log.d(TAG, "Attempting to delete tenant with ID: " + id);
+        
         // 1. Delete local
         int rows = localDao.delete(id);
+        Log.d(TAG, "Local delete result: " + rows + " rows affected");
         
         // 2. Delete remote async
         remoteRepo.delete(id, new FirestoreRepository.FirestoreCallback<Void>() {

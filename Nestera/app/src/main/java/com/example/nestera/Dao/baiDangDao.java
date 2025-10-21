@@ -68,16 +68,38 @@ public class baiDangDao {
         Cursor c = db.rawQuery(sql, args);
         while (c.moveToNext()){
             BaiDang b = new BaiDang();
-            b.setId(c.getInt(c.getColumnIndex("id")));
-            b.setTieuDe(c.getString(c.getColumnIndex("tieuDe")));
-            b.setDiaChi(c.getString(c.getColumnIndex("diaChi")));
-            b.setGiaThang(c.getInt(c.getColumnIndex("giaThang")));
-            b.setDienTich(c.getDouble(c.getColumnIndex("dienTich")));
-            b.setTienNghi(c.getString(c.getColumnIndex("tienNghi")));
-            b.setTrangThai(c.getString(c.getColumnIndex("trangThai")));
-            b.setHinhAnh(c.getString(c.getColumnIndex("hinhAnh")));
-            b.setChuTroId(c.getString(c.getColumnIndex("chuTroId")));
-            try { b.setMaPhong(c.getInt(c.getColumnIndex("maPhong"))); } catch (Exception ignored) {}
+            
+            int idIndex = c.getColumnIndex("id");
+            if (idIndex >= 0) b.setId(c.getInt(idIndex));
+            
+            int tieuDeIndex = c.getColumnIndex("tieuDe");
+            if (tieuDeIndex >= 0) b.setTieuDe(c.getString(tieuDeIndex));
+            
+            int diaChiIndex = c.getColumnIndex("diaChi");
+            if (diaChiIndex >= 0) b.setDiaChi(c.getString(diaChiIndex));
+            
+            int giaThangIndex = c.getColumnIndex("giaThang");
+            if (giaThangIndex >= 0) b.setGiaThang(c.getInt(giaThangIndex));
+            
+            int dienTichIndex = c.getColumnIndex("dienTich");
+            if (dienTichIndex >= 0) b.setDienTich(c.getDouble(dienTichIndex));
+            
+            int tienNghiIndex = c.getColumnIndex("tienNghi");
+            if (tienNghiIndex >= 0) b.setTienNghi(c.getString(tienNghiIndex));
+            
+            int trangThaiIndex = c.getColumnIndex("trangThai");
+            if (trangThaiIndex >= 0) b.setTrangThai(c.getString(trangThaiIndex));
+            
+            int hinhAnhIndex = c.getColumnIndex("hinhAnh");
+            if (hinhAnhIndex >= 0) b.setHinhAnh(c.getString(hinhAnhIndex));
+            
+            int chuTroIdIndex = c.getColumnIndex("chuTroId");
+            if (chuTroIdIndex >= 0) b.setChuTroId(c.getString(chuTroIdIndex));
+            
+            try { 
+                int maPhongIndex = c.getColumnIndex("maPhong");
+                if (maPhongIndex >= 0) b.setMaPhong(c.getInt(maPhongIndex));
+            } catch (Exception ignored) {}
             list.add(b);
         }
         c.close();

@@ -40,16 +40,30 @@ public class frg_thongtintaikhoan extends Fragment {
         lstThongTin=v.findViewById(R.id.lstThongTin);
         hybridDao = new NguoiThueHybridDao(getActivity());
         hybridDao.enableRealtimeSync();
-        list = (ArrayList<NguoiThue>) hybridDao.getAll();
-        thongTinTaiKhoan_adapter = new ThongTinTaiKhoan_Adapter(getActivity(), this,list);
-        lstThongTin.setAdapter(thongTinTaiKhoan_adapter);
-
+        
         Bundle i= getArguments();
         if (i!=null){
             String user=i.getString("key");
             list_nt = hybridDao.getNguoiThueByUser(user);
             thongTinTaiKhoan_adapter = new ThongTinTaiKhoan_Adapter(getActivity(),this,list_nt);
             lstThongTin.setAdapter(thongTinTaiKhoan_adapter);
+        } else {
+            // Load all với callback
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<NguoiThue>>() {
+                @Override
+                public void onSuccess(java.util.List<NguoiThue> syncedList) {
+                    list = (ArrayList<NguoiThue>) syncedList;
+                    thongTinTaiKhoan_adapter = new ThongTinTaiKhoan_Adapter(getActivity(), frg_thongtintaikhoan.this, list);
+                    lstThongTin.setAdapter(thongTinTaiKhoan_adapter);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    list = new ArrayList<>();
+                    thongTinTaiKhoan_adapter = new ThongTinTaiKhoan_Adapter(getActivity(), frg_thongtintaikhoan.this, list);
+                    lstThongTin.setAdapter(thongTinTaiKhoan_adapter);
+                }
+            });
         }
 
 

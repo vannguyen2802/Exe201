@@ -129,41 +129,87 @@ public class BaiDangActivity extends AppCompatActivity {
     }
 
     private void loadData(){
-        // Sử dụng Hybrid DAO - tự động sync với Firestore
+        // Sử dụng Hybrid DAO - ĐỢI sync với Firestore
         String role = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
-        List<BaiDang> list;
+        
         if ("USER".equalsIgnoreCase(role)) {
-            // Người thuê: xem tất cả bài đăng
-            list = hybridDao.getAll();
-        } else {
-            // Landlord/Admin: xem bài đăng của mình
-            String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-            list = hybridDao.getByChuTro(currentUser);
-        }
+            // Người thuê: xem tất cả bài đăng - ĐỢI SYNC từ Firestore
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
+                @Override
+                public void onSuccess(List<BaiDang> list) {
+                    com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, list);
+                    lv.setAdapter(adapter);
+                }
 
-        com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(this, list);
-        lv.setAdapter(adapter);
+                @Override
+                public void onError(Exception e) {
+                    android.widget.Toast.makeText(BaiDangActivity.this, "Lỗi load dữ liệu: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            // Landlord/Admin: xem bài đăng của mình - ĐỢI SYNC từ Firestore
+            String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+            hybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
+                @Override
+                public void onSuccess(List<BaiDang> list) {
+                    com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, list);
+                    lv.setAdapter(adapter);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    android.widget.Toast.makeText(BaiDangActivity.this, "Lỗi load dữ liệu: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     private void filterPosts(String query) {
         if (query == null) query = "";
-        query = query.trim().toLowerCase();
+        final String searchQuery = query.trim().toLowerCase();
         
-        java.util.List<com.example.nestera.model.BaiDang> source;
         String role = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
+        
         if ("USER".equalsIgnoreCase(role)) {
-            source = hybridDao.getAll();
+            // USER: search trong tất cả bài đăng
+            hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<BaiDang>>() {
+                @Override
+                public void onSuccess(java.util.List<BaiDang> source) {
+                    java.util.ArrayList<BaiDang> filtered = new java.util.ArrayList<>();
+                    for (BaiDang b : source) {
+                        String title = b.getTieuDe() == null ? "" : b.getTieuDe().toLowerCase();
+                        String addr = b.getDiaChi() == null ? "" : b.getDiaChi().toLowerCase();
+                        if (title.contains(searchQuery) || addr.contains(searchQuery)) filtered.add(b);
+                    }
+                    lv.setAdapter(new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, filtered));
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    lv.setAdapter(new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, new java.util.ArrayList<>()));
+                }
+            });
         } else {
+            // LANDLORD: search trong bài đăng của mình
             String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-            source = hybridDao.getByChuTro(currentUser);
+            hybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<BaiDang>>() {
+                @Override
+                public void onSuccess(java.util.List<BaiDang> source) {
+                    java.util.ArrayList<BaiDang> filtered = new java.util.ArrayList<>();
+                    for (BaiDang b : source) {
+                        String title = b.getTieuDe() == null ? "" : b.getTieuDe().toLowerCase();
+                        String addr = b.getDiaChi() == null ? "" : b.getDiaChi().toLowerCase();
+                        if (title.contains(searchQuery) || addr.contains(searchQuery)) filtered.add(b);
+                    }
+                    lv.setAdapter(new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, filtered));
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    lv.setAdapter(new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, new java.util.ArrayList<>()));
+                }
+            });
         }
-        java.util.ArrayList<com.example.nestera.model.BaiDang> filtered = new java.util.ArrayList<>();
-        for (com.example.nestera.model.BaiDang b : source) {
-            String title = b.getTieuDe() == null ? "" : b.getTieuDe().toLowerCase();
-            String addr = b.getDiaChi() == null ? "" : b.getDiaChi().toLowerCase();
-            if (title.contains(query) || addr.contains(query)) filtered.add(b);
-        }
-        lv.setAdapter(new com.example.nestera.Adapter.BaiDangAdapter(this, filtered));
     }
 
     // Load theo tab khi role là USER
@@ -173,21 +219,33 @@ public class BaiDangActivity extends AppCompatActivity {
             loadData();
             return;
         }
+        
         String landlordId = getTenantLandlordId();
-        List<BaiDang> listAll = hybridDao.getAll();
-        java.util.ArrayList<BaiDang> filtered = new java.util.ArrayList<>();
-        if (landlordId == null || landlordId.isEmpty()) {
-            // Nếu chưa xác định được chủ trọ của người thuê, không hiển thị gì ở tab "của bạn"
-            if (!isYourLandlord) filtered.addAll(listAll);
-        } else {
-            for (BaiDang b : listAll) {
-                boolean isYours = landlordId.equalsIgnoreCase(b.getChuTroId());
-                if (isYourLandlord && isYours) filtered.add(b);
-                if (!isYourLandlord && !isYours) filtered.add(b);
+        
+        // ĐỢI sync từ Firestore
+        hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
+            @Override
+            public void onSuccess(List<BaiDang> listAll) {
+                java.util.ArrayList<BaiDang> filtered = new java.util.ArrayList<>();
+                if (landlordId == null || landlordId.isEmpty()) {
+                    // Nếu chưa xác định được chủ trọ của người thuê, không hiển thị gì ở tab "của bạn"
+                    if (!isYourLandlord) filtered.addAll(listAll);
+                } else {
+                    for (BaiDang b : listAll) {
+                        boolean isYours = landlordId.equalsIgnoreCase(b.getChuTroId());
+                        if (isYourLandlord && isYours) filtered.add(b);
+                        if (!isYourLandlord && !isYours) filtered.add(b);
+                    }
+                }
+                com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(BaiDangActivity.this, filtered);
+                lv.setAdapter(adapter);
             }
-        }
-        com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(this, filtered);
-        lv.setAdapter(adapter);
+
+            @Override
+            public void onError(Exception e) {
+                android.widget.Toast.makeText(BaiDangActivity.this, "Lỗi load dữ liệu", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     // Lấy mã chủ trọ (chuTroId) mà người thuê hiện tại thuộc về

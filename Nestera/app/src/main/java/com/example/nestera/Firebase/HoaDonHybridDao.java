@@ -35,6 +35,26 @@ public class HoaDonHybridDao {
     }
 
     /**
+     * Lấy tất cả hóa đơn với callback - đợi sync Firestore xong
+     */
+    public void getAllWithSync(FirestoreRepository.FirestoreCallback<List<HoaDon>> callback) {
+        remoteRepo.getAll(new FirestoreRepository.FirestoreCallback<List<HoaDon>>() {
+            @Override
+            public void onSuccess(List<HoaDon> remoteData) {
+                updateLocalCache(remoteData);
+                callback.onSuccess(localDao.getAll());
+                Log.d(TAG, "Synced " + remoteData.size() + " HoaDon from Firestore");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onSuccess(localDao.getAll());
+                Log.e(TAG, "Sync failed, using local data", e);
+            }
+        });
+    }
+
+    /**
      * Lấy hóa đơn theo ID
      */
     public HoaDon getById(int id) {

@@ -26,8 +26,20 @@ public class myapplication extends Application {
         // Initialize Firebase
         FirebaseApp.initializeApp(this);
         
-        // Auto-create default admin account (runs once)
-        createDefaultAdminIfNeeded();
+        // Anonymous Authentication để có quyền truy cập Firestore
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        if (auth.getCurrentUser() == null) {
+            auth.signInAnonymously()
+                    .addOnSuccessListener(authResult -> {
+                        Log.d("Firebase", "✅ Anonymous sign-in SUCCESS");
+                        Log.d("Firebase", "User ID: " + authResult.getUser().getUid());
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("Firebase", "❌ Anonymous sign-in FAILED", e);
+                    });
+        } else {
+            Log.d("Firebase", "✅ User already signed in: " + auth.getCurrentUser().getUid());
+        }
         
         // Configure Firestore
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -37,54 +49,6 @@ public class myapplication extends Application {
         db.setFirestoreSettings(settings);
 
         phuongthuc();
-    }
-    
-    /**
-     * Tự động tạo tài khoản admin mặc định nếu chưa tồn tại
-     * Chỉ chạy 1 lần khi app khởi động lần đầu
-     */
-    private void createDefaultAdminIfNeeded() {
-        SharedPreferences prefs = getSharedPreferences("app_setup", MODE_PRIVATE);
-        boolean adminCreated = prefs.getBoolean("admin_created", false);
-        
-        if (!adminCreated) {
-            try {
-                chuTroDao dao = new chuTroDao(this);
-                
-                // Kiểm tra admin đã tồn tại chưa
-                ChuTro existing = dao.getID("admin");
-                
-                if (existing == null) {
-                    // Tạo tài khoản admin mặc định
-                    ChuTro admin = new ChuTro();
-                    admin.setMaChuTro("admin");
-                    admin.setTenChuTro("Administrator");
-                    admin.setMatKhau("NesteraAdmin22102005@"); // Nên đổi sau khi login
-                    admin.setEmail("admin@nestera.com");
-                    admin.setSdt("0123456789");
-                    admin.setCccd("0000000000");
-                    admin.setApproved(1); // Đã được duyệt
-                    admin.setBanned(0);   // Không bị khóa
-                    
-                    long result = dao.insert(admin);
-                    
-                    if (result > 0) {
-                        Log.i("AdminSetup", "✅ Default admin account created successfully");
-                        Log.i("AdminSetup", "Username: admin | Password: NesteraAdmin22102005@");
-                        
-                        // Đánh dấu đã tạo admin
-                        prefs.edit().putBoolean("admin_created", true).apply();
-                    } else {
-                        Log.e("AdminSetup", "❌ Failed to create admin account");
-                    }
-                } else {
-                    Log.i("AdminSetup", "Admin account already exists");
-                    prefs.edit().putBoolean("admin_created", true).apply();
-                }
-            } catch (Exception e) {
-                Log.e("AdminSetup", "Error creating admin account", e);
-            }
-        }
     }
     
     // tao phuong thuc kenh thong bao

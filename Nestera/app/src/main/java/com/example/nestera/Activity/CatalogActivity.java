@@ -18,7 +18,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.nestera.Adapter.BaiDangRecyclerAdapter;
-import com.example.nestera.Dao.baiDangDao;
+import com.example.nestera.Firebase.BaiDangHybridDao;
+import com.example.nestera.Firebase.FirestoreRepository;
 import com.example.nestera.MainActivity;
 import com.example.nestera.R;
 import com.example.nestera.dangnhap;
@@ -32,7 +33,7 @@ public class CatalogActivity extends AppCompatActivity {
     ArrayList<BaiDang> baiDangList;
     ArrayList<BaiDang> allBaiDangList; // Lưu toàn bộ danh sách để tìm kiếm
     BaiDangRecyclerAdapter baiDangAdapter;
-    baiDangDao dao;
+    BaiDangHybridDao hybridDao;
     EditText edtSearch;
     
     // Category buttons
@@ -57,7 +58,7 @@ public class CatalogActivity extends AppCompatActivity {
 
     private void initViews() {
         rvRooms = findViewById(R.id.rvRooms);
-        dao = new baiDangDao(this);
+        hybridDao = new BaiDangHybridDao(this);
         btnLogin = findViewById(R.id.btnLogin);
         ivBack = findViewById(R.id.ivBack);
         ivNotification = findViewById(R.id.ivNotification);
@@ -148,18 +149,44 @@ public class CatalogActivity extends AppCompatActivity {
     }
 
     private void loadAllBaiDang() {
-        // Load tất cả bài đăng từ tất cả chủ trọ
-        try {
-            List<BaiDang> posts = dao.getAll();
-            allBaiDangList.clear();
-            allBaiDangList.addAll(posts);
-            
-            baiDangList.clear();
-            baiDangList.addAll(posts);
-            baiDangAdapter.notifyDataSetChanged();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // Load tất cả bài đăng từ Firebase với callback
+        android.util.Log.d("CatalogActivity", "Starting to load all posts from Firebase...");
+        
+        hybridDao.getAllWithSync(new FirestoreRepository.FirestoreCallback<List<BaiDang>>() {
+            @Override
+            public void onSuccess(List<BaiDang> syncedPosts) {
+                android.util.Log.d("CatalogActivity", "✅ Firebase sync success: " + syncedPosts.size() + " posts");
+                
+                // Update UI on main thread
+                runOnUiThread(() -> {
+                    allBaiDangList.clear();
+                    allBaiDangList.addAll(syncedPosts);
+                    
+                    baiDangList.clear();
+                    baiDangList.addAll(syncedPosts);
+                    
+                    if (baiDangAdapter != null) {
+                        baiDangAdapter.notifyDataSetChanged();
+                        android.util.Log.d("CatalogActivity", "UI updated with " + baiDangList.size() + " posts");
+                    }
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("CatalogActivity", "❌ Firebase sync failed", e);
+                
+                // Fallback to empty list
+                runOnUiThread(() -> {
+                    allBaiDangList.clear();
+                    baiDangList.clear();
+                    
+                    if (baiDangAdapter != null) {
+                        baiDangAdapter.notifyDataSetChanged();
+                    }
+                });
+            }
+        });
     }
 
     private void setupClickListeners() {
