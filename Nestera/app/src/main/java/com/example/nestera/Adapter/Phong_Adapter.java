@@ -18,6 +18,7 @@ import com.example.nestera.Dao.LoaiPhongDao;
 import com.example.nestera.R;
 import com.example.nestera.model.LoaiPhong;
 import com.example.nestera.model.PhongTro;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -110,12 +111,27 @@ public class Phong_Adapter extends ArrayAdapter<PhongTro> {
                 }
             });
             
-            // Load ảnh: ưu tiên ảnh URI từ bài đăng (nếu đồng bộ), nếu không thì dùng imagePath drawable
+            // Load ảnh: ưu tiên Firebase Storage URL, fallback drawable
             if (ivRoomImage != null) {
                 String imagePath = phongTro.getImagePath();
-                if (imagePath != null && imagePath.startsWith("content:")) {
-                    try { ivRoomImage.setImageURI(android.net.Uri.parse(imagePath)); } catch (Exception e) { ivRoomImage.setImageResource(R.drawable.phong_tro_1_1); }
+                if (imagePath != null && (imagePath.startsWith("http://") || imagePath.startsWith("https://"))) {
+                    // Firebase Storage URL - dùng Glide
+                    Glide.with(context)
+                        .load(imagePath)
+                        .placeholder(R.drawable.phong_tro_1_1)
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(ivRoomImage);
+                } else if (imagePath != null && imagePath.startsWith("content:")) {
+                    // Local URI - dùng Glide
+                    Glide.with(context)
+                        .load(android.net.Uri.parse(imagePath))
+                        .placeholder(R.drawable.phong_tro_1_1)
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(ivRoomImage);
                 } else if (imagePath != null && !imagePath.isEmpty()) {
+                    // Drawable resource name
                     String imageName = imagePath;
                     if (imageName.contains(".")) {
                         imageName = imageName.substring(0, imageName.lastIndexOf("."));

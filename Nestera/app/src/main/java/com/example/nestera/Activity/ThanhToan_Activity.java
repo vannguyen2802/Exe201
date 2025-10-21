@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -22,6 +23,7 @@ import com.example.nestera.Adapter.HoaDon_Adapter;
 import com.example.nestera.Adapter.NganHangSpinner_Adapter;
 import com.example.nestera.Dao.NganHangDao;
 import com.example.nestera.Dao.hoaDonDao;
+import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.R;
 import com.example.nestera.model.HoaDon;
 import com.example.nestera.model.NganHang;
@@ -49,6 +51,7 @@ public class ThanhToan_Activity extends AppCompatActivity {
     byte[] anhthanhtoan;
     byte[] anhqr;
     int mahoadon;
+    Uri selectedImageUri; // URI ảnh thanh toán được chọn
     final int REQUEST_CODE_FOLDER = 456;
 
     @Override
@@ -114,22 +117,49 @@ public class ThanhToan_Activity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhThanhToan.getDrawable();
-                Bitmap bitmap = bitmapDrawable.getBitmap();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                anhthanhtoan = byteArrayOutputStream.toByteArray();
-                hoaDon.setAnhThanhToan(anhthanhtoan);
-                hoaDon.setTrangThai(1);
-                hoaDon.setMaHoaDon(Integer.parseInt(edtmaHoaDon.getText().toString()));
-                if (hoadonDao.updateanh(hoaDon)>0){
-                    Toast.makeText(ThanhToan_Activity.this, "Đã gửi", Toast.LENGTH_SHORT).show();
-                    hoadonDao.updateTrangThaiHoaDon(mahoadon,1);
-                }else {
-                    Toast.makeText(ThanhToan_Activity.this, "Thất bại", Toast.LENGTH_SHORT).show();
+                // Kiểm tra phải có ảnh thanh toán
+                if (selectedImageUri == null) {
+                    Toast.makeText(ThanhToan_Activity.this, "Vui lòng chọn ảnh chứng từ thanh toán", Toast.LENGTH_SHORT).show();
+                    return;
                 }
-                Intent intent=new Intent(ThanhToan_Activity.this,hoaDon_Activity.class);
-                startActivity(intent);
+
+                // Upload ảnh lên Firebase Storage
+                android.app.ProgressDialog progress = new android.app.ProgressDialog(ThanhToan_Activity.this);
+                progress.setMessage("Đang upload ảnh thanh toán...");
+                progress.setCancelable(false);
+                progress.show();
+
+                ImageUploader uploader = new ImageUploader(ThanhToan_Activity.this);
+                uploader.uploadImage(selectedImageUri, "hoaDon", new ImageUploader.UploadCallback() {
+                    @Override
+                    public void onSuccess(String downloadUrl) {
+                        progress.dismiss();
+                        // Lưu với Firebase Storage URL
+                        hoaDon.setImageUrl(downloadUrl);
+                        hoaDon.setAnhThanhToan(null); // BLOB để null
+                        hoaDon.setTrangThai(1);
+                        hoaDon.setMaHoaDon(Integer.parseInt(edtmaHoaDon.getText().toString()));
+                        
+                        if (hoadonDao.updateanh(hoaDon) > 0) {
+                            Toast.makeText(ThanhToan_Activity.this, "Đã gửi", Toast.LENGTH_SHORT).show();
+                            hoadonDao.updateTrangThaiHoaDon(mahoadon, 1);
+                            Intent intent = new Intent(ThanhToan_Activity.this, hoaDon_Activity.class);
+                            startActivity(intent);
+                            finish();
+                        } else {
+                            Toast.makeText(ThanhToan_Activity.this, "Thất bại", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        progress.dismiss();
+                        Toast.makeText(ThanhToan_Activity.this, 
+                            "Lỗi upload ảnh: " + e.getMessage() + ". Thanh toán không được lưu!", 
+                            Toast.LENGTH_LONG).show();
+                        Log.e("ThanhToan_Activity", "Upload failed, data NOT saved", e);
+                    }
+                });
 
             }
         });
@@ -139,13 +169,14 @@ public class ThanhToan_Activity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null){
-            Uri uri = data.getData();
+            selectedImageUri = data.getData();
             try {
-                InputStream inputStream = getContentResolver().openInputStream(uri);
+                InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 imgAnhThanhToan.setImageBitmap(bitmap);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+                Toast.makeText(this, "Lỗi: Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+                selectedImageUri = null;
             }
 
         }

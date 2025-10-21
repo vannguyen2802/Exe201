@@ -1,6 +1,7 @@
 package com.example.nestera.Activity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -15,6 +16,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nestera.Dao.baiDangDao;
+import com.example.nestera.Firebase.BaiDangHybridDao;
+import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.R;
 import com.example.nestera.model.BaiDang;
 
@@ -24,6 +27,7 @@ import java.util.List;
 public class BaiDangActivity extends AppCompatActivity {
     ListView lv;
     Button fabAdd;
+    BaiDangHybridDao hybridDao; // Sử dụng Hybrid DAO cho sync Firestore
     android.widget.LinearLayout llTabs;
     android.widget.Button btnTabChuTroCuaBan, btnTabChuTroKhac;
     private final java.util.ArrayList<android.net.Uri> selectedImageUris = new java.util.ArrayList<>();
@@ -36,6 +40,9 @@ public class BaiDangActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_baidang);
         setTitle("Bài đăng cho thuê");
+
+        // Khởi tạo Hybrid DAO để sync với Firestore
+        hybridDao = new BaiDangHybridDao(this);
 
         lv = findViewById(R.id.lvBaiDang);
         fabAdd = findViewById(R.id.btnAddPost);
@@ -65,6 +72,9 @@ public class BaiDangActivity extends AppCompatActivity {
         }
 
         loadData();
+
+        // Enable real-time sync từ Firestore
+        hybridDao.enableRealtimeSync();
 
         // Search posts by title or address
         if (edtSearchPost != null) {
@@ -119,16 +129,16 @@ public class BaiDangActivity extends AppCompatActivity {
     }
 
     private void loadData(){
-        baiDangDao dao = new baiDangDao(this);
+        // Sử dụng Hybrid DAO - tự động sync với Firestore
         String role = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
         List<BaiDang> list;
         if ("USER".equalsIgnoreCase(role)) {
             // Người thuê: xem tất cả bài đăng
-            list = dao.getAll();
+            list = hybridDao.getAll();
         } else {
-            // Landlord/Admin: xem bài đăng của mình (giữ hành vi cũ cho landlord)
+            // Landlord/Admin: xem bài đăng của mình
             String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-            list = dao.getByChuTro(currentUser);
+            list = hybridDao.getByChuTro(currentUser);
         }
 
         com.example.nestera.Adapter.BaiDangAdapter adapter = new com.example.nestera.Adapter.BaiDangAdapter(this, list);
@@ -138,14 +148,14 @@ public class BaiDangActivity extends AppCompatActivity {
     private void filterPosts(String query) {
         if (query == null) query = "";
         query = query.trim().toLowerCase();
-        com.example.nestera.Dao.baiDangDao dao = new com.example.nestera.Dao.baiDangDao(this);
+        
         java.util.List<com.example.nestera.model.BaiDang> source;
         String role = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
         if ("USER".equalsIgnoreCase(role)) {
-            source = dao.getAll();
+            source = hybridDao.getAll();
         } else {
             String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
-            source = dao.getByChuTro(currentUser);
+            source = hybridDao.getByChuTro(currentUser);
         }
         java.util.ArrayList<com.example.nestera.model.BaiDang> filtered = new java.util.ArrayList<>();
         for (com.example.nestera.model.BaiDang b : source) {
@@ -163,9 +173,8 @@ public class BaiDangActivity extends AppCompatActivity {
             loadData();
             return;
         }
-        baiDangDao dao = new baiDangDao(this);
         String landlordId = getTenantLandlordId();
-        List<BaiDang> listAll = dao.getAll();
+        List<BaiDang> listAll = hybridDao.getAll();
         java.util.ArrayList<BaiDang> filtered = new java.util.ArrayList<>();
         if (landlordId == null || landlordId.isEmpty()) {
             // Nếu chưa xác định được chủ trọ của người thuê, không hiển thị gì ở tab "của bạn"
@@ -243,40 +252,67 @@ public class BaiDangActivity extends AppCompatActivity {
                     if (c7.isChecked()) a.add(c7.getText().toString());
                     b.setTienNghi(android.text.TextUtils.join(" · ", a));
                     b.setTrangThai(spTrangThai.getSelectedItem().toString());
-                    // Lưu danh sách URI ảnh thành chuỗi
-                    java.util.List<String> uriStrings = new java.util.ArrayList<>();
-                    for (android.net.Uri u : selectedImageUris) { uriStrings.add(u.toString()); }
-                    b.setHinhAnh(android.text.TextUtils.join(";", uriStrings));
+                    
                     // Lấy chuTroId từ người đăng nhập hiện tại
                     android.content.SharedPreferences pref = getSharedPreferences("user11", MODE_PRIVATE);
                     String currentUser = pref.getString("username11", "");
                     b.setChuTroId(currentUser);
-                    long postId = new baiDangDao(this).insert(b);
-                    // Đồng bộ sang danh sách Phòng Trọ để hiển thị ở mục Phòng
-                    try {
-                        com.example.nestera.model.PhongTro p = new com.example.nestera.model.PhongTro();
-                        p.setTenPhong(b.getTieuDe());
-                        p.setGia(b.getGiaThang());
-                        p.setTienNghi(b.getTienNghi());
-                        p.setMaLoai(1); // mặc định Full option; có thể thêm chọn loại sau
-                        p.setTrangThai("Đã thuê".equalsIgnoreCase(b.getTrangThai()) ? 1 : 0);
-                        p.setDiaChi(b.getDiaChi());
-                        // nếu có ảnh, set ảnh đầu tiên vào imagePath để list Phòng hiển thị
-                        if (b.getHinhAnh() != null && !b.getHinhAnh().isEmpty()) {
-                            String first = b.getHinhAnh().split(";")[0];
-                            p.setImagePath(first); // có thể là URI content:
-                        }
-                        long idPhong = new com.example.nestera.Dao.phongTroDao(this).insert(p);
-                        if (idPhong > 0) {
-                            b.setMaPhong((int) idPhong);
-                            if (postId > 0) b.setId((int) postId);
-                            new baiDangDao(this).update(b); // cập nhật maPhong vào bài đăng vừa tạo
-                        }
-                    } catch (Exception ignored) {}
-                    loadData();
+                    
+                    // Upload ảnh lên Firebase Storage trước khi lưu
+                    if (!selectedImageUris.isEmpty()) {
+                        android.app.ProgressDialog progress = new android.app.ProgressDialog(this);
+                        progress.setMessage("Đang upload ảnh...");
+                        progress.setCancelable(false);
+                        progress.show();
+                        
+                        ImageUploader uploader = new ImageUploader(this);
+                        uploader.uploadMultipleImages(selectedImageUris, "baiDang", new ImageUploader.MultiUploadCallback() {
+                            @Override
+                            public void onAllSuccess(List<String> downloadUrls) {
+                                progress.dismiss();
+                                // Debug: Log số lượng URL trả về
+                                Log.d("BaiDangActivity", "Upload success: " + downloadUrls.size() + " images");
+                                for (int i = 0; i < downloadUrls.size(); i++) {
+                                    Log.d("BaiDangActivity", "URL " + i + ": " + downloadUrls.get(i));
+                                }
+                                // Lưu URLs từ Firebase Storage
+                                String urlsJoined = android.text.TextUtils.join(";", downloadUrls);
+                                Log.d("BaiDangActivity", "Joined URLs: " + urlsJoined);
+                                b.setHinhAnh(urlsJoined);
+                                saveBaiDangToDatabase(b);
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                progress.dismiss();
+                                android.widget.Toast.makeText(BaiDangActivity.this, 
+                                    "Lỗi upload ảnh: " + e.getMessage() + ". Bài đăng không được lưu!", 
+                                    android.widget.Toast.LENGTH_LONG).show();
+                                // KHÔNG lưu gì cả khi có lỗi upload
+                                Log.e("BaiDangActivity", "Upload failed, data NOT saved", e);
+                            }
+                        });
+                    } else {
+                        // Không có ảnh, lưu trực tiếp
+                        saveBaiDangToDatabase(b);
+                    }
                 })
                 .setNegativeButton("Hủy", null)
                 .show();
+    }
+
+    // Helper method để lưu bài đăng vào database
+    private void saveBaiDangToDatabase(BaiDang b) {
+        // Insert vào SQLite + Firestore (chỉ 1 lần)
+        long postId = hybridDao.insert(b);
+        
+        if (postId > 0) {
+            android.widget.Toast.makeText(this, "Đã tạo bài đăng và sync lên Cloud!", android.widget.Toast.LENGTH_SHORT).show();
+            loadData();
+            selectedImageUris.clear(); // Clear ảnh đã chọn để tránh duplicate
+        } else {
+            android.widget.Toast.makeText(this, "Lỗi tạo bài đăng!", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

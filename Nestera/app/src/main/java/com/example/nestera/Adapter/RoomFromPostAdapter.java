@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 
 import com.example.nestera.R;
 import com.example.nestera.model.BaiDang;
+import com.bumptech.glide.Glide;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -40,7 +41,12 @@ public class RoomFromPostAdapter extends ArrayAdapter<BaiDang> {
             ImageView iv = v.findViewById(R.id.ivRoomImage);
             if (b.getHinhAnh()!=null && !b.getHinhAnh().isEmpty()) {
                 String first = b.getHinhAnh().split(";")[0];
-                try { iv.setImageURI(Uri.parse(first)); } catch (Exception ignored) {}
+                Glide.with(getContext())
+                    .load(first)
+                    .placeholder(R.drawable.phong_tro_1_1)
+                    .error(R.drawable.phong_tro_1_1)
+                    .centerCrop()
+                    .into(iv);
             }
             TextView txtPhong = v.findViewById(R.id.txtPhong);
             TextView tvLocation = v.findViewById(R.id.tvLocation);

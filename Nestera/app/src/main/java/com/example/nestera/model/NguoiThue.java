@@ -90,6 +90,23 @@ public class NguoiThue {
         this.chuTroId = chuTroId;
     }
 
+    // Alias methods for compatibility with Repository
+    public String getMaNguoiThue() {
+        return maNguoithue;
+    }
+
+    public void setMaNguoiThue(String maNguoiThue) {
+        this.maNguoithue = maNguoiThue;
+    }
+
+    public String getCCCD() {
+        return cCCD;
+    }
+
+    public void setCCCD(String CCCD) {
+        this.cCCD = CCCD;
+    }
+
     public NguoiThue(String maNguoithue, String matKhauNT, String tenNguoiThue, String thuongTru, String sdt, String cCCD, String namSinh, int gioiTinh, int maPhong) {
         this.maNguoithue = maNguoithue;
         this.matKhauNT = matKhauNT;

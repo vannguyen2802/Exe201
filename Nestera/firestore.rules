@@ -1,0 +1,299 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
+    
+    // Kiểm tra user đã đăng nhập chưa
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    // Kiểm tra user có phải Admin không
+    function isAdmin() {
+      return isSignedIn() && 
+             request.auth.token.role == 'ADMIN';
+    }
+    
+    // Kiểm tra user có phải Chủ trọ không
+    function isLandlord() {
+      return isSignedIn() && 
+             request.auth.token.role == 'LANDLORD';
+    }
+    
+    // Kiểm tra user có phải Người thuê không
+    function isTenant() {
+      return isSignedIn() && 
+             request.auth.token.role == 'TENANT';
+    }
+    
+    // Kiểm tra user có phải Kế toán không
+    function isAccountant() {
+      return isSignedIn() && 
+             request.auth.token.role == 'ACCOUNTANT';
+    }
+    
+    // Kiểm tra user có phải chủ sở hữu document không (theo maChuTro)
+    function isOwner(maChuTro) {
+      return isSignedIn() && 
+             request.auth.uid == maChuTro;
+    }
+    
+    // Kiểm tra user có phải người thuê của document không (theo maNguoiThue)
+    function isTenantOf(maNguoiThue) {
+      return isSignedIn() && 
+             request.auth.uid == maNguoiThue;
+    }
+    
+    // Kiểm tra document đã được approve chưa
+    function isApproved(data) {
+      return data.approved == 1;
+    }
+    
+    // Kiểm tra document có bị ban không
+    function isBanned(data) {
+      return data.banned == 1;
+    }
+    
+    
+    // =====================================================
+    // CHU TRO (Landlord) COLLECTION
+    // =====================================================
+    match /chuTro/{chuTroId} {
+      // Đọc: Admin (all), Chủ trọ (own data), Kế toán (approved only)
+      allow read: if isAdmin() || 
+                     isOwner(chuTroId) ||
+                     (isAccountant() && isApproved(resource.data));
+      
+      // Tạo mới: Ai cũng có thể đăng ký (pending approval)
+      allow create: if request.resource.data.approved == 0 &&
+                       request.resource.data.banned == 0;
+      
+      // Cập nhật: Admin (all), Chủ trọ (own data, không thay đổi approved/banned)
+      allow update: if isAdmin() || 
+                       (isOwner(chuTroId) && 
+                        request.resource.data.approved == resource.data.approved &&
+                        request.resource.data.banned == resource.data.banned);
+      
+      // Xóa: Chỉ Admin
+      allow delete: if isAdmin();
+    }
+    
+    
+    // =====================================================
+    // NGUOI THUE (Tenant) COLLECTION
+    // =====================================================
+    match /nguoiThue/{nguoiThueId} {
+      // Đọc: Admin (all), Chủ trọ (own tenants), Người thuê (own data), Kế toán (all approved)
+      allow read: if isAdmin() || 
+                     isOwner(resource.data.maChuTro) ||
+                     isTenantOf(nguoiThueId) ||
+                     isAccountant();
+      
+      // Tạo: Chủ trọ (own tenants), Admin
+      allow create: if isAdmin() || 
+                       (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+      
+      // Cập nhật: Admin, Chủ trọ (own tenants), Người thuê (own data - password only)
+      allow update: if isAdmin() || 
+                       isOwner(resource.data.maChuTro) ||
+                       (isTenantOf(nguoiThueId) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['matKhauNT']));
+      
+      // Xóa: Admin, Chủ trọ (own tenants)
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // KE TOAN (Accountant) COLLECTION
+    // =====================================================
+    match /keToan/{keToanId} {
+      // Đọc: Admin (all), Kế toán (own data), Chủ trọ (own accountants)
+      allow read: if isAdmin() || 
+                     request.auth.uid == keToanId ||
+                     isOwner(resource.data.maChuTro);
+      
+      // Tạo: Admin, Chủ trọ (own accountants)
+      allow create: if isAdmin() || 
+                       (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+      
+      // Cập nhật: Admin, Chủ trọ (own accountants), Kế toán (own data - password only)
+      allow update: if isAdmin() || 
+                       isOwner(resource.data.maChuTro) ||
+                       (request.auth.uid == keToanId && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['matKhau']));
+      
+      // Xóa: Admin, Chủ trọ (own accountants)
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // LOAI PHONG (Room Type) COLLECTION
+    // =====================================================
+    match /loaiPhong/{loaiPhongId} {
+      // Đọc: Admin, Chủ trọ (own types), Kế toán, Người thuê (public info)
+      allow read: if isSignedIn();
+      
+      // Tạo/Cập nhật/Xóa: Admin, Chủ trọ (own types)
+      allow create, update: if isAdmin() || 
+                               (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // PHONG TRO (Room) COLLECTION
+    // =====================================================
+    match /phongTro/{phongId} {
+      // Đọc: Admin, Chủ trọ (own rooms), Kế toán, Người thuê (rented rooms)
+      allow read: if isSignedIn();
+      
+      // Tạo/Cập nhật/Xóa: Admin, Chủ trọ (own rooms)
+      allow create, update: if isAdmin() || 
+                               (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // HOP DONG (Contract) COLLECTION
+    // =====================================================
+    match /hopDong/{hopDongId} {
+      // Đọc: Admin, Chủ trọ (own contracts), Người thuê (own contracts), Kế toán
+      allow read: if isAdmin() || 
+                     isOwner(resource.data.maChuTro) ||
+                     isTenantOf(resource.data.maNguoiThue) ||
+                     isAccountant();
+      
+      // Tạo/Cập nhật/Xóa: Admin, Chủ trọ (own contracts)
+      allow create, update: if isAdmin() || 
+                               (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // HOA DON (Invoice) COLLECTION
+    // =====================================================
+    match /hoaDon/{hoaDonId} {
+      // Đọc: Admin, Chủ trọ (own invoices), Người thuê (own invoices), Kế toán
+      allow read: if isAdmin() || 
+                     isOwner(resource.data.maChuTro) ||
+                     isTenantOf(resource.data.maNguoiThue) ||
+                     isAccountant();
+      
+      // Tạo: Admin, Chủ trọ (own invoices), Kế toán
+      allow create: if isAdmin() || 
+                       (isLandlord() && request.resource.data.maChuTro == request.auth.uid) ||
+                       isAccountant();
+      
+      // Cập nhật: Admin, Chủ trọ (own invoices), Kế toán, Người thuê (payment status only)
+      allow update: if isAdmin() || 
+                       isOwner(resource.data.maChuTro) ||
+                       isAccountant() ||
+                       (isTenantOf(resource.data.maNguoiThue) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['trangThai', 'ngayThanhToan']));
+      
+      // Xóa: Admin, Chủ trọ (own invoices)
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // SU CO (Issue/Problem) COLLECTION
+    // =====================================================
+    match /suCo/{suCoId} {
+      // Đọc: Admin, Chủ trọ (own issues), Người thuê (own issues)
+      allow read: if isAdmin() || 
+                     isOwner(resource.data.maChuTro) ||
+                     isTenantOf(resource.data.maNguoiThue);
+      
+      // Tạo: Admin, Người thuê (own issues)
+      allow create: if isAdmin() || 
+                       (isTenant() && request.resource.data.maNguoiThue == request.auth.uid);
+      
+      // Cập nhật: Admin, Chủ trọ (change status), Người thuê (own issues - content only)
+      allow update: if isAdmin() || 
+                       isOwner(resource.data.maChuTro) ||
+                       (isTenantOf(resource.data.maNguoiThue) && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['tenSuCo', 'noiDung']));
+      
+      // Xóa: Admin, Chủ trọ (own issues)
+      allow delete: if isAdmin() || isOwner(resource.data.maChuTro);
+    }
+    
+    
+    // =====================================================
+    // BAI DANG (Post/Listing) COLLECTION
+    // =====================================================
+    match /baiDang/{baiDangId} {
+      // Đọc: Public (anyone can view listings)
+      allow read: if true;
+      
+      // Tạo/Cập nhật/Xóa: Admin, Chủ trọ (own posts)
+      allow create, update: if isAdmin() || 
+                               (isLandlord() && request.resource.data.chuTroId == request.auth.uid);
+      allow delete: if isAdmin() || isOwner(resource.data.chuTroId);
+    }
+    
+    
+    // =====================================================
+    // NGAN HANG (Bank Account) COLLECTION
+    // =====================================================
+    match /nganHang/{nganHangId} {
+      // Đọc: Admin, Chủ trọ (own bank accounts)
+      allow read: if isAdmin() || isOwner(resource.data.maChuTro);
+      
+      // Tạo/Cập nhật/Xóa: Admin, Chủ trọ (own bank accounts)
+      allow create, update, delete: if isAdmin() || 
+                                        (isLandlord() && request.resource.data.maChuTro == request.auth.uid);
+    }
+    
+    
+    // =====================================================
+    // THONG BAO (Notification) COLLECTION
+    // =====================================================
+    match /thongBao/{thongBaoId} {
+      // Đọc: Admin, User (own notifications)
+      allow read: if isAdmin() || 
+                     request.auth.uid == resource.data.userId;
+      
+      // Tạo: Admin, Chủ trọ (send to tenants)
+      allow create: if isAdmin() || isLandlord();
+      
+      // Cập nhật: Admin, User (mark as read)
+      allow update: if isAdmin() || 
+                       (request.auth.uid == resource.data.userId && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']));
+      
+      // Xóa: Admin, User (own notifications)
+      allow delete: if isAdmin() || request.auth.uid == resource.data.userId;
+    }
+    
+    
+    // =====================================================
+    // THONG KE (Statistics) COLLECTION - Read Only
+    // =====================================================
+    match /thongKe/{thongKeId} {
+      // Đọc: Admin, Chủ trọ (own stats), Kế toán
+      allow read: if isAdmin() || 
+                     isOwner(resource.data.maChuTro) ||
+                     isAccountant();
+      
+      // Chỉ backend mới được ghi (Cloud Functions)
+      allow write: if false;
+    }
+    
+    
+    // =====================================================
+    // DEFAULT DENY ALL
+    // =====================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

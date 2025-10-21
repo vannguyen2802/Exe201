@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 
 import com.example.nestera.R;
 import com.example.nestera.model.BaiDang;
+import com.bumptech.glide.Glide;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -53,12 +54,19 @@ public class BaiDangAdapter extends ArrayAdapter<BaiDang> {
 
         BaiDang b = getItem(position);
         if (b != null) {
-            // image
+            // Load ảnh từ Firebase Storage URL bằng Glide
             if (b.getHinhAnh() != null && !b.getHinhAnh().isEmpty()) {
                 try {
                     String[] arr = b.getHinhAnh().split(";");
                     if (arr.length > 0 && arr[0] != null && !arr[0].trim().isEmpty()) {
-                        h.img.setImageURI(Uri.parse(arr[0]));
+                        // Dùng Glide để load ảnh từ URL với placeholder trong khi load
+                        Glide.with(getContext())
+                            .load(arr[0])
+                            .placeholder(R.drawable.phong_tro_1_1) // Hiện placeholder trong khi load
+                            .error(R.drawable.phong_tro_1_1) // Hiện error nếu load thất bại
+                            .centerCrop()
+                            .transition(com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade()) // Transition mượt
+                            .into(h.img);
                     } else {
                         h.img.setImageResource(R.drawable.phong_tro_1_1);
                     }

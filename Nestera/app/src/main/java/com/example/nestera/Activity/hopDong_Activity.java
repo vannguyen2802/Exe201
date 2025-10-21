@@ -17,6 +17,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -29,9 +30,13 @@ import android.widget.Toast;
 
 import com.example.nestera.Adapter.HopDong_Adapter;
 import com.example.nestera.Adapter.NguoiThueSpinerAdapter;
+import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.Dao.hopDongDao;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.HopDongHybridDao;
+import com.example.nestera.Firebase.NguoiThueHybridDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.MainActivity;
 import com.example.nestera.R;
 import com.example.nestera.model.HopDong;
@@ -45,7 +50,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class hopDong_Activity extends AppCompatActivity {
-    hopDongDao dao;
+    HopDongHybridDao hybridDao;
     ArrayList<HopDong> list;
     ArrayList<NguoiThue> list_nt;
     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -60,12 +65,16 @@ public class hopDong_Activity extends AppCompatActivity {
     Spinner spinner;
     int position,maphong,gia,mp;
     String mant,dc,sdt,cccd;
-    nguoiThueDao dao_nt;
+    NguoiThueHybridDao hybridDao_nt;
     NguoiThue nt;
     NguoiThueSpinerAdapter spinerAdapter;
+    PhongTroHybridDao hybridDao_pt;
+    // Keep old DAOs for specialty methods
+    nguoiThueDao dao_nt;
     phongTroDao dao_pt;
     Button btnTaoHD,btnHuy;
     byte[] hinhAnh;
+    Uri selectedImageUri; // URI ảnh hợp đồng được chọn
     final int REQUEST_CODE_FOLDER = 456;
     public static final int REQUEST_CODE_RENEW = 1004;
     public Integer pendingRenewHopDongId = null;
@@ -89,8 +98,9 @@ public class hopDong_Activity extends AppCompatActivity {
         btnAdd = findViewById(R.id.btnadd_toolbar);
         btnAdd.setVisibility(View.GONE);
         lsthopDong = findViewById(R.id.lsthopDong);
-        dao = new hopDongDao(hopDong_Activity.this);
-        list = (ArrayList<HopDong>) dao.getAll();
+        hybridDao = new HopDongHybridDao(hopDong_Activity.this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
+        list = (ArrayList<HopDong>) hybridDao.getAll();
         // Nếu là Chủ trọ, chỉ hiển thị hợp đồng của phòng thuộc chủ trọ này
         try {
             String roleLocal = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
@@ -183,11 +193,11 @@ public class hopDong_Activity extends AppCompatActivity {
         });
         
         maphong = getIntent().getIntExtra("maphong", -1);
-        list_hdm = dao.getHopDongByMaPhong(maphong);
+        list_hdm = new ArrayList<>(hybridDao.getHopDongByMaPhong(maphong));
 
         dao_nt=new nguoiThueDao(hopDong_Activity.this);
         mp = dao_nt.getMaPhongByUser(username);
-        list_hdnt = dao.getHopDongByMaPhong(mp);
+        list_hdnt = new ArrayList<>(hybridDao.getHopDongByMaPhong(mp));
         
         // Kiểm tra theo role thay vì username
         if("LANDLORD".equalsIgnoreCase(role)) {
@@ -255,17 +265,17 @@ public class hopDong_Activity extends AppCompatActivity {
                 String maNguoiThue;
                 maphong = getIntent().getIntExtra("maphong", -1);
                 HopDong current = null;
-                try { current = dao.getID(Id); } catch (Exception ignored) {}
+                try { current = hybridDao.getID(Id); } catch (Exception ignored) {}
                 if (current != null) {
                     if (maphong == -1) maphong = current.getMaPhong();
                     maNguoiThue = current.getMaNguoiThue();
                 } else {
-                    maNguoiThue = dao.getMaNguoiThueByMaPhong(maphong);
+                    maNguoiThue = hybridDao.getMaNguoiThueByMaPhong(maphong);
                 }
                 
                 // Không xóa hợp đồng; đánh dấu là ĐÃ HỦY bằng cách đặt phòng về trạng thái trống
                 // và giữ bản ghi hợp đồng để vẫn hiển thị trong danh sách
-                dao.updateTrangThaiPhong(maphong, 0);
+                hybridDao.updateTrangThaiPhong(maphong, 0);
                 // Đồng bộ trạng thái bài đăng về Còn trống
                 try {
                     com.example.nestera.Dao.baiDangDao baiDangDao = new com.example.nestera.Dao.baiDangDao(hopDong_Activity.this);
@@ -476,76 +486,100 @@ public class hopDong_Activity extends AppCompatActivity {
                     return;
                 }
 
-                BitmapDrawable bitmapDrawable = (BitmapDrawable) imgAnhhd.getDrawable();
-                Bitmap bitmap = bitmapDrawable.getBitmap();
-                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-                hinhAnh = byteArrayOutputStream.toByteArray();
+                // Kiểm tra phải có ảnh hợp đồng
+                if (selectedImageUri == null) {
+                    Toast.makeText(hopDong_Activity.this, "Vui lòng chọn ảnh hợp đồng", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-
+                // Upload ảnh hợp đồng lên Firebase Storage
+                android.app.ProgressDialog progress = new android.app.ProgressDialog(hopDong_Activity.this);
+                progress.setMessage("Đang upload ảnh hợp đồng...");
+                progress.setCancelable(false);
+                progress.show();
 
                 int soThang = Integer.parseInt(edtSothang_hd.getText().toString());
                 int tienCoc = Integer.parseInt(edtTienCoc_hd.getText().toString());
                 int soNguoi = Integer.parseInt(edtSonguoi_hd.getText().toString());
                 int soXe = Integer.parseInt(edtSoxe_hd.getText().toString());
 
-                item = new HopDong();
-                item.setMaNguoiThue(mant);
-                item.setMaPhong(maphong);
-                item.setTenPhong(tenphong);
-                item.setGhiChu(edtGhiChu_hd.getText().toString());
-                item.setNgayKy(new Date());
-                item.setSdt(sdt);
-                item.setCCCD(cccd);
-                item.setGiaTien(gia);
-                item.setThuongTru(dc);
-                item.setThoiHan(soThang);
-                item.setTienCoc(tienCoc);
-                item.setSoNguoi(soNguoi);
-                item.setSoXe(soXe);
-                item.setHinhAnhhd(hinhAnh);
-                item.setGhiChu(edtGhiChu_hd.getText().toString());
-                if (dao.insert(item) > 0) {
-                    // Cập nhật trạng thái phòng đã thuê
-                    dao.updateTrangThaiPhong(maphong, 1);
-                    
-                    // Cập nhật mã phòng cho người thuê
-                    NguoiThue nguoiThueUpdate = dao_nt.getID(mant);
-                    if (nguoiThueUpdate != null) {
-                        nguoiThueUpdate.setMaPhong(maphong);
-                        dao_nt.update(nguoiThueUpdate);
-                    }
-                    
-                    // Cập nhật trạng thái bài đăng thành "Đã thuê"
-                    com.example.nestera.Dao.baiDangDao baiDangDao = new com.example.nestera.Dao.baiDangDao(hopDong_Activity.this);
-                    java.util.List<com.example.nestera.model.BaiDang> baiDangList = baiDangDao.getAll();
-                    for (com.example.nestera.model.BaiDang bd : baiDangList) {
-                        if (bd.getMaPhong() != null && bd.getMaPhong() == maphong) {
-                            bd.setTrangThai("Đã thuê");
-                            baiDangDao.update(bd);
-                            break;
+                ImageUploader uploader = new ImageUploader(hopDong_Activity.this);
+                uploader.uploadImage(selectedImageUri, "hopDong", new ImageUploader.UploadCallback() {
+                    @Override
+                    public void onSuccess(String downloadUrl) {
+                        progress.dismiss();
+                        
+                        // Tạo hợp đồng với Firebase URL
+                        item = new HopDong();
+                        item.setMaNguoiThue(mant);
+                        item.setMaPhong(maphong);
+                        item.setTenPhong(tenphong);
+                        item.setGhiChu(edtGhiChu_hd.getText().toString());
+                        item.setNgayKy(new Date());
+                        item.setSdt(sdt);
+                        item.setCCCD(cccd);
+                        item.setGiaTien(gia);
+                        item.setThuongTru(dc);
+                        item.setThoiHan(soThang);
+                        item.setTienCoc(tienCoc);
+                        item.setSoNguoi(soNguoi);
+                        item.setSoXe(soXe);
+                        item.setImageUrl(downloadUrl); // Lưu Firebase URL
+                        item.setHinhAnhhd(null); // BLOB để null
+                        item.setGhiChu(edtGhiChu_hd.getText().toString());
+                        
+                        if (hybridDao.insert(item) > 0) {
+                            // Cập nhật trạng thái phòng đã thuê
+                            hybridDao.updateTrangThaiPhong(maphong, 1);
+                            
+                            // Cập nhật mã phòng cho người thuê
+                            NguoiThue nguoiThueUpdate = dao_nt.getID(mant);
+                            if (nguoiThueUpdate != null) {
+                                nguoiThueUpdate.setMaPhong(maphong);
+                                dao_nt.update(nguoiThueUpdate);
+                            }
+                            
+                            // Cập nhật trạng thái bài đăng thành "Đã thuê"
+                            com.example.nestera.Dao.baiDangDao baiDangDao = new com.example.nestera.Dao.baiDangDao(hopDong_Activity.this);
+                            java.util.List<com.example.nestera.model.BaiDang> baiDangList = baiDangDao.getAll();
+                            for (com.example.nestera.model.BaiDang bd : baiDangList) {
+                                if (bd.getMaPhong() != null && bd.getMaPhong() == maphong) {
+                                    bd.setTrangThai("Đã thuê");
+                                    baiDangDao.update(bd);
+                                    break;
+                                }
+                            }
+                            
+                            Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thành công!", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
+                            // Reload danh sách hợp đồng
+                            list_hdm = new ArrayList<>(hybridDao.getHopDongByMaPhong(maphong));
+                            hopDongAdapter = new HopDong_Adapter(hopDong_Activity.this, list_hdm, hopDong_Activity.this);
+                            lsthopDong.setAdapter(hopDongAdapter);
+                            
+                            // Quay lại và refresh
+                            finish();
+                        } else {
+                            Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thất bại", Toast.LENGTH_SHORT).show();
+                            dialog.dismiss();
                         }
                     }
-                    
-                    Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thành công!", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                    // Reload danh sách hợp đồng
-                    list_hdm = dao.getHopDongByMaPhong(maphong);
-                    hopDongAdapter = new HopDong_Adapter(hopDong_Activity.this, list_hdm, hopDong_Activity.this);
-                    lsthopDong.setAdapter(hopDongAdapter);
-                    
-                    // Quay lại và refresh
-                    finish();
-                } else {
-                    Toast.makeText(hopDong_Activity.this, "Tạo hợp đồng thất bại", Toast.LENGTH_SHORT).show();
-                    dialog.dismiss();
-                }
+
+                    @Override
+                    public void onError(Exception e) {
+                        progress.dismiss();
+                        Toast.makeText(hopDong_Activity.this, 
+                            "Lỗi upload ảnh: " + e.getMessage() + ". Hợp đồng không được lưu!", 
+                            Toast.LENGTH_LONG).show();
+                        Log.e("hopDong_Activity", "Upload failed, data NOT saved", e);
+                    }
+                });
             }
         });
         dialog.show();
     }
     void capNhapLv(){
-        list= (ArrayList<HopDong>) dao.getAll();
+        list= (ArrayList<HopDong>) hybridDao.getAll();
         hopDongAdapter=new HopDong_Adapter(hopDong_Activity.this,list, hopDong_Activity.this);
         lsthopDong.setAdapter(hopDongAdapter);
     }
@@ -553,13 +587,14 @@ public class hopDong_Activity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if (requestCode == REQUEST_CODE_FOLDER && resultCode == RESULT_OK && data != null){
-            Uri uri = data.getData();
+            selectedImageUri = data.getData();
             try {
-                InputStream inputStream = getContentResolver().openInputStream(uri);
+                InputStream inputStream = getContentResolver().openInputStream(selectedImageUri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 imgAnhhd.setImageBitmap(bitmap);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+                Toast.makeText(this, "Lỗi: Không thể đọc ảnh", Toast.LENGTH_SHORT).show();
+                selectedImageUri = null;
             }
 
         }
@@ -572,7 +607,7 @@ public class hopDong_Activity extends AppCompatActivity {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                 pendingRenewImageBytes = baos.toByteArray();
                 if (pendingRenewHopDongId != null && pendingRenewThoiHan != null) {
-                    HopDong hd = dao.getID(String.valueOf(pendingRenewHopDongId));
+                    HopDong hd = hybridDao.getID(String.valueOf(pendingRenewHopDongId));
                     if (hd != null) {
                         int oldRoom = hd.getMaPhong();
                         if (pendingRenewNewMaPhong != null) {
@@ -581,7 +616,7 @@ public class hopDong_Activity extends AppCompatActivity {
                         hd.setThoiHan(pendingRenewThoiHan);
                         hd.setNgayKy(new java.util.Date());
                         hd.setHinhAnhhd(pendingRenewImageBytes);
-                        dao.update(hd);
+                        hybridDao.update(hd);
                         // Cập nhật trạng thái phòng
                         updateTrangThaiPhongSauGiaHan(hd.getMaPhong());
                         Toast.makeText(this, "Gia hạn thành công và đã cập nhật ảnh mới", Toast.LENGTH_SHORT).show();
@@ -596,7 +631,7 @@ public class hopDong_Activity extends AppCompatActivity {
 
     private void updateTrangThaiPhongSauGiaHan(int maPhong) {
         // Cập nhật phòng về trạng thái đã thuê
-        dao.updateTrangThaiPhong(maPhong, 1);
+        hybridDao.updateTrangThaiPhong(maPhong, 1);
         // Đồng bộ trạng thái bài đăng
         com.example.nestera.Dao.baiDangDao baiDangDao = new com.example.nestera.Dao.baiDangDao(this);
         java.util.List<com.example.nestera.model.BaiDang> baiDangList = baiDangDao.getAll();
@@ -611,7 +646,7 @@ public class hopDong_Activity extends AppCompatActivity {
 
     private void releaseOldRoom(int maPhong) {
         // Trả phòng cũ về trạng thái trống và cập nhật bài đăng liên quan nếu có
-        dao.updateTrangThaiPhong(maPhong, 0);
+        hybridDao.updateTrangThaiPhong(maPhong, 0);
         com.example.nestera.Dao.baiDangDao baiDangDao = new com.example.nestera.Dao.baiDangDao(this);
         java.util.List<com.example.nestera.model.BaiDang> baiDangList = baiDangDao.getAll();
         for (com.example.nestera.model.BaiDang bd : baiDangList) {

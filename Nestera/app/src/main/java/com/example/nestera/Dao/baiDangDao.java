@@ -59,6 +59,10 @@ public class baiDangDao {
         return db.update("BaiDang", v, "id=?", new String[]{String.valueOf(bd.getId())});
     }
 
+    public int delete(String id){
+        return db.delete("BaiDang", "id=?", new String[]{id});
+    }
+
     private List<BaiDang> getData(String sql, String...args){
         List<BaiDang> list = new ArrayList<>();
         Cursor c = db.rawQuery(sql, args);

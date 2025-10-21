@@ -30,6 +30,8 @@ import com.example.nestera.Adapter.NguoiThue_Adapter;
 import com.example.nestera.Adapter.SPPhong_Adapter;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.NguoiThueHybridDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.R;
 import com.example.nestera.model.NguoiThue;
 import com.example.nestera.model.PhongTro;
@@ -46,14 +48,15 @@ public class nguoiThue_Activity extends AppCompatActivity {
     EditText edtSearch;
     NguoiThue_Adapter nguoiThueAdapter;
     NguoiThue nguoiThue;
-    static nguoiThueDao dao;
+    static NguoiThueHybridDao hybridDao;
     ImageView btnadd;
     Dialog dialog;
     EditText edtUser,edtPass,edtRePass,edtHoTen,edtNamSinh,edtSDT,edtThuongTru,edtCCCD;
     RadioButton rdoNam, rdoNu, rdoKhac;
     Spinner spnPhong;
     Button btnXacNhan, btnHuy;
-    phongTroDao troDao;
+    PhongTroHybridDao hybridDao_pt;
+    phongTroDao dao_pt; // Old DAO for specialty methods
     SPPhong_Adapter spPhongAdapter;
     ArrayList<PhongTro> listpt;
     PhongTro phongTro;
@@ -95,7 +98,8 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
 
             lstNguoiThue=findViewById(R.id.lstNguoiThue);
-            dao =new nguoiThueDao(nguoiThue_Activity.this);
+            hybridDao = new NguoiThueHybridDao(nguoiThue_Activity.this);
+            hybridDao.enableRealtimeSync(); // Enable real-time sync
 
             // Khởi tạo list trước
             list = new ArrayList<>();
@@ -107,12 +111,12 @@ public class nguoiThue_Activity extends AppCompatActivity {
             if ("ADMIN".equalsIgnoreCase(role)) {
                 // Admin xem tất cả
                 android.util.Log.d("NguoiThueDebug", "Loading all for ADMIN");
-                listtemp = (ArrayList<NguoiThue>) dao.getAll();
+                listtemp = (ArrayList<NguoiThue>) hybridDao.getAll();
             } else if ("LANDLORD".equalsIgnoreCase(role)) {
                 // Chủ trọ chỉ xem người thuê do mình tạo (lọc theo chuTroId)
                 android.util.Log.d("NguoiThueDebug", "Loading for LANDLORD: " + username);
                 if (username != null && !username.isEmpty()) {
-                    listtemp = (ArrayList<NguoiThue>) dao.getByChuTro(username);
+                    listtemp = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
                     android.util.Log.d("NguoiThueDebug", "Found " + listtemp.size() + " tenants");
                 } else {
                     listtemp = new ArrayList<>();
@@ -207,9 +211,9 @@ public class nguoiThue_Activity extends AppCompatActivity {
         btnHuy=dialog.findViewById(R.id.btnHuy);
         rdoNam.setChecked(true);
 
-        troDao=new phongTroDao(context);
+        dao_pt=new phongTroDao(context);
         listpt = new ArrayList<PhongTro>();
-        listpt= (ArrayList<PhongTro>) troDao.getAll();
+        listpt= (ArrayList<PhongTro>) dao_pt.getAll();
         
         // Chỉ hiển thị phòng do chủ trọ hiện tại sở hữu (dựa theo BaiDang.chuTroId)
         try {
@@ -345,7 +349,7 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
 
 
-                if (dao.insert(nguoiThue)>0){
+                if (hybridDao.insert(nguoiThue)>0){
 
                     Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
                 }else {
@@ -388,9 +392,9 @@ public class nguoiThue_Activity extends AppCompatActivity {
         txt2.setVisibility(View.GONE);
         txt3.setVisibility(View.GONE);
 
-        troDao=new phongTroDao(context);
+        dao_pt=new phongTroDao(context);
         listpt = new ArrayList<PhongTro>();
-        listpt= (ArrayList<PhongTro>) troDao.getAll();
+        listpt= (ArrayList<PhongTro>) dao_pt.getAll();
         
         // Chỉ hiển thị phòng do chủ trọ hiện tại sở hữu (dựa theo BaiDang.chuTroId)
         try {
@@ -536,7 +540,7 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
 
 
-                if (dao.update(nguoiThue)>0){
+                if (hybridDao.update(nguoiThue)>0){
                     Toast.makeText(context, "Cập nhật thành công", Toast.LENGTH_SHORT).show();
                 }else {
                     Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show();
@@ -559,13 +563,13 @@ public class nguoiThue_Activity extends AppCompatActivity {
         // Load danh sách theo role
         if ("ADMIN".equalsIgnoreCase(role)) {
             // Admin xem tất cả
-            list = (ArrayList<NguoiThue>) dao.getAll();
-            listtemp = (ArrayList<NguoiThue>) dao.getAll();
+            list = (ArrayList<NguoiThue>) hybridDao.getAll();
+            listtemp = (ArrayList<NguoiThue>) hybridDao.getAll();
         } else if ("LANDLORD".equalsIgnoreCase(role)) {
             // Chủ trọ chỉ xem người thuê của mình
             if (username != null && !username.isEmpty()) {
-                list = (ArrayList<NguoiThue>) dao.getByChuTro(username);
-                listtemp = (ArrayList<NguoiThue>) dao.getByChuTro(username);
+                list = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
+                listtemp = (ArrayList<NguoiThue>) hybridDao.getByChuTro(username);
             } else {
                 list = new ArrayList<>();
                 listtemp = new ArrayList<>();
@@ -589,7 +593,7 @@ public class nguoiThue_Activity extends AppCompatActivity {
 
         builder.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialogInterface, int id) {
-                dao.delete(Id);
+                hybridDao.delete(Id);
                 capNhatList();
                 dialogInterface.cancel();
             }

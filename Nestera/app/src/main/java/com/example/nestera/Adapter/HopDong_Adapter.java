@@ -27,6 +27,7 @@ import com.example.nestera.R;
 import com.example.nestera.model.HopDong;
 import com.example.nestera.model.NguoiThue;
 import com.example.nestera.model.PhongTro;
+import com.bumptech.glide.Glide;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -129,9 +130,21 @@ public class HopDong_Adapter extends ArrayAdapter<HopDong> {
             edtSonguoi_hd.setText(hd.getSoNguoi() + "");
             edtSoxe_hd.setText(hd.getSoXe() + "");
             edtGhiChu_hd.setText(hd.getGhiChu());
+            
+            // Load ảnh: ưu tiên Firebase Storage URL, fallback BLOB
             hinhAnh = hd.getHinhAnhhd();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(hinhAnh, 0, hinhAnh.length);
-            imgAnhHopDong.setImageBitmap(bitmap);
+            if (hd.getImageUrl() != null && !hd.getImageUrl().isEmpty()) {
+                // Load từ Firebase Storage
+                Glide.with(context)
+                    .load(hd.getImageUrl())
+                    .placeholder(R.drawable.phong_tro_1_1)
+                    .error(R.drawable.baseline_warning_24)
+                    .into(imgAnhHopDong);
+            } else if (hinhAnh != null && hinhAnh.length > 0) {
+                // Fallback: Load từ BLOB
+                Bitmap bitmap = BitmapFactory.decodeByteArray(hinhAnh, 0, hinhAnh.length);
+                imgAnhHopDong.setImageBitmap(bitmap);
+            }
 
 
             ntDao = new nguoiThueDao(context);

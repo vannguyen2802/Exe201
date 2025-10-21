@@ -16,6 +16,7 @@ import androidx.annotation.Nullable;
 import com.example.nestera.Fragment.frg_NganHang;
 import com.example.nestera.R;
 import com.example.nestera.model.NganHang;
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -58,9 +59,18 @@ public class NganHang_Adapter extends ArrayAdapter<NganHang> {
             txtTenNganHang.setText("Tên ngân hàng: "+item.getTenNganHang());
             txtSTK.setText("Số tài khoản: "+item.getSTK());
 
+            // Load QR code: ưu tiên Firebase Storage, fallback BLOB
             hinhAnh = item.getHinhAnh();
-            Bitmap bitmap= BitmapFactory.decodeByteArray(hinhAnh, 0, hinhAnh.length);
-            imgAnh.setImageBitmap(bitmap);
+            if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
+                Glide.with(context)
+                    .load(item.getImageUrl())
+                    .placeholder(R.drawable.phong_tro_1_1)
+                    .error(R.drawable.baseline_warning_24)
+                    .into(imgAnh);
+            } else if (hinhAnh != null && hinhAnh.length > 0) {
+                Bitmap bitmap= BitmapFactory.decodeByteArray(hinhAnh, 0, hinhAnh.length);
+                imgAnh.setImageBitmap(bitmap);
+            }
 
             btnDelete.setOnClickListener(new View.OnClickListener() {
                 @Override

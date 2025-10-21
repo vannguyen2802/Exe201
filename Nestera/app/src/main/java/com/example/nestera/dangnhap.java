@@ -14,6 +14,9 @@ import android.widget.Toast;
 
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.chuTroDao;
+import com.example.nestera.Activity.AdminDashboardActivity;
+import com.example.nestera.Firebase.NguoiThueHybridDao;
+import com.example.nestera.Firebase.ChuTroHybridDao;
 import com.example.nestera.Fragment.frg_thongtintaikhoan;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -21,6 +24,8 @@ import com.google.android.material.textfield.TextInputLayout;
 public class dangnhap extends AppCompatActivity {
     TextInputEditText edtUser, edtPass;
     TextInputLayout tilPass;
+    NguoiThueHybridDao hybridDao;
+    ChuTroHybridDao chuTroHybridDao;
     nguoiThueDao dao;
     chuTroDao chuTroDao;
     CheckBox chkluu;
@@ -35,7 +40,9 @@ public class dangnhap extends AppCompatActivity {
         edtPass = findViewById(R.id.edtPass);
         chkluu = findViewById(R.id.chkLuu);
         btnDN = findViewById(R.id.btnDangNhap);
-        dao=new nguoiThueDao(dangnhap.this);
+        hybridDao = new NguoiThueHybridDao(dangnhap.this);
+        chuTroHybridDao = new ChuTroHybridDao(dangnhap.this);
+        dao = new nguoiThueDao(dangnhap.this);
         chuTroDao = new chuTroDao(dangnhap.this);
         TextView txtDangKy = findViewById(R.id.txtDangKyChuTro);
 
@@ -63,6 +70,28 @@ public class dangnhap extends AppCompatActivity {
         if (strPass.isEmpty() || strUser.isEmpty()) {
             Toast.makeText(getApplicationContext(), "Vui lòng nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
         } else {
+            // 1. CHECK ADMIN FIRST (username = "admin")
+            if (strUser.equalsIgnoreCase("admin")) {
+                if (chuTroDao.checkLoginCT(strUser, strPass) > 0) {
+                    Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show();
+                    remember(strUser, strPass, chkluu.isChecked());
+                    Intent i = new Intent(getApplicationContext(), AdminDashboardActivity.class);
+                    i.putExtra("user", strUser);
+                    SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putString("username11", strUser);
+                    editor.putString("role", "ADMIN");
+                    editor.apply();
+                    startActivity(i);
+                    finish();
+                    return;
+                } else {
+                    Toast.makeText(getApplicationContext(), "Sai mật khẩu Admin!", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+            
+            // 2. CHECK LANDLORD (Chủ trọ)
             // Landlord (chủ trọ) từ database
             // Banned check first
             Integer banned = chuTroDao.getBannedStatus(strUser);
@@ -91,20 +120,6 @@ public class dangnhap extends AppCompatActivity {
                 } else {
                     Toast.makeText(this, "Tài khoản đang chờ Admin duyệt", Toast.LENGTH_SHORT).show();
                 }
-            // Admin default account
-            } else if (strUser.equalsIgnoreCase("Admin") && strPass.equalsIgnoreCase("Admin")) {
-                Toast.makeText(this, "Đăng nhập thành công (Admin)", Toast.LENGTH_SHORT).show();
-                remember(strUser,strPass,chkluu.isChecked());
-                Intent i = new Intent(getApplicationContext(), com.example.nestera.Activity.AdminDashboardActivity.class);
-                i.putExtra("user",strUser);
-                SharedPreferences preferences = getSharedPreferences("user11", MODE_PRIVATE);
-                SharedPreferences.Editor editor = preferences.edit();
-                editor.putString("username11", strUser);
-                editor.putString("role", "ADMIN");
-                editor.apply();
-
-                startActivity(i);
-                finish();
             } else if (dao.CheckLoginNT(strUser,strPass)>0){
                 Toast.makeText(this, "Đăng nhập thành công(Người thuê)", Toast.LENGTH_SHORT).show();
                 remember(strUser,strPass,chkluu.isChecked());

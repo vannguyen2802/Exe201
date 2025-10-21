@@ -3,6 +3,7 @@ package com.example.nestera.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -13,17 +14,24 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nestera.Dao.chuTroDao;
+import com.example.nestera.Firebase.BaiDangHybridDao;
+import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.R;
 import com.example.nestera.model.ChuTro;
+import com.bumptech.glide.Glide;
 
 public class BaiDangDetailActivity extends AppCompatActivity {
     private final java.util.ArrayList<android.net.Uri> editImageUris = new java.util.ArrayList<>();
     private android.widget.TextView tvSelectedEdit;
+    private BaiDangHybridDao hybridDao;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_baidang_detail);
         setTitle("Chi tiết phòng");
+
+        // Khởi tạo Hybrid DAO
+        hybridDao = new BaiDangHybridDao(this);
 
         ImageView ivBack = findViewById(R.id.ivBack);
         
@@ -49,9 +57,20 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         Intent it = getIntent();
         int postId = it.getIntExtra("postId", -1);
         
-        // Load lại dữ liệu từ database để có trạng thái mới nhất
-        com.example.nestera.Dao.baiDangDao dao = new com.example.nestera.Dao.baiDangDao(this);
-        com.example.nestera.model.BaiDang baiDang = dao.getById(postId);
+        // Load lại dữ liệu từ Hybrid DAO (có sync Firestore)
+        com.example.nestera.model.BaiDang baiDang = null;
+        try {
+            // Lấy từ local cache hoặc Firestore
+            java.util.List<com.example.nestera.model.BaiDang> allPosts = hybridDao.getAll();
+            for (com.example.nestera.model.BaiDang b : allPosts) {
+                if (b.getId() == postId) {
+                    baiDang = b;
+                    break;
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("BaiDangDetail", "Error loading data", e);
+        }
         
         String tieuDe, diaChi, tienNghi, trangThai, hinhAnh, chuTroId;
         int giaThang;
@@ -118,6 +137,9 @@ public class BaiDangDetailActivity extends AppCompatActivity {
             tvMaPhong.setText("-");
         }
 
+        // CLEAR container trước khi thêm ảnh để tránh duplicate
+        imagesContainer.removeAllViews();
+
         if (hinhAnh != null && !hinhAnh.isEmpty()){
             String[] arr = hinhAnh.split(";");
             for (String u : arr){
@@ -127,7 +149,14 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                 lp.rightMargin = (int)(getResources().getDisplayMetrics().density*8);
                 iv.setLayoutParams(lp);
                 iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                try { iv.setImageURI(Uri.parse(u)); } catch (Exception ignored) {}
+                
+                // Load ảnh từ Firebase Storage bằng Glide (không dùng placeholder để tránh hiện ảnh mặc định)
+                Glide.with(this)
+                    .load(u)
+                    .error(R.drawable.phong_tro_1_1)
+                    .centerCrop()
+                    .into(iv);
+                    
                 imagesContainer.addView(iv);
             }
         }
@@ -282,56 +311,54 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     if (c7.isChecked()) sel.add(c7.getText().toString());
                     b.setTienNghi(android.text.TextUtils.join(" · ", sel));
                     b.setTrangThai(spTrangThai.getSelectedItem().toString());
-                    // nếu có chọn lại ảnh, lưu thay thế; nếu không giữ nguyên
-                    if (!editImageUris.isEmpty()){
-                        java.util.List<String> uriStrings = new java.util.ArrayList<>();
-                        for (android.net.Uri u : editImageUris) uriStrings.add(u.toString());
-                        b.setHinhAnh(android.text.TextUtils.join(";", uriStrings));
-                    } else {
-                        b.setHinhAnh(hinhAnh);
-                    }
                     b.setChuTroId(chuTroId);
-                    com.example.nestera.Dao.baiDangDao dao = new com.example.nestera.Dao.baiDangDao(this);
-                    int rows = dao.update(b);
-                    if (rows > 0) {
-                        // Reload UI with latest data
-                        com.example.nestera.model.BaiDang updated = dao.getById(id);
-                        if (updated != null) {
-                            TextView tTitle = findViewById(R.id.tvTitle);
-                            TextView tLoc = findViewById(R.id.tvLocation);
-                            TextView tPrice = findViewById(R.id.tvPrice);
-                            TextView tAmenities = findViewById(R.id.tvAmenities);
-                            TextView tArea = findViewById(R.id.tvArea);
-                            TextView tStatus = findViewById(R.id.tvStatus);
-                            tTitle.setText(updated.getTieuDe());
-                            tLoc.setText(updated.getDiaChi());
-                            tPrice.setText(String.format(java.util.Locale.getDefault(), "%s/tháng", java.text.NumberFormat.getNumberInstance(new java.util.Locale("vi","VN")).format(updated.getGiaThang())));
-                            tAmenities.setText(updated.getTienNghi());
-                            tArea.setText(String.valueOf(updated.getDienTich()) + "m²");
-                            tStatus.setText(updated.getTrangThai());
-                            LinearLayout imgs = findViewById(R.id.imagesContainer);
-                            imgs.removeAllViews();
-                            if (updated.getHinhAnh() != null && !updated.getHinhAnh().isEmpty()) {
-                                String[] arr = updated.getHinhAnh().split(";");
-                                for (String u : arr) {
-                                    if (u == null || u.trim().isEmpty()) continue;
-                                    ImageView iv = new ImageView(this);
-                                    LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams((int) (getResources().getDisplayMetrics().density*280), (int)(getResources().getDisplayMetrics().density*180));
-                                    lp.rightMargin = (int)(getResources().getDisplayMetrics().density*8);
-                                    iv.setLayoutParams(lp);
-                                    iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                                    try { iv.setImageURI(Uri.parse(u)); } catch (Exception ignored2) {}
-                                    imgs.addView(iv);
-                                }
+                    
+                    // Upload ảnh mới lên Firebase Storage nếu có
+                    if (!editImageUris.isEmpty()) {
+                        android.app.ProgressDialog progress = new android.app.ProgressDialog(this);
+                        progress.setMessage("Đang upload ảnh...");
+                        progress.setCancelable(false);
+                        progress.show();
+                        
+                        ImageUploader uploader = new ImageUploader(this);
+                        uploader.uploadMultipleImages(editImageUris, "baiDang", new ImageUploader.MultiUploadCallback() {
+                            @Override
+                            public void onAllSuccess(java.util.List<String> downloadUrls) {
+                                progress.dismiss();
+                                b.setHinhAnh(android.text.TextUtils.join(";", downloadUrls));
+                                updateBaiDangInDatabase(b, id);
                             }
-                        }
-                        android.widget.Toast.makeText(this, "Đã lưu chỉnh sửa", android.widget.Toast.LENGTH_SHORT).show();
+
+                            @Override
+                            public void onError(Exception e) {
+                                progress.dismiss();
+                                android.widget.Toast.makeText(BaiDangDetailActivity.this, 
+                                    "Lỗi upload ảnh: " + e.getMessage() + ". Cập nhật không được lưu!", 
+                                    android.widget.Toast.LENGTH_LONG).show();
+                                // KHÔNG lưu gì cả khi có lỗi upload
+                                Log.e("BaiDangDetail", "Upload failed, data NOT saved", e);
+                            }
+                        });
                     } else {
-                        android.widget.Toast.makeText(this, "Không có thay đổi", android.widget.Toast.LENGTH_SHORT).show();
+                        // Giữ nguyên ảnh cũ
+                        b.setHinhAnh(hinhAnh);
+                        updateBaiDangInDatabase(b, id);
                     }
                 })
                 .setNegativeButton("Đóng", null)
                 .show();
+    }
+
+    // Helper method để update bài đăng
+    private void updateBaiDangInDatabase(com.example.nestera.model.BaiDang b, int id) {
+        int rows = hybridDao.update(b); // Sử dụng Hybrid DAO - sync Firestore
+        if (rows > 0) {
+            // Reload UI
+            loadDetailData();
+            android.widget.Toast.makeText(this, "Đã lưu và sync lên Cloud!", android.widget.Toast.LENGTH_SHORT).show();
+        } else {
+            android.widget.Toast.makeText(this, "Không có thay đổi", android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 }
 

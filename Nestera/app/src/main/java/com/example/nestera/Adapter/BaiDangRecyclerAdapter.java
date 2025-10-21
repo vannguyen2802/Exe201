@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.nestera.Activity.BaiDangDetailActivity;
 import com.example.nestera.R;
 import com.example.nestera.model.BaiDang;
+import com.bumptech.glide.Glide;
 
 import java.text.NumberFormat;
 import java.util.List;
@@ -85,13 +86,16 @@ public class BaiDangRecyclerAdapter extends RecyclerView.Adapter<BaiDangRecycler
             }
         }
         
-        // Load ảnh từ hinhAnh (URI string)
+        // Load ảnh từ Firebase Storage bằng Glide (không dùng placeholder)
         if (!TextUtils.isEmpty(baiDang.getHinhAnh())) {
             try {
                 String[] imageUris = baiDang.getHinhAnh().split(";");
                 if (imageUris.length > 0 && !TextUtils.isEmpty(imageUris[0])) {
-                    // Load ảnh từ URI
-                    holder.ivRoomImage.setImageURI(Uri.parse(imageUris[0]));
+                    Glide.with(context)
+                        .load(imageUris[0])
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(holder.ivRoomImage);
                 } else {
                     holder.ivRoomImage.setImageResource(R.drawable.phong_tro_1_1);
                 }

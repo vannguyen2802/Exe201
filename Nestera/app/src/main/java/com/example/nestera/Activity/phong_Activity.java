@@ -28,8 +28,8 @@ import android.widget.Toast;
 
 import com.example.nestera.Adapter.LoaiPhongSpinnerAdapter;
 import com.example.nestera.Adapter.Phong_Adapter;
-import com.example.nestera.Dao.LoaiPhongDao;
-import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.LoaiPhongHybridDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.MainActivity;
 import com.example.nestera.R;
 import com.example.nestera.model.LoaiPhong;
@@ -44,14 +44,14 @@ public class phong_Activity extends AppCompatActivity {
     ArrayList<LoaiPhong> list_lp;
     com.example.nestera.Adapter.RoomFromPostAdapter adapter;
     //PhongTro item;
-    phongTroDao dao;
+    PhongTroHybridDao hybridDao;
     ImageView btnAdd;
     EditText edtmaPhong, edttenPhong, edtGia, edtTienNghi,edtSearch;
     Button btnHuy, btnXacNhan;
     Spinner spinner;
     int position, maLoaiPhong;
     CheckBox chk;
-    LoaiPhongDao dao_lp;
+    LoaiPhongHybridDao hybridDao_lp;
     LoaiPhong item_lp;
     LoaiPhongSpinnerAdapter spinnerAdapter;
 
@@ -79,7 +79,8 @@ public class phong_Activity extends AppCompatActivity {
 
 
         lstPhong = findViewById(R.id.lstPhongTro);
-        dao = new phongTroDao(phong_Activity.this);
+        hybridDao = new PhongTroHybridDao(phong_Activity.this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
         btnAdd = findViewById(R.id.btnadd_toolbar);
         // Ẩn nút thêm (+) trên màn Phòng trọ
         if (btnAdd != null) {
@@ -145,8 +146,7 @@ public class phong_Activity extends AppCompatActivity {
         btnXacNhan = dialog.findViewById(R.id.btnXacNhan);
         chk.setVisibility(View.GONE);
         list_lp = new ArrayList<LoaiPhong>();
-        dao_lp = new LoaiPhongDao(context);
-        list_lp = (ArrayList<LoaiPhong>) dao_lp.getAll();
+        list_lp = (ArrayList<LoaiPhong>) hybridDao_lp.getAll();
         spinnerAdapter = new LoaiPhongSpinnerAdapter(context, list_lp);
         //
         spinner.setAdapter(spinnerAdapter);
@@ -262,7 +262,7 @@ public class phong_Activity extends AppCompatActivity {
         builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                dao.delete(Id);
+                hybridDao.delete(Integer.parseInt(Id));
                 capNhapLv();
                 dialogInterface.cancel();
                 Toast.makeText(phong_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();

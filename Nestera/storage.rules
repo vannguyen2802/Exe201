@@ -1,0 +1,72 @@
+rules_version = '2';
+
+// ============================================
+// Firebase Storage Security Rules - Nestera
+// ============================================
+//
+// Allow authenticated users to read/write images
+//
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // ===== PHÒNG TRỌ IMAGES =====
+    match /phongTro/{imageId} {
+      // Read: Public (cho phép xem ảnh phòng trọ)
+      allow read: if true;
+      
+      // Write: Chỉ admin và landlord
+      allow write: if request.auth != null && 
+                     (request.auth.token.role == "ADMIN" ||
+                      request.auth.token.role == "LANDLORD");
+    }
+    
+    // ===== BÀI ĐĂNG IMAGES =====
+    match /baiDang/{imageId} {
+      // Read: Public (cho phép xem ảnh bài đăng)
+      allow read: if true;
+      
+      // Write: Chỉ admin và landlord
+      allow write: if request.auth != null && 
+                     (request.auth.token.role == "ADMIN" ||
+                      request.auth.token.role == "LANDLORD");
+    }
+    
+    // ===== HỢP ĐỒNG IMAGES =====
+    match /hopDong/{imageId} {
+      // Read: Admin, landlord, accountant, và người thuê (authenticated)
+      allow read: if request.auth != null;
+      
+      // Write: Admin và landlord
+      allow write: if request.auth != null && 
+                     (request.auth.token.role == "ADMIN" ||
+                      request.auth.token.role == "LANDLORD");
+    }
+    
+    // ===== HÓA ĐƠN IMAGES =====
+    match /hoaDon/{imageId} {
+      // Read: Admin, landlord, accountant, người thuê
+      allow read: if request.auth != null;
+      
+      // Write: Admin, landlord, accountant
+      allow write: if request.auth != null && 
+                     (request.auth.token.role == "ADMIN" ||
+                      request.auth.token.role == "LANDLORD" ||
+                      request.auth.token.role == "ACCOUNTANT");
+    }
+    
+    // ===== SỰ CỐ IMAGES =====
+    match /suCo/{imageId} {
+      // Read: Authenticated users
+      allow read: if request.auth != null;
+      
+      // Write: Authenticated users (tenant có thể upload ảnh sự cố)
+      allow write: if request.auth != null;
+    }
+    
+    // ===== DEFAULT - Block all other paths =====
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
