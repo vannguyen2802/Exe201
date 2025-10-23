@@ -16,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nestera.Dao.chuTroDao;
 import com.example.nestera.Dao.nguoiThueDao;
+import com.example.nestera.Firebase.ChuTroHybridDao;
+import com.example.nestera.Firebase.FirestoreRepository;
 import com.example.nestera.R;
 import com.example.nestera.model.ChuTro;
 import com.example.nestera.model.NguoiThue;
@@ -29,6 +31,8 @@ public class ManageAccountsActivity extends AppCompatActivity {
 
     ImageView ivBack;
 
+
+    private ChuTroHybridDao hybridDao;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,6 +56,7 @@ public class ManageAccountsActivity extends AppCompatActivity {
         });
 
 
+        hybridDao = new ChuTroHybridDao(this);
         chuTroDao ctDao = new chuTroDao(this);
         nguoiThueDao ntDao = new nguoiThueDao(this);
 
@@ -72,16 +77,40 @@ public class ManageAccountsActivity extends AppCompatActivity {
                 action.setText("Active");
                 action.setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
-                        int r = ctDao.unbanUser(ct.getMaChuTro());
-                        if (r>0){ Toast.makeText(ManageAccountsActivity.this, "Đã mở khóa "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show(); recreate(); }
+                        ctDao.unbanUser(ct.getMaChuTro());
+                        hybridDao.syncUserToFirestore(ct.getMaChuTro(), new FirestoreRepository.FirestoreCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(ManageAccountsActivity.this, "Đã mở khóa "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
+                                    recreate();
+                                });
+                            }
+                            @Override
+                            public void onError(Exception e) {
+                                runOnUiThread(() -> Toast.makeText(ManageAccountsActivity.this, "Lỗi sync Firestore: "+e.getMessage(), Toast.LENGTH_SHORT).show());
+                            }
+                        });
                     }
                 });
             } else {
                 action.setText("Ban");
                 action.setOnClickListener(new View.OnClickListener() {
                     @Override public void onClick(View v) {
-                        int r = ctDao.banUser(ct.getMaChuTro());
-                        if (r>0){ Toast.makeText(ManageAccountsActivity.this, "Đã khóa "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show(); recreate(); }
+                        ctDao.banUser(ct.getMaChuTro());
+                        hybridDao.syncUserToFirestore(ct.getMaChuTro(), new FirestoreRepository.FirestoreCallback<Void>() {
+                            @Override
+                            public void onSuccess(Void result) {
+                                runOnUiThread(() -> {
+                                    Toast.makeText(ManageAccountsActivity.this, "Đã khóa "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
+                                    recreate();
+                                });
+                            }
+                            @Override
+                            public void onError(Exception e) {
+                                runOnUiThread(() -> Toast.makeText(ManageAccountsActivity.this, "Lỗi sync Firestore: "+e.getMessage(), Toast.LENGTH_SHORT).show());
+                            }
+                        });
                     }
                 });
             }
@@ -144,8 +173,19 @@ public class ManageAccountsActivity extends AppCompatActivity {
         btnApproveAll.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int r = ctDao.approveAllPending();
-                Toast.makeText(ManageAccountsActivity.this, "Đã duyệt " + r + " tài khoản", Toast.LENGTH_SHORT).show();
+                List<ChuTro> pendings = ctDao.getPending();
+                int count = 0;
+                for (ChuTro ct : pendings) {
+                    ctDao.approveUser(ct.getMaChuTro());
+                    hybridDao.syncUserToFirestore(ct.getMaChuTro(), new FirestoreRepository.FirestoreCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {}
+                        @Override
+                        public void onError(Exception e) {}
+                    });
+                    count++;
+                }
+                Toast.makeText(ManageAccountsActivity.this, "Đã duyệt " + count + " tài khoản", Toast.LENGTH_SHORT).show();
                 recreate();
             }
         });
@@ -195,11 +235,20 @@ public class ManageAccountsActivity extends AppCompatActivity {
         approve.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int r = dao.approveUser(ct.getMaChuTro());
-                if (r>0){
-                    Toast.makeText(ManageAccountsActivity.this, "Đã duyệt "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
-                    recreate();
-                }
+                dao.approveUser(ct.getMaChuTro());
+                hybridDao.syncUserToFirestore(ct.getMaChuTro(), new FirestoreRepository.FirestoreCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ManageAccountsActivity.this, "Đã duyệt "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
+                            recreate();
+                        });
+                    }
+                    @Override
+                    public void onError(Exception e) {
+                        runOnUiThread(() -> Toast.makeText(ManageAccountsActivity.this, "Lỗi sync Firestore: "+e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                });
             }
         });
         row.addView(approve);
@@ -208,11 +257,20 @@ public class ManageAccountsActivity extends AppCompatActivity {
         reject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int r = dao.rejectUser(ct.getMaChuTro());
-                if (r>0){
-                    Toast.makeText(ManageAccountsActivity.this, "Đã từ chối "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
-                    recreate();
-                }
+                dao.rejectUser(ct.getMaChuTro());
+                hybridDao.syncUserToFirestore(ct.getMaChuTro(), new FirestoreRepository.FirestoreCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(ManageAccountsActivity.this, "Đã từ chối "+ct.getMaChuTro(), Toast.LENGTH_SHORT).show();
+                            recreate();
+                        });
+                    }
+                    @Override
+                    public void onError(Exception e) {
+                        runOnUiThread(() -> Toast.makeText(ManageAccountsActivity.this, "Lỗi sync Firestore: "+e.getMessage(), Toast.LENGTH_SHORT).show());
+                    }
+                });
             }
         });
         row.addView(reject);

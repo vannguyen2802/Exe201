@@ -13,6 +13,24 @@ import java.util.Map;
  */
 public class ChuTroRepository extends FirestoreRepository<ChuTro> {
 
+    /**
+     * Lấy chủ trọ theo documentId (chuTroId)
+     */
+    public void getById(String id, FirestoreCallback<ChuTro> callback) {
+        db.collection(collectionName)
+                .document(id)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        ChuTro chuTro = documentSnapshot.toObject(ChuTro.class);
+                        callback.onSuccess(chuTro);
+                    } else {
+                        callback.onSuccess(null);
+                    }
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
     public ChuTroRepository() {
         super("chuTro");
     }

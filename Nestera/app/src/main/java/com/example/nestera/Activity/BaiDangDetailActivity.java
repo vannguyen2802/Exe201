@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.nestera.Dao.chuTroDao;
 import com.example.nestera.Firebase.BaiDangHybridDao;
+import com.example.nestera.Firebase.ChuTroHybridDao;
 import com.example.nestera.Firebase.ImageUploader;
 import com.example.nestera.R;
 import com.example.nestera.model.ChuTro;
@@ -34,7 +35,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         hybridDao = new BaiDangHybridDao(this);
 
         ImageView ivBack = findViewById(R.id.ivBack);
-        
+
         // Xử lý nút back
         ivBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -56,7 +57,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
     private void loadDetailData() {
         Intent it = getIntent();
         int postId = it.getIntExtra("postId", -1);
-        
+
         // Load dữ liệu với callback để đợi sync
         hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
             @Override
@@ -83,11 +84,11 @@ public class BaiDangDetailActivity extends AppCompatActivity {
     private void setupUI(com.example.nestera.model.BaiDang baiDang) {
         android.content.Intent it = getIntent();
         int postId = it.getIntExtra("postId", -1); // Get postId from Intent
-        
+
         String tieuDe, diaChi, tienNghi, trangThai, hinhAnh, chuTroId;
         int giaThang;
         double dienTich;
-        
+
         if (baiDang != null) {
             // Sử dụng dữ liệu từ database (mới nhất)
             tieuDe = baiDang.getTieuDe();
@@ -134,7 +135,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         tvStatus.setText(trangThai);
         tvStatus.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16); // Tăng size chữ
         tvStatus.setTypeface(null, android.graphics.Typeface.BOLD); // In đậm
-        
+
         if ("Đã thuê".equalsIgnoreCase(trangThai)) {
             tvStatus.setTextColor(0xFFDC3545); // Màu đỏ
         } else {
@@ -161,14 +162,14 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                 lp.rightMargin = (int)(getResources().getDisplayMetrics().density*8);
                 iv.setLayoutParams(lp);
                 iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                
+
                 // Load ảnh từ Firebase Storage bằng Glide (không dùng placeholder để tránh hiện ảnh mặc định)
                 Glide.with(this)
-                    .load(u)
-                    .error(R.drawable.phong_tro_1_1)
-                    .centerCrop()
-                    .into(iv);
-                    
+                        .load(u)
+                        .error(R.drawable.phong_tro_1_1)
+                        .centerCrop()
+                        .into(iv);
+
                 imagesContainer.addView(iv);
             }
         }
@@ -177,20 +178,20 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         String role = getSharedPreferences("user11", MODE_PRIVATE).getString("role", "");
         LinearLayout ownerSection = findViewById(R.id.ownerSection);
         LinearLayout landlordButtonsSection = findViewById(R.id.landlordButtonsSection);
-        
+
         // Kiểm tra trạng thái phòng đã thuê hay chưa
         boolean isDaThue = "Đã thuê".equalsIgnoreCase(trangThai);
-        
+
         // Kiểm tra xem đã có hợp đồng chưa
         int maPhongLocal = getIntent().getIntExtra("maPhong", -1);
         com.example.nestera.Dao.hopDongDao hopDongDao = new com.example.nestera.Dao.hopDongDao(this);
         boolean coHopDong = !hopDongDao.getHopDongByMaPhong(maPhongLocal).isEmpty();
-        
+
         if ("LANDLORD".equalsIgnoreCase(role)) {
             // Nếu là landlord, ẩn phần thông tin chủ trọ và hiển thị section buttons landlord
             ownerSection.setVisibility(View.GONE);
             landlordButtonsSection.setVisibility(View.VISIBLE);
-            
+
             // Thay đổi text button dựa vào trạng thái hợp đồng
             if (coHopDong || isDaThue) {
                 btnCreateContract.setText("Xem hợp đồng");
@@ -201,7 +202,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                 btnEdit.setEnabled(true);
                 btnEdit.setAlpha(1.0f);
             }
-            
+
             btnEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -210,7 +211,7 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     }
                 }
             });
-            
+
             btnCreateContract.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -232,29 +233,39 @@ public class BaiDangDetailActivity extends AppCompatActivity {
             // Nếu là user, hiển thị thông tin chủ trọ và ẩn section buttons landlord
             landlordButtonsSection.setVisibility(View.GONE);
             ownerSection.setVisibility(View.VISIBLE);
-            
-            chuTroDao chuTroDao = new chuTroDao(this);
-            ChuTro ct = chuTroDao.getID(chuTroId);
-            if (ct != null){
-                String ownerName = (ct.getTenChuTro()==null||ct.getTenChuTro().trim().isEmpty())? chuTroId : ct.getTenChuTro();
-                tvOwner.setText(ownerName);
-                tvPhone.setText("📱 " + ct.getSdt());
 
-                btnCall.setEnabled(ct.getSdt()!=null && !ct.getSdt().isEmpty());
-                btnCall.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:"+ct.getSdt()));
-                        startActivity(dial);
-                    }
-                });
-            } else {
+            // Chỉ dùng callback bất đồng bộ để lấy dữ liệu chủ trọ
+            ChuTroHybridDao chuTroDao = new ChuTroHybridDao(this);
+            chuTroDao.getByIdWithSync(chuTroId, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<ChuTro>() {
+                @Override
+                public void onSuccess(ChuTro ct) {
+                    runOnUiThread(() -> {
+                        if (ct != null && ct.getSdt() != null && !ct.getSdt().isEmpty()) {
+                            String ownerName = (ct.getTenChuTro() == null || ct.getTenChuTro().trim().isEmpty()) ? chuTroId : ct.getTenChuTro();
+                            tvOwner.setText(ownerName);
+                            tvPhone.setText("📱 " + ct.getSdt());
+                            btnCall.setEnabled(true);
+                            btnCall.setOnClickListener(v -> {
+                                Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + ct.getSdt()));
+                                startActivity(dial);
+                            });
+                        } else {
+                            tvOwner.setText("Không có thông tin");
+                            tvPhone.setText("");
+                            btnCall.setEnabled(false);
+                        }
+                    });
+                }
 
-                tvOwner.setText("Không có thông tin");
-                tvPhone.setText("");
-
-                btnCall.setEnabled(false);
-            }
+                @Override
+                public void onError(Exception e) {
+                    runOnUiThread(() -> {
+                        tvOwner.setText("Không có thông tin");
+                        tvPhone.setText("");
+                        btnCall.setEnabled(false);
+                    });
+                }
+            });
         }
 
 
@@ -324,14 +335,14 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     b.setTienNghi(android.text.TextUtils.join(" · ", sel));
                     b.setTrangThai(spTrangThai.getSelectedItem().toString());
                     b.setChuTroId(chuTroId);
-                    
+
                     // Upload ảnh mới lên Firebase Storage nếu có
                     if (!editImageUris.isEmpty()) {
                         android.app.ProgressDialog progress = new android.app.ProgressDialog(this);
                         progress.setMessage("Đang upload ảnh...");
                         progress.setCancelable(false);
                         progress.show();
-                        
+
                         ImageUploader uploader = new ImageUploader(this);
                         uploader.uploadMultipleImages(editImageUris, "baiDang", new ImageUploader.MultiUploadCallback() {
                             @Override
@@ -344,9 +355,9 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                             @Override
                             public void onError(Exception e) {
                                 progress.dismiss();
-                                android.widget.Toast.makeText(BaiDangDetailActivity.this, 
-                                    "Lỗi upload ảnh: " + e.getMessage() + ". Cập nhật không được lưu!", 
-                                    android.widget.Toast.LENGTH_LONG).show();
+                                android.widget.Toast.makeText(BaiDangDetailActivity.this,
+                                        "Lỗi upload ảnh: " + e.getMessage() + ". Cập nhật không được lưu!",
+                                        android.widget.Toast.LENGTH_LONG).show();
                                 // KHÔNG lưu gì cả khi có lỗi upload
                                 Log.e("BaiDangDetail", "Upload failed, data NOT saved", e);
                             }
@@ -373,5 +384,3 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         }
     }
 }
-
-

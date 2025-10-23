@@ -14,6 +14,30 @@ import java.util.List;
  * GHI: Song song SQLite + Firestore
  */
 public class ChuTroHybridDao {
+    /**
+     * Lấy chủ trọ theo ID, đợi sync Firestore xong rồi trả về qua callback
+     */
+    public void getByIdWithSync(String id, com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<ChuTro> callback) {
+        remoteRepo.getById(id, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<ChuTro>() {
+            @Override
+            public void onSuccess(ChuTro result) {
+                if (result != null) {
+                    int rows = localDao.update(result);
+                    if (rows == 0) {
+                        localDao.insert(result);
+                    }
+                }
+                // Trả về dữ liệu mới nhất từ local (đã update/insert)
+                callback.onSuccess(localDao.getID(id));
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Fallback local nếu lỗi
+                callback.onSuccess(localDao.getID(id));
+            }
+        });
+    }
     private static final String TAG = "ChuTroHybrid";
     private final Context context;
     private final chuTroDao localDao;
@@ -54,7 +78,7 @@ public class ChuTroHybridDao {
                 Log.e(TAG, "Failed to sync landlord from Firestore", e);
             }
         });
-        
+
         return local;
     }
 
@@ -115,7 +139,7 @@ public class ChuTroHybridDao {
         localDao.insert(chuTro);
         
         // 2. Ghi remote async
-        remoteRepo.insert(chuTro, new FirestoreRepository.FirestoreCallback<String>() {
+        remoteRepo.insert(chuTro.getMaChuTro(), chuTro, new FirestoreRepository.FirestoreCallback<String>() {
             @Override
             public void onSuccess(String documentId) {
                 Log.d(TAG, "ChuTro synced to Firestore: " + documentId);
@@ -232,5 +256,23 @@ public class ChuTroHybridDao {
                 Log.e(TAG, "Real-time sync error", e);
             }
         });
+    }
+
+    // Thêm mới chủ trọ với ID chỉ định, đồng bộ local + Firestore
+    public void insert(String id, com.example.nestera.model.ChuTro chuTro, FirestoreRepository.FirestoreCallback<String> callback) {
+        // Ghi local
+        localDao.insert(chuTro);
+        // Ghi remote Firestore với id chỉ định
+        remoteRepo.insert(id, chuTro, callback);
+    }
+
+    // Đồng bộ trạng thái chủ trọ lên Firestore sau khi update local
+    public void syncUserToFirestore(String id, FirestoreRepository.FirestoreCallback<Void> callback) {
+        ChuTro ct = localDao.getID(id);
+        if (ct != null) {
+            remoteRepo.update(id, ct, callback);
+        } else {
+            callback.onError(new Exception("Không tìm thấy chủ trọ để sync"));
+        }
     }
 }
