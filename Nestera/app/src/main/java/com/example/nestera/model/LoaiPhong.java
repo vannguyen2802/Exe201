@@ -57,4 +57,21 @@ public class LoaiPhong {
     public void setGiaNuoc(int giaNuoc) {
         this.giaNuoc = giaNuoc;
     }
+
+    // Alias methods for compatibility with Repository
+    public int getMaLoai() {
+        return maLoaiPhong;
+    }
+
+    public void setMaLoai(int maLoai) {
+        this.maLoaiPhong = maLoai;
+    }
+
+    public String getTenLoai() {
+        return tenLoaiPhong;
+    }
+
+    public void setTenLoai(String tenLoai) {
+        this.tenLoaiPhong = tenLoai;
+    }
 }

@@ -18,7 +18,7 @@ public class HopDong {
     private String maNguoiThue;
     private int maPhong;
     private byte[] hinhAnhhd;
-
+    private String imageUrl; // Firebase Storage URL
 
 
     public HopDong() {
@@ -64,6 +64,11 @@ public class HopDong {
 
     public void setCCCD(String CCCD) {
         this.CCCD = CCCD;
+    }
+    
+    // Overload to accept int from Firestore
+    public void setCCCD(int cccd) {
+        this.CCCD = String.valueOf(cccd);
     }
 
     public String getThuongTru() {
@@ -160,5 +165,13 @@ public class HopDong {
 
     public void setHinhAnhhd(byte[] hinhAnhhd) {
         this.hinhAnhhd = hinhAnhhd;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

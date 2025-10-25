@@ -11,7 +11,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.example.nestera.Adapter.RoomAdapter;
-import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.R;
 import com.example.nestera.model.PhongTro;
 
@@ -22,7 +22,7 @@ public class loaiPhong_Activity extends AppCompatActivity {
     RecyclerView rvRooms;
     ArrayList<PhongTro> roomList;
     RoomAdapter roomAdapter;
-    phongTroDao dao;
+    PhongTroHybridDao hybridDao;
     
     // Category buttons
     LinearLayout btnGanToi, btnDanhGiaCao, btnGiaRe, btnYeuThich;
@@ -42,7 +42,8 @@ public class loaiPhong_Activity extends AppCompatActivity {
 
     private void initViews() {
         rvRooms = findViewById(R.id.rvRooms);
-        dao = new phongTroDao(this);
+        hybridDao = new PhongTroHybridDao(this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
         
         // Setup back button
         ImageView ivBack = findViewById(R.id.ivBack);
@@ -61,7 +62,7 @@ public class loaiPhong_Activity extends AppCompatActivity {
     private void loadSampleData() {
         // Load dữ liệu thật từ database với ảnh
         try {
-            List<PhongTro> rooms = dao.getAll();
+            List<PhongTro> rooms = hybridDao.getAll();
             roomList.clear();
             roomList.addAll(rooms);
             roomAdapter.notifyDataSetChanged();

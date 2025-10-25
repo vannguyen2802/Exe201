@@ -54,6 +54,18 @@ public class suCo {
         this.maNguoiThue = maNguoiThue;
     }
 
+    // Alias methods for Repository compatibility
+    public int getMasuCo() { return getMaSuCo(); }
+    public void setMasuCo(int maSuCo) { setMaSuCo(maSuCo); }
+    public String getTensuCo() { return getTenSuCo(); }
+    public void setTensuCo(String tenSuCo) { setTenSuCo(tenSuCo); }
+    // Overload to accept String for maNguoiThue (Repository compatibility)
+    public void setMaNguoiThue(String maNguoiThue) {
+        if (maNguoiThue != null && !maNguoiThue.isEmpty()) {
+            this.maNguoiThue = Integer.parseInt(maNguoiThue);
+        }
+    }
+
     public suCo(int maSuCo, String tenSuCo, String noiDung, int trangThai, int maPhong, int maNguoiThue) {
         this.maSuCo = maSuCo;
         this.tenSuCo = tenSuCo;

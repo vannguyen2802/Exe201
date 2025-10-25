@@ -1,0 +1,25 @@
+﻿    
+    /**
+     * Sync pending changes
+     */
+    public void syncPendingChanges() {
+        android.util.Log.d(TAG, "Syncing pending changes...");
+        List<HoaDon> localData = localDao.getAll();
+        if (localData == null || localData.isEmpty()) return;
+        
+        for (HoaDon item : localData) {
+            remoteRepo.getById(String.valueOf(item.getMaHoaDon()), new FirestoreRepository.FirestoreCallback<HoaDon>() {
+                @Override
+                public void onSuccess(HoaDon remote) {
+                    if (remote != null) {
+                        remoteRepo.update(String.valueOf(item.getMaHoaDon()), item, null);
+                    } else {
+                        remoteRepo.add(item, null);
+                    }
+                }
+                @Override
+                public void onError(Exception e) {}
+            });
+        }
+    }
+}

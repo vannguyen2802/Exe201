@@ -225,7 +225,7 @@
         android:layout_height="33dp"
         android:layout_marginTop="10dp"
         android:backgroundTint="@color/gray_dark"
-        android:popupBackground="@color/gray_dark"
+        android:popupBackground="@android:color/white"
         android:textSize="17dp" />
 
     <LinearLayout

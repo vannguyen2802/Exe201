@@ -29,6 +29,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.example.nestera.Activity.ThanhToan_Activity;
 import com.example.nestera.Activity.hoaDon_Activity;
 import com.example.nestera.Dao.NganHangDao;
+import com.bumptech.glide.Glide;
 import com.example.nestera.Dao.hoaDonDao;
 import com.example.nestera.Dao.nguoiThueDao;
 import com.example.nestera.Dao.phongTroDao;
@@ -178,10 +179,18 @@ public class HoaDon_Adapter extends ArrayAdapter<HoaDon> {
 //                hoadonDao.updateTrangThaiHoaDon(hoaDon.getMaHoaDon(),2);
 //            }
 
-
+            // Load ảnh thanh toán: ưu tiên Firebase Storage, fallback BLOB
             anhthanhtoan=hoaDon.getAnhThanhToan();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(anhthanhtoan,0,anhthanhtoan.length);
-            imgAnh.setImageBitmap(bitmap);
+            if (hoaDon.getImageUrl() != null && !hoaDon.getImageUrl().isEmpty()) {
+                Glide.with(context)
+                    .load(hoaDon.getImageUrl())
+                    .placeholder(R.drawable.phong_tro_1_1)
+                    .error(R.drawable.baseline_warning_24)
+                    .into(imgAnh);
+            } else if (anhthanhtoan != null && anhthanhtoan.length > 0) {
+                Bitmap bitmap = BitmapFactory.decodeByteArray(anhthanhtoan,0,anhthanhtoan.length);
+                imgAnh.setImageBitmap(bitmap);
+            }
 
 
 

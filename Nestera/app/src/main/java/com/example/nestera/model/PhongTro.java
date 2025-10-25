@@ -6,6 +6,7 @@ public class PhongTro {
     private int trangThai;
     private String imageUrl;
     private String imagePath; // Đường dẫn ảnh từ database
+    private String diaChi;
 
     public PhongTro() {
     }
@@ -100,5 +101,13 @@ public class PhongTro {
 
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
+    }
+
+    public String getDiaChi() {
+        return diaChi;
+    }
+
+    public void setDiaChi(String diaChi) {
+        this.diaChi = diaChi;
     }
 }

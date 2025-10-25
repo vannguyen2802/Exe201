@@ -28,8 +28,9 @@ import android.widget.Toast;
 
 import com.example.nestera.Adapter.LoaiPhongSpinnerAdapter;
 import com.example.nestera.Adapter.Phong_Adapter;
-import com.example.nestera.Dao.LoaiPhongDao;
-import com.example.nestera.Dao.phongTroDao;
+import com.example.nestera.Firebase.BaiDangHybridDao;
+import com.example.nestera.Firebase.LoaiPhongHybridDao;
+import com.example.nestera.Firebase.PhongTroHybridDao;
 import com.example.nestera.MainActivity;
 import com.example.nestera.R;
 import com.example.nestera.model.LoaiPhong;
@@ -39,25 +40,30 @@ import java.util.ArrayList;
 
 public class phong_Activity extends AppCompatActivity {
     ListView lstPhong;
-    ArrayList<PhongTro> list;
+    ArrayList<com.example.nestera.model.BaiDang> list;
     ArrayList<PhongTro> listtemp;
     ArrayList<LoaiPhong> list_lp;
-    Phong_Adapter adapter;
-    PhongTro item;
-    phongTroDao dao;
+    com.example.nestera.Adapter.RoomFromPostAdapter adapter;
+    //PhongTro item;
+    PhongTroHybridDao hybridDao;
+    BaiDangHybridDao baiDangHybridDao;
     ImageView btnAdd;
     EditText edtmaPhong, edttenPhong, edtGia, edtTienNghi,edtSearch;
     Button btnHuy, btnXacNhan;
     Spinner spinner;
     int position, maLoaiPhong;
     CheckBox chk;
-    LoaiPhongDao dao_lp;
+    LoaiPhongHybridDao hybridDao_lp;
     LoaiPhong item_lp;
     LoaiPhongSpinnerAdapter spinnerAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        android.util.Log.d("PhongActivity", "=== onCreate() START ===");  
+        android.util.Log.d("PhongActivity", "Activity: " + this.getClass().getSimpleName());
+        
         setContentView(R.layout.activity_phong);
         getWindow().setStatusBarColor(ContextCompat.getColor(this,R.color.black));
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -79,10 +85,17 @@ public class phong_Activity extends AppCompatActivity {
 
 
         lstPhong = findViewById(R.id.lstPhongTro);
-        dao = new phongTroDao(phong_Activity.this);
+        hybridDao = new PhongTroHybridDao(phong_Activity.this);
+        hybridDao.enableRealtimeSync(); // Enable real-time sync
+        baiDangHybridDao = new BaiDangHybridDao(phong_Activity.this);
         btnAdd = findViewById(R.id.btnadd_toolbar);
+        // Ẩn nút thêm (+) trên màn Phòng trọ
+        if (btnAdd != null) {
+            btnAdd.setVisibility(View.GONE);
+        }
 
-        listtemp= (ArrayList<PhongTro>) dao.getAll();
+        // Lấy dữ liệu từ bài đăng thay vì PhongTro
+        list = new java.util.ArrayList<>();
         edtSearch=findViewById(R.id.edtSearch);
         edtSearch.addTextChangedListener(new TextWatcher() {
             @Override
@@ -92,13 +105,38 @@ public class phong_Activity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                list.clear();
-                for (PhongTro pt : listtemp){
-                    if (pt.getTenPhong().contains(charSequence.toString())){
-                        list.add(pt);
-                    }
+                try {
+                    // Lấy username của chủ trọ hiện tại
+                    String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+                    
+                    // Use Firebase sync để tìm kiếm
+                    baiDangHybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
+                        @Override
+                        public void onSuccess(java.util.List<com.example.nestera.model.BaiDang> syncedList) {
+                            runOnUiThread(() -> {
+                                list.clear();
+                                if (syncedList != null) {
+                                    for (com.example.nestera.model.BaiDang b : syncedList){
+                                        if ((b.getTieuDe()!=null && b.getTieuDe().toLowerCase().contains(charSequence.toString().toLowerCase())) ||
+                                            (b.getDiaChi()!=null && b.getDiaChi().toLowerCase().contains(charSequence.toString().toLowerCase()))){
+                                            list.add(b);
+                                        }
+                                    }
+                                }
+                                if (adapter != null) {
+                                    adapter.notifyDataSetChanged();
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onError(Exception e) {
+                            Log.e("phong_Activity", "Error during search", e);
+                        }
+                    });
+                } catch (Exception e) {
+                    Log.e("phong_Activity", "Error during search", e);
                 }
-                adapter.notifyDataSetChanged();
             }
 
             @Override
@@ -116,14 +154,7 @@ public class phong_Activity extends AppCompatActivity {
                                       }
                                   }
         );
-        lstPhong.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                item = list.get(i);
-                opendialog(phong_Activity.this, 1);
-                return false;
-            }
-        });
+        lstPhong.setOnItemLongClickListener(null);
     }
 
     public void opendialog(Context context, int type) {
@@ -139,8 +170,7 @@ public class phong_Activity extends AppCompatActivity {
         btnXacNhan = dialog.findViewById(R.id.btnXacNhan);
         chk.setVisibility(View.GONE);
         list_lp = new ArrayList<LoaiPhong>();
-        dao_lp = new LoaiPhongDao(context);
-        list_lp = (ArrayList<LoaiPhong>) dao_lp.getAll();
+        list_lp = (ArrayList<LoaiPhong>) hybridDao_lp.getAll();
         spinnerAdapter = new LoaiPhongSpinnerAdapter(context, list_lp);
         //
         spinner.setAdapter(spinnerAdapter);
@@ -209,30 +239,7 @@ public class phong_Activity extends AppCompatActivity {
                 dialog.show();
             }
         });
-        if (type != 0) {
-            edtmaPhong.setText(item.getMaPhong() + "");
-            edttenPhong.setText(item.getTenPhong() + "");
-            edtTienNghi.setText(item.getTienNghi() + "");
-            edtGia.setText(item.getGia() + "");
-
-            if (item.getTrangThai() == 1) {
-                chk.setChecked(true);
-                edtmaPhong.setEnabled(false);
-                edttenPhong.setEnabled(false);
-                edtTienNghi.setEnabled(false);
-                edtGia.setEnabled(false);
-                spinner.setEnabled(false);
-            } else {
-                chk.setChecked(false);
-            }
-            for (int i = 0; i < list_lp.size(); i++) {
-                if (item.getMaLoai() == (list_lp.get(i).getMaLoaiPhong())) {
-                    position = i;
-                }
-                Log.i("zzzzzzzzzzzz", "posPhong: " + position);
-                spinner.setSelection(position);
-            }
-        }
+        // Không xử lý edit phòng trong chế độ hiển thị từ bài đăng
             btnHuy.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -246,13 +253,7 @@ public class phong_Activity extends AppCompatActivity {
                         Toast.makeText(context, "Bạn phải nhập đầy đủ thông tin", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    int checkTen = 0;
-                    for (PhongTro pt :list){
-                        if(pt.getTenPhong().equalsIgnoreCase(edttenPhong.getText().toString())){
-                            checkTen=1;
-                            break;
-                        }
-                    }
+                    int checkTen = 0; // skip duplicate name check in new mode
                     if(checkTen==1){
                         Toast.makeText(context, "Tên phòng đã tồn tại", Toast.LENGTH_SHORT).show();
                         return;
@@ -267,30 +268,7 @@ public class phong_Activity extends AppCompatActivity {
                         Toast.makeText(context, "Giá phải là số", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    item = new PhongTro();
-                    item.setTenPhong(edttenPhong.getText().toString());
-                    item.setTienNghi(edtTienNghi.getText().toString());
-                    item.setGia(Integer.parseInt(edtGia.getText().toString()));
-                    item.setMaLoai(maLoaiPhong);
-                    if (chk.isChecked()) {
-                        item.setTrangThai(1);
-                    } else {
-                        item.setTrangThai(0);
-                    }
-                    if (type == 0) {
-                        if (dao.insert(item) > 0) {
-                            Toast.makeText(context, "Thêm thành công", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(context, "Thêm thất bại", Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        item.setMaPhong(Integer.parseInt(edtmaPhong.getText().toString()));
-                        if (dao.update(item) > 0) {
-                            Toast.makeText(context, "Sửa thành công", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Toast.makeText(context, "Sửa thất bại", Toast.LENGTH_SHORT).show();
-                        }
-                    }
+                    Toast.makeText(context, "Chức năng này không khả dụng khi nguồn là bài đăng", Toast.LENGTH_SHORT).show();
 
                     capNhapLv();
                     dialog.dismiss();
@@ -308,7 +286,7 @@ public class phong_Activity extends AppCompatActivity {
         builder.setPositiveButton("Có", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                dao.delete(Id);
+                hybridDao.delete(Integer.parseInt(Id));
                 capNhapLv();
                 dialogInterface.cancel();
                 Toast.makeText(phong_Activity.this, "Xóa thành công ", Toast.LENGTH_SHORT).show();
@@ -325,18 +303,96 @@ public class phong_Activity extends AppCompatActivity {
     }
 
     public void capNhapLv() {
+        // Lấy username của chủ trọ hiện tại
+        String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+        
+        android.util.Log.d("PhongActivity", "Loading posts for user: " + currentUser);
+        
+        // Use Firebase sync thay vì local DAO
+        baiDangHybridDao.getByChuTroWithSync(currentUser, new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
+            @Override
+            public void onSuccess(java.util.List<com.example.nestera.model.BaiDang> syncedList) {
+                runOnUiThread(() -> {
+                    try {
+                        if (syncedList != null) {
+                            list.clear(); // Clear existing data first
+                            list.addAll(syncedList);
+                            android.util.Log.d("PhongActivity", "✅ Loaded " + list.size() + " posts from Firebase");
+                        } else {
+                            list.clear();
+                            android.util.Log.w("PhongActivity", "Synced list is null for user: " + currentUser);
+                        }
+                        
+                        // Reuse existing adapter if available
+                        if (adapter == null) {
+                            adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
+                            lstPhong.setAdapter(adapter);
+                        } else {
+                            adapter.notifyDataSetChanged();
+                        }
+                    } catch (Exception e) {
+                        android.util.Log.e("PhongActivity", "Error setting adapter", e);
+                    }
+                });
+            }
 
-        list = (ArrayList<PhongTro>) dao.getAll();
-        adapter = new Phong_Adapter(phong_Activity.this, this, list);
-        lstPhong.setAdapter(adapter);
+            @Override
+            public void onError(Exception e) {
+                android.util.Log.e("PhongActivity", "❌ Error loading posts from Firebase", e);
+                runOnUiThread(() -> {
+                    // Fallback to empty list
+                    list = new java.util.ArrayList<>();
+                    adapter = new com.example.nestera.Adapter.RoomFromPostAdapter(phong_Activity.this, list);
+                    lstPhong.setAdapter(adapter);
+                    Toast.makeText(phong_Activity.this, "Lỗi tải dữ liệu từ Firebase", Toast.LENGTH_SHORT).show();
+                });
+            }
+        });
     }
     public void xemHD(int i){
-        PhongTro pp = list.get(i);
-        int maPhong = pp.getMaPhong();
+        com.example.nestera.model.BaiDang pp = list.get(i);
+        int maPhong = (pp.getMaPhong()==null? -1 : pp.getMaPhong());
 
         Intent intent = new Intent(phong_Activity.this, hopDong_Activity.class);
         intent.putExtra("maphong", maPhong);
         startActivity(intent);
+    }
+    
+    // Method để xóa bài đăng (được gọi từ adapter)
+    public void deleteBaiDang(int postId) {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Xác nhận xóa");
+        builder.setMessage("Bạn có chắc chắn muốn xóa bài đăng này?");
+        builder.setPositiveButton("Có", new android.content.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(android.content.DialogInterface dialog, int which) {
+                try {
+                    // Xóa từ Firebase và SQLite
+                    long result = baiDangHybridDao.delete(String.valueOf(postId));
+                    if (result > 0) {
+                        android.widget.Toast.makeText(phong_Activity.this, "Xóa bài đăng thành công", android.widget.Toast.LENGTH_SHORT).show();
+                        // Force sync from Firebase after delete
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            // Force reload from Firebase instead of cache
+                            String currentUser = getSharedPreferences("user11", MODE_PRIVATE).getString("username11", "");
+                            baiDangHybridDao.forceSync(); // Force sync first
+                            
+                            // Then reload UI
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                capNhapLv(); // Reload data after sync
+                            }, 1000);
+                        }, 500);
+                    } else {
+                        android.widget.Toast.makeText(phong_Activity.this, "Xóa thất bại", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("PhongActivity", "Error deleting post", e);
+                    android.widget.Toast.makeText(phong_Activity.this, "Lỗi: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        builder.setNegativeButton("Không", null);
+        builder.show();
     }
 
 }

@@ -106,7 +106,10 @@ public class hopDongDao {
     public HopDong getID(String id){
         String sql = "SELECT * FROM HopDong WHERE maHopDong=?";
         List<HopDong> list = getDaTa(sql,id);
-        return list.get(0);
+        if (list != null && !list.isEmpty()) {
+            return list.get(0);
+        }
+        return null; // Return null if not found
     }
     @SuppressLint("Range")
     public ArrayList<HopDong> getHopDongByMaPhong(int maPhong) {

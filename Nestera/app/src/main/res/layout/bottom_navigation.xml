@@ -10,8 +10,8 @@
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         android:padding="8dp">
 
         <ImageView
@@ -23,34 +23,10 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
             android:text="Trang chủ"
-            android:textSize="10sp"
             android:textColor="@color/orange"
-            android:layout_marginTop="2dp" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="0dp"
-        android:layout_height="match_parent"
-        android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="8dp">
-
-        <ImageView
-            android:id="@+id/ivNavSearch"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:src="@drawable/ic_search_inactive" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Tìm kiếm"
-            android:textSize="10sp"
-            android:textColor="#999999"
-            android:layout_marginTop="2dp" />
+            android:textSize="10sp" />
 
     </LinearLayout>
 
