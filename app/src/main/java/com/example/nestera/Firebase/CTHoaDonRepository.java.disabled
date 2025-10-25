@@ -1,0 +1,134 @@
+package com.example.nestera.Firebase;
+
+import com.example.nestera.model.CTHoaDon;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Repository cho CTHoaDon (Chi Tiết Hóa Đơn) - đọc/ghi Firestore
+ */
+public class CTHoaDonRepository extends FirestoreRepository<CTHoaDon> {
+
+    public CTHoaDonRepository() {
+        super("ctHoaDon");
+    }
+
+    @Override
+    protected CTHoaDon fromDocument(QueryDocumentSnapshot doc) {
+        CTHoaDon ct = new CTHoaDon();
+        ct.setMaChiTiet(doc.getLong("maChiTiet") != null ? doc.getLong("maChiTiet").intValue() : 0);
+        ct.setMaHoaDon(doc.getLong("maHoaDon") != null ? doc.getLong("maHoaDon").intValue() : 0);
+        ct.setTenDichVu(doc.getString("tenDichVu"));
+        
+        // Parse số lượng từ Firestore
+        Double soLuongDouble = doc.getDouble("soLuong");
+        ct.setSoLuong(soLuongDouble != null ? soLuongDouble.floatValue() : 0f);
+        
+        // Parse đơn giá
+        Double donGiaDouble = doc.getDouble("donGia");
+        ct.setDonGia(donGiaDouble != null ? donGiaDouble.floatValue() : 0f);
+        
+        // Parse thành tiền
+        Double thanhTienDouble = doc.getDouble("thanhTien");
+        ct.setThanhTien(thanhTienDouble != null ? thanhTienDouble.floatValue() : 0f);
+        
+        return ct;
+    }
+
+    @Override
+    protected Map<String, Object> toDocument(CTHoaDon item) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("maChiTiet", item.getMaChiTiet());
+        map.put("maHoaDon", item.getMaHoaDon());
+        map.put("tenDichVu", item.getTenDichVu());
+        map.put("soLuong", item.getSoLuong());
+        map.put("donGia", item.getDonGia());
+        map.put("thanhTien", item.getThanhTien());
+        return map;
+    }
+
+    /**
+     * Lấy chi tiết hóa đơn theo mã hóa đơn
+     */
+    public void getByMaHoaDon(int maHoaDon, FirestoreCallback<List<CTHoaDon>> callback) {
+        db.collection(collectionName)
+                .whereEqualTo("maHoaDon", maHoaDon)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<CTHoaDon> list = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        list.add(fromDocument(doc));
+                    }
+                    callback.onSuccess(list);
+                })
+                .addOnFailureListener(callback::onError);
+    }
+
+    /**
+     * Tính tổng tiền cho một hóa đơn
+     */
+    public void getTotalByMaHoaDon(int maHoaDon, FirestoreCallback<Float> callback) {
+        getByMaHoaDon(maHoaDon, new FirestoreCallback<List<CTHoaDon>>() {
+            @Override
+            public void onSuccess(List<CTHoaDon> result) {
+                float total = 0;
+                for (CTHoaDon ct : result) {
+                    total += ct.getThanhTien();
+                }
+                callback.onSuccess(total);
+            }
+
+            @Override
+            public void onError(Exception e) {
+                callback.onError(e);
+            }
+        });
+    }
+
+    /**
+     * Lắng nghe real-time changes cho một hóa đơn cụ thể
+     */
+    public void listenForChangesByMaHoaDon(int maHoaDon, FirestoreCallback<List<CTHoaDon>> callback) {
+        db.collection(collectionName)
+                .whereEqualTo("maHoaDon", maHoaDon)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    
+                    if (snapshots != null) {
+                        List<CTHoaDon> list = new ArrayList<>();
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            list.add(fromDocument(doc));
+                        }
+                        callback.onSuccess(list);
+                    }
+                });
+    }
+
+    /**
+     * Lắng nghe tất cả changes
+     */
+    public void listenForChanges(FirestoreCallback<List<CTHoaDon>> callback) {
+        db.collection(collectionName)
+                .addSnapshotListener((snapshots, error) -> {
+                    if (error != null) {
+                        callback.onError(error);
+                        return;
+                    }
+                    
+                    if (snapshots != null) {
+                        List<CTHoaDon> list = new ArrayList<>();
+                        for (QueryDocumentSnapshot doc : snapshots) {
+                            list.add(fromDocument(doc));
+                        }
+                        callback.onSuccess(list);
+                    }
+                });
+    }
+}
