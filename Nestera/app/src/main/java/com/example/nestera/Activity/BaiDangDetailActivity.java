@@ -35,7 +35,6 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         hybridDao = new BaiDangHybridDao(this);
 
         ImageView ivBack = findViewById(R.id.ivBack);
-
         // Xử lý nút back
         ivBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,7 +56,6 @@ public class BaiDangDetailActivity extends AppCompatActivity {
     private void loadDetailData() {
         Intent it = getIntent();
         int postId = it.getIntExtra("postId", -1);
-
         // Load dữ liệu với callback để đợi sync
         hybridDao.getAllWithSync(new com.example.nestera.Firebase.FirestoreRepository.FirestoreCallback<java.util.List<com.example.nestera.model.BaiDang>>() {
             @Override
@@ -135,7 +133,6 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         tvStatus.setText(trangThai);
         tvStatus.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 16); // Tăng size chữ
         tvStatus.setTypeface(null, android.graphics.Typeface.BOLD); // In đậm
-
         if ("Đã thuê".equalsIgnoreCase(trangThai)) {
             tvStatus.setTextColor(0xFFDC3545); // Màu đỏ
         } else {
@@ -186,12 +183,10 @@ public class BaiDangDetailActivity extends AppCompatActivity {
         int maPhongLocal = getIntent().getIntExtra("maPhong", -1);
         com.example.nestera.Dao.hopDongDao hopDongDao = new com.example.nestera.Dao.hopDongDao(this);
         boolean coHopDong = !hopDongDao.getHopDongByMaPhong(maPhongLocal).isEmpty();
-
         if ("LANDLORD".equalsIgnoreCase(role)) {
             // Nếu là landlord, ẩn phần thông tin chủ trọ và hiển thị section buttons landlord
             ownerSection.setVisibility(View.GONE);
             landlordButtonsSection.setVisibility(View.VISIBLE);
-
             // Thay đổi text button dựa vào trạng thái hợp đồng
             if (coHopDong || isDaThue) {
                 btnCreateContract.setText("Xem hợp đồng");
@@ -202,7 +197,6 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                 btnEdit.setEnabled(true);
                 btnEdit.setAlpha(1.0f);
             }
-
             btnEdit.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -211,7 +205,6 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     }
                 }
             });
-
             btnCreateContract.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -335,14 +328,12 @@ public class BaiDangDetailActivity extends AppCompatActivity {
                     b.setTienNghi(android.text.TextUtils.join(" · ", sel));
                     b.setTrangThai(spTrangThai.getSelectedItem().toString());
                     b.setChuTroId(chuTroId);
-
                     // Upload ảnh mới lên Firebase Storage nếu có
                     if (!editImageUris.isEmpty()) {
                         android.app.ProgressDialog progress = new android.app.ProgressDialog(this);
                         progress.setMessage("Đang upload ảnh...");
                         progress.setCancelable(false);
                         progress.show();
-
                         ImageUploader uploader = new ImageUploader(this);
                         uploader.uploadMultipleImages(editImageUris, "baiDang", new ImageUploader.MultiUploadCallback() {
                             @Override

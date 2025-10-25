@@ -100,4 +100,3 @@ public class RegisterLandlordActivity extends AppCompatActivity {
 }
 
 
-

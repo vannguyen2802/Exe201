@@ -9,9 +9,9 @@
               <option name="connection">
                 <ConnectionSetting>
                   <option name="appId" value="com.example.nestera" />
-                  <option name="mobileSdkAppId" value="1:875651460665:android:5f8c9ce8a75a51292ba7e8" />
-                  <option name="projectId" value="nestera" />
-                  <option name="projectNumber" value="875651460665" />
+                  <option name="mobileSdkAppId" value="1:489421659461:android:fc3a3bbae0983d9dfdb22c" />
+                  <option name="projectId" value="nesteradb" />
+                  <option name="projectNumber" value="489421659461" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

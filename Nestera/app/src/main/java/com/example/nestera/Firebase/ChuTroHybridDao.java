@@ -78,7 +78,11 @@ public class ChuTroHybridDao {
                 Log.e(TAG, "Failed to sync landlord from Firestore", e);
             }
         });
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> origin/VanNT_New
         return local;
     }
 
@@ -139,7 +143,11 @@ public class ChuTroHybridDao {
         localDao.insert(chuTro);
         
         // 2. Ghi remote async
+<<<<<<< HEAD
         remoteRepo.insert(chuTro.getMaChuTro(), chuTro, new FirestoreRepository.FirestoreCallback<String>() {
+=======
+        remoteRepo.insert(chuTro, new FirestoreRepository.FirestoreCallback<String>() {
+>>>>>>> origin/VanNT_New
             @Override
             public void onSuccess(String documentId) {
                 Log.d(TAG, "ChuTro synced to Firestore: " + documentId);
