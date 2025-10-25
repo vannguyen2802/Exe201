@@ -1,0 +1,194 @@
+package com.example.nestera.Firebase;
+
+import android.util.Log;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Base Repository cho Firestore operations
+ * Các repository khác sẽ extend class này
+ */
+public abstract class FirestoreRepository<T> {
+    protected static final String TAG = "FirestoreRepo";
+    protected final FirebaseFirestore db;
+    protected final String collectionName;
+
+    protected FirestoreRepository(String collectionName) {
+        this.db = FirebaseFirestore.getInstance();
+        this.collectionName = collectionName;
+    }
+
+    /**
+     * Convert Firestore document thành model object
+     */
+    protected abstract T fromDocument(QueryDocumentSnapshot doc);
+
+    /**
+     * Convert model object thành Map để lưu Firestore
+     */
+    protected abstract Map<String, Object> toDocument(T item);
+
+    /**
+     * Lấy tất cả documents từ collection
+     */
+    public void getAll(FirestoreCallback<List<T>> callback) {
+        db.collection(collectionName)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<T> list = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        list.add(fromDocument(doc));
+                    }
+                    callback.onSuccess(list);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting all " + collectionName, e);
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Lấy document theo ID
+     */
+    public void getById(String id, FirestoreCallback<T> callback) {
+        db.collection(collectionName)
+                .document(id)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Create a temporary QueryDocumentSnapshot-like object
+                        // Since we can't directly cast, we'll need to handle this differently
+                        try {
+                            @SuppressWarnings("unchecked")
+                            T item = (T) documentSnapshot.toObject(Object.class);
+                            callback.onSuccess(item);
+                        } catch (Exception e) {
+                            callback.onError(e);
+                        }
+                    } else {
+                        callback.onError(new Exception("Document not found"));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error getting " + collectionName + " by ID", e);
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Thêm document mới với ID cụ thể (sử dụng local ID)
+     */
+    public void insert(String documentId, T item, FirestoreCallback<String> callback) {
+        Map<String, Object> data = toDocument(item);
+        data.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        
+        Log.d(TAG, "=== FIRESTORE INSERT START ===");
+        Log.d(TAG, "Collection: " + collectionName);
+        Log.d(TAG, "Document ID: " + documentId);
+        Log.d(TAG, "Data keys: " + data.keySet().toString());
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            Log.d(TAG, "  " + entry.getKey() + " = " + entry.getValue());
+        }
+        
+        db.collection(collectionName)
+                .document(documentId)
+                .set(data)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "✅ Firestore set() SUCCESS! DocID: " + documentId);
+                    Log.d(TAG, "Document path: " + collectionName + "/" + documentId);
+                    callback.onSuccess(documentId);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Firestore set() FAILED for collection: " + collectionName, e);
+                    Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+                    Log.e(TAG, "Error message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        Log.e(TAG, "Caused by: " + e.getCause().getMessage());
+                    }
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Thêm document mới (để Firebase tự tạo ID) - deprecated, sử dụng insert(String, T, callback)
+     */
+    @Deprecated
+    public void insert(T item, FirestoreCallback<String> callback) {
+        Map<String, Object> data = toDocument(item);
+        data.put("createdAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        
+        Log.d(TAG, "=== FIRESTORE INSERT START ===");
+        Log.d(TAG, "Collection: " + collectionName);
+        Log.d(TAG, "Data keys: " + data.keySet().toString());
+        for (Map.Entry<String, Object> entry : data.entrySet()) {
+            Log.d(TAG, "  " + entry.getKey() + " = " + entry.getValue());
+        }
+        
+        db.collection(collectionName)
+                .add(data)
+                .addOnSuccessListener(docRef -> {
+                    Log.d(TAG, "✅ Firestore add() SUCCESS! DocID: " + docRef.getId());
+                    Log.d(TAG, "Document path: " + docRef.getPath());
+                    callback.onSuccess(docRef.getId());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "❌ Firestore add() FAILED for collection: " + collectionName, e);
+                    Log.e(TAG, "Error type: " + e.getClass().getSimpleName());
+                    Log.e(TAG, "Error message: " + e.getMessage());
+                    if (e.getCause() != null) {
+                        Log.e(TAG, "Caused by: " + e.getCause().getMessage());
+                    }
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Cập nhật document
+     */
+    public void update(String id, T item, FirestoreCallback<Void> callback) {
+        Map<String, Object> data = toDocument(item);
+        data.put("updatedAt", com.google.firebase.firestore.FieldValue.serverTimestamp());
+        
+        db.collection(collectionName)
+                .document(id)
+                .update(data)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Update success: " + id);
+                    callback.onSuccess(null);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error updating " + collectionName, e);
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Xóa document
+     */
+    public void delete(String id, FirestoreCallback<Void> callback) {
+        db.collection(collectionName)
+                .document(id)
+                .delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d(TAG, "Delete success: " + id);
+                    callback.onSuccess(null);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Error deleting " + collectionName, e);
+                    callback.onError(e);
+                });
+    }
+
+    /**
+     * Callback interface cho Firestore operations
+     */
+    public interface FirestoreCallback<R> {
+        void onSuccess(R result);
+        void onError(Exception e);
+    }
+}
